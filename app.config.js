@@ -7,7 +7,7 @@ module.exports = () => {
 
   return {
     ...base,
-    name: isPaid ? 'الأفق المدفوعة' : 'الأفق التجريبية',
+    name: isPaid ? 'الأفق المدفوعة' : 'الأفق',
     slug: `alofok-${variant}`,
     scheme: `alofok-${variant}`,
     icon,
@@ -18,11 +18,11 @@ module.exports = () => {
     android: {
       ...base.android,
       package: `com.alofok.${variant}`,
-      versionCode: 3,
+      versionCode: 4,
       blockedPermissions: ['android.permission.RECORD_AUDIO'],
       adaptiveIcon: {
         foregroundImage: icon,
-        backgroundColor: isPaid ? '#061724' : '#06334a'
+        backgroundColor: '#061724'
       }
     },
     extra: {

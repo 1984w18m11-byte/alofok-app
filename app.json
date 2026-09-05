@@ -2,7 +2,7 @@
   "expo": {
     "name": "الأفق",
     "slug": "horizon-calendar-v2",
-    "version": "0.2.1",
+    "version": "0.2.2",
     "orientation": "portrait",
     "scheme": "horizoncalendar",
     "userInterfaceStyle": "dark",
@@ -25,16 +25,11 @@
         "FOREGROUND_SERVICE",
         "FOREGROUND_SERVICE_MEDIA_PLAYBACK"
       ],
-      "versionCode": 2
+      "versionCode": 4
     },
     "plugins": [
       "expo-location",
-      [
-        "expo-notifications",
-        {
-          "sounds": []
-        }
-      ],
+      ["expo-notifications", {"sounds": []}],
       "expo-audio",
       "expo-asset"
     ],
