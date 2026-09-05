@@ -1,11 +1,22 @@
 {
   "cli": {"version": ">= 16.0.0"},
   "build": {
-    "preview": {
+    "trial": {
       "distribution": "internal",
+      "env": {"APP_VARIANT": "trial", "EXPO_PUBLIC_APP_VARIANT": "trial"},
       "android": {"buildType": "apk"}
     },
-    "production": {
+    "paid": {
+      "distribution": "internal",
+      "env": {"APP_VARIANT": "paid", "EXPO_PUBLIC_APP_VARIANT": "paid"},
+      "android": {"buildType": "apk"}
+    },
+    "production-trial": {
+      "env": {"APP_VARIANT": "trial", "EXPO_PUBLIC_APP_VARIANT": "trial"},
+      "android": {"buildType": "app-bundle"}
+    },
+    "production-paid": {
+      "env": {"APP_VARIANT": "paid", "EXPO_PUBLIC_APP_VARIANT": "paid"},
       "android": {"buildType": "app-bundle"}
     }
   }

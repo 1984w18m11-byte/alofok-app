@@ -23,6 +23,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
+const APP_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
 const ADHAN_ASSETS={
  'commons-aishatu98-adhan':require('./assets/adhan/adhan-aishatu98.ogg'),
  'commons-beautiful-adhan':require('./assets/adhan/beautiful-adhan.ogg'),
@@ -383,7 +384,7 @@ const [eventPack,setEventPack]=useState('common');
   <ScrollView contentContainerStyle={s.page}>
    <View style={s.hero}>
     <Text style={s.appName}>الأفق</Text>
-    <Text style={s.appSub}>التقويم العربي والمواقيت</Text>
+    <Text style={s.appSub}>{APP_VARIANT==='paid'?'النسخة المدفوعة • التقويم العربي والمواقيت':'النسخة التجريبية • التقويم العربي والمواقيت'}</Text>
     <Pressable style={s.locationPill} onPress={()=>useGps(true)}>
       <Text style={s.locationPin}>📍</Text>
       <Text style={s.locationText}>{locationBusy?'جاري تحديد الموقع...':locState}</Text>

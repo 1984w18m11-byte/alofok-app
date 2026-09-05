@@ -73,7 +73,7 @@
     "license": "CC0 1.0 Universal",
     "source": "Wikimedia Commons — Adhan.ogg",
     "asset": "assets/adhan/adhan-aishatu98.ogg",
-    "available_in": ["trial", "profit"]
+    "available_in": ["trial", "paid"]
   },
   {
     "id": "commons-beautiful-adhan",
@@ -86,7 +86,7 @@
     "license": "CC0 1.0 Universal",
     "source": "Wikimedia Commons — Beautiful adhan.ogg",
     "asset": "assets/adhan/beautiful-adhan.ogg",
-    "available_in": ["trial", "profit"]
+    "available_in": ["trial", "paid"]
   },
   {
     "id": "commons-andrewler-azan",
@@ -100,7 +100,7 @@
     "source": "Wikimedia Commons — Azan.ogg",
     "source_url": "https://commons.wikimedia.org/wiki/File:Azan.ogg",
     "asset": "assets/adhan/azan-andrewler.ogg",
-    "available_in": ["trial", "profit"]
+    "available_in": ["trial", "paid"]
   },
   {
     "id": "commons-mecca-2013",
@@ -115,7 +115,7 @@
     "source_url": "https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm",
     "modification_ar": "استُخرج المسار الصوتي وحُوّل إلى Ogg Vorbis دون تغيير المحتوى.",
     "asset": "assets/adhan/mecca-adhan-2013.ogg",
-    "available_in": ["trial", "profit"]
+    "available_in": ["trial", "paid"]
   },
   {
     "id": "commons-istanbul-adhan",
