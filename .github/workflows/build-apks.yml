@@ -19,8 +19,6 @@ jobs:
         include:
           - variant: trial
             filename: alofok-trial.apk
-          - variant: paid
-            filename: alofok-paid.apk
 
     env:
       APP_VARIANT: ${{ matrix.variant }}
@@ -46,29 +44,45 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Repair PNG checksums
+      - name: Create valid trial icon
         run: |
           python3 - <<'PY'
-          import pathlib, struct, zlib
-          for name in ('assets/icon-trial.png','assets/icon-paid.png'):
-              path=pathlib.Path(name)
-              data=path.read_bytes()
-              if data[:8] != b'\x89PNG\r\n\x1a\n':
-                  raise SystemExit(f'{name}: invalid PNG signature')
-              out=bytearray(data[:8])
-              pos=8
-              while pos < len(data):
-                  length=struct.unpack('>I',data[pos:pos+4])[0]
-                  kind=data[pos+4:pos+8]
-                  payload=data[pos+8:pos+8+length]
-                  if len(payload) != length:
-                      raise SystemExit(f'{name}: truncated PNG chunk')
-                  out += struct.pack('>I',length)+kind+payload+struct.pack('>I',zlib.crc32(kind+payload)&0xffffffff)
-                  pos += 12+length
-                  if kind == b'IEND':
-                      break
-              path.write_bytes(out)
-              print(f'Repaired {name}')
+          import math, pathlib, struct, zlib
+          W=H=1024
+          bg=(6,51,74)
+          gold=(229,181,87)
+          light=(250,220,145)
+          px=[list(bg) for _ in range(W*H)]
+          def put(x,y,c):
+              if 0<=x<W and 0<=y<H: px[y*W+x]=list(c)
+          def rect(x0,y0,x1,y1,c):
+              for y in range(max(0,y0),min(H,y1)):
+                  for x in range(max(0,x0),min(W,x1)): put(x,y,c)
+          def circle(cx,cy,r,c):
+              rr=r*r
+              for y in range(max(0,cy-r),min(H,cy+r+1)):
+                  dx=int(math.sqrt(max(0,rr-(y-cy)**2)))
+                  for x in range(max(0,cx-dx),min(W,cx+dx+1)): put(x,y,c)
+          circle(512,512,470,(7,38,55))
+          circle(315,280,150,gold)
+          circle(365,235,145,(7,38,55))
+          rect(255,570,769,810,gold)
+          circle(512,570,175,gold)
+          rect(337,570,687,690,gold)
+          rect(210,465,275,810,light)
+          rect(749,465,814,810,light)
+          circle(242,465,33,light)
+          circle(781,465,33,light)
+          rect(226,385,258,465,gold)
+          rect(765,385,797,465,gold)
+          for cx in (395,512,629):
+              rect(cx-30,650,cx+30,810,(7,38,55))
+              circle(cx,650,30,(7,38,55))
+          raw=b''.join(b'\x00'+bytes(sum(px[y*W:(y+1)*W],[])) for y in range(H))
+          def chunk(t,d): return struct.pack('>I',len(d))+t+d+struct.pack('>I',zlib.crc32(t+d)&0xffffffff)
+          png=b'\x89PNG\r\n\x1a\n'+chunk(b'IHDR',struct.pack('>IIBBBBB',W,H,8,2,0,0,0))+chunk(b'IDAT',zlib.compress(raw,9))+chunk(b'IEND',b'')
+          pathlib.Path('assets/icon-trial.png').write_bytes(png)
+          print('Created valid 1024x1024 trial icon')
           PY
 
       - name: Validate Expo configuration
