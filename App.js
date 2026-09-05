@@ -35,7 +35,7 @@ const PRAYERS=[['الفجر','fajr'],['الشروق','sunrise'],['الظهر','d
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
 const PRAYER_METHODS=[['MWL','رابطة العالم الإسلامي'],['EGYPT','الهيئة المصرية'],['KARACHI','جامعة كراتشي'],['UMM_AL_QURA','أم القرى']];
-const PRIVACY_SUMMARY='يستخدم الأفق موقعك أثناء تشغيل التطبيق فقط لحساب المواقيت والقبلة واختيار المدينة الأقرب. تُحفظ تفضيلات الأذان وعدد مرات ظهور الإعلان محليًا على جهازك. لا توجد حسابات مستخدمين، ولا نبيع بيانات شخصية، ولا يُستخدم الموقع للإعلانات. يمكنك سحب أذونات الموقع والإشعارات أو حذف البيانات من إعدادات جهازك في أي وقت.';
+const PRIVACY_SUMMARY='يستخدم الأفق موقعك أثناء تشغيل التطبيق فقط لحساب المواقيت والقبلة واختيار المدينة الأقرب. تُحفظ تفضيلات الأذان محليًا على جهازك. لا توجد حسابات مستخدمين، ولا إعلانات، ولا نبيع بيانات شخصية. يمكنك سحب أذونات الموقع والإشعارات أو حذف البيانات من إعدادات جهازك في أي وقت.';
 const COPYRIGHT_SUMMARY='© 2026 وسام محمد — جميع الحقوق محفوظة. يُمنح المستخدم حقًا شخصيًا لاستخدام النسخة التي حصل عليها بصورة مشروعة. يُحظر نسخ التطبيق أو إعادة بيعه أو نشره أو تعديله أو استخراج تصميمه وأصوله دون إذن كتابي. شراء النسخة المدفوعة لا ينقل ملكية التطبيق. تبقى المكتبات والأصوات الخارجية خاضعة لتراخيص أصحابها.';
 
 function formatArabicClock(d){return new Intl.DateTimeFormat('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(d)}
@@ -58,9 +58,19 @@ function utcDateFromMinutes(date,minutes){
  return result;
 }
 function distanceKm(a,b){const R=6371,rad=x=>x*Math.PI/180;const dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon);const x=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
-const religiousFor=(m,d,pack='common')=>religiousEvents.filter(e=>(e.pack==='common'||e.pack===pack)&&((e.m===m&&e.d===d)||(e.m===m&&e.range&&d>=e.range[0]&&d<=e.range[1])||(e.dates||[]).some(x=>x.m===m&&x.d===d)));
+const religiousFor=(m,d)=>religiousEvents.filter(e=>((e.m===m&&e.d===d)||(e.m===m&&e.range&&d>=e.range[0]&&d<=e.range[1])||(e.dates||[]).some(x=>x.m===m&&x.d===d))).filter((e,i,all)=>all.findIndex(x=>x.ar===e.ar)===i);
 const nationalFor=(country,date)=>(nationalEvents[country]||[]).filter(e=>e.month===date.getUTCMonth()+1&&e.day===date.getUTCDate());
-const eventsForDay=(country,date,lunar,pack)=>[...religiousFor(lunar.month,lunar.day,pack).map(e=>({type:'دينية',name:e.ar})),...nationalFor(country,date).map(e=>({type:'وطنية',name:e.name_ar}))];
+const eventsForDay=(country,date,lunar)=>[...religiousFor(lunar.month,lunar.day).map(e=>({type:'دينية',name:e.ar})),...nationalFor(country,date).map(e=>({type:'وطنية',name:e.name_ar}))];
+
+const LUNAR_ACCENTS=['#f5b94c','#65c7d0','#d6a8ff','#ffb36b','#73d6a1','#83b9ff','#ffc857','#e8a0bf','#f2c14e','#79c9c5','#9ab7ff','#d0a4ff'];
+function paidTheme(date,lunarMonth,isRamadan){
+ const hour=date.getHours();
+ const month=date.getMonth();
+ const season=month>=2&&month<=4?'الربيع':month>=5&&month<=7?'الصيف':month>=8&&month<=10?'الخريف':'الشتاء';
+ const period=hour>=5&&hour<10?{name:'الصباح',bg:'#71431f',sky:'#d9863d',symbol:'☀'}:hour>=10&&hour<17?{name:'النهار',bg:'#075b82',sky:'#27a4c8',symbol:'☀'}:hour>=17&&hour<20?{name:'المساء',bg:'#742f35',sky:'#d66a3c',symbol:'◒'}:{name:'الليل',bg:'#120f32',sky:'#302060',symbol:'☾'};
+ if(isRamadan)return {background:'#17233f',sky:'#49376f',accent:'#f5c96a',label:'رمضان • '+period.name+' • '+season,symbol:'☾'};
+ return {background:period.bg,sky:period.sky,accent:LUNAR_ACCENTS[(lunarMonth-1)%12],label:period.name+' • '+season+' • الشهر القمري '+lunarMonth,symbol:period.symbol};
+}
 
 export default function App(){
  const [tab,setTab]=useState('today');
@@ -76,13 +86,11 @@ export default function App(){
  const [selectedAdhan,setSelectedAdhan]=useState(null);
  const [showAdhanVoices,setShowAdhanVoices]=useState(false);
  const [showAdhanLicense,setShowAdhanLicense]=useState(false);
-const [eventPack,setEventPack]=useState('common');
- const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
+const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [swipeStartX,setSwipeStartX]=useState(null);
  const [adhanSound,setAdhanSound]=useState(null);
  const [imsakAlertEnabled,setImsakAlertEnabled]=useState(false);
  const [iftarAlertEnabled,setIftarAlertEnabled]=useState(false);
- const [showWeeklyAd,setShowWeeklyAd]=useState(false);
  const [showPrivacy,setShowPrivacy]=useState(false);
  const [showCopyright,setShowCopyright]=useState(false);
  const [compassHeading,setCompassHeading]=useState(null);
@@ -91,46 +99,6 @@ const [eventPack,setEventPack]=useState('common');
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
  useEffect(()=>()=>{adhanSound?.release()},[adhanSound]);
-
-
- useEffect(()=>{
-   let active=true;
-
-   async function checkWeeklyAd(){
-     try{
-       const d=new Date();
-
-       const first=new Date(d);
-       const day=(d.getDay()+6)%7;
-       first.setDate(d.getDate()-day);
-       first.setHours(0,0,0,0);
-
-       const weekKey=
-         first.getFullYear()+'-'+
-         String(first.getMonth()+1).padStart(2,'0')+'-'+
-         String(first.getDate()).padStart(2,'0');
-
-       const key='alofq_ad_week_'+weekKey;
-       const count=Number(await AsyncStorage.getItem(key)||'0');
-
-       if(APP_VARIANT==='trial'&&count<2&&active){
-         await AsyncStorage.setItem(key,String(count+1));
-         setShowWeeklyAd(true);
-       }else if(active){
-         setShowWeeklyAd(false);
-       }
-     }catch(e){
-       console.log('Weekly ad check error:',e);
-     }
-   }
-
-   checkWeeklyAd();
-   return()=>{active=false};
- },[]);
-
- async function closeWeeklyAd(){
-   setShowWeeklyAd(false);
- }
 
 
  useEffect(()=>{
@@ -305,6 +273,7 @@ const [eventPack,setEventPack]=useState('common');
  const illum=illumination(jd);
  const elong=elongationDeg(jd);
  const conj=findConjunctionNear(now);
+ const theme=APP_VARIANT==='paid'?paidTheme(now,lunar.month,isRamadan):{background:'#061724',sky:'#0b2232',accent:'#f4bb52',label:'الثيم الداكن الثابت',symbol:'☾'};
 
  useEffect(()=>{
    let active=true;
@@ -467,24 +436,19 @@ const [eventPack,setEventPack]=useState('common');
  }
 
 
- return <SafeAreaView style={s.root}>
+ return <SafeAreaView style={[s.root,{backgroundColor:theme.background}]}>
+  {APP_VARIANT==='paid'&&<View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>}
   <ScrollView contentContainerStyle={s.page}>
    <View style={s.hero}>
-    <Text style={s.appName}>الأفق</Text>
+    <Text style={[s.appName,{color:theme.accent}]}>الأفق</Text>
     <Text style={s.appSub}>{APP_VARIANT==='paid'?'النسخة المدفوعة • التقويم العربي والمواقيت':'النسخة التجريبية • التقويم العربي والمواقيت'}</Text>
+    <Text style={[s.themeLabel,{color:theme.accent}]}>{theme.label}</Text>
     <Pressable style={s.locationPill} onPress={()=>useGps(true)}>
       <Text style={s.locationPin}>📍</Text>
       <Text style={s.locationText}>{locationBusy?'جاري تحديد الموقع...':locState}</Text>
     </Pressable>
    </View>
-   {tab==='today'&&<>{showWeeklyAd&&<Card title='إعلان'>
-  <Text style={s.text}>🕋 إعلان ديني موثوق</Text>
-  <Text style={s.sub}>يُخصص هذا المكان لإعلانات الحج والعمرة أو المسابقات الرمضانية والدينية الموثوقة فقط.</Text>
-  <Text style={s.sub}>لن يُفعّل أي رابط قبل التحقق من الجهة الرسمية.</Text>
-  <Pressable style={s.primary} onPress={closeWeeklyAd}>
-    <Text style={s.primaryText}>إغلاق الإعلان</Text>
-  </Pressable>
-</Card>}
+   {tab==='today'&&<>
     <View style={s.clockCard}>
   <Text style={s.week}>{weekday(now)}</Text>
   <Text style={s.hdate}>{lunar.day} {lunar.monthNameAr} {lunar.year} هـ</Text>
@@ -525,7 +489,7 @@ const [eventPack,setEventPack]=useState('common');
       <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
       <View style={s.dayGrid}>
        {Array.from({length:calendarStartWeekday},(_,i)=><View key={`lunar-blank-${i}`} style={s.dayCellBlank}/>)}
-       {calendarDays.map(day=>{const date=new Date(calendarDate);date.setUTCDate(date.getUTCDate()+(day-calendarView.day));const ld=proposedLunisolarDate(date);const ev=eventsForDay(city.country,date,ld,eventPack);const isToday=ld.year===lunar.year&&ld.month===lunar.month&&ld.day===lunar.day;return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>{setCalendarDate(date);setSelectedCalendarEvent(ev)}}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
+       {calendarDays.map(day=>{const date=new Date(calendarDate);date.setUTCDate(date.getUTCDate()+(day-calendarView.day));const ld=proposedLunisolarDate(date);const ev=eventsForDay(city.country,date,ld);const isToday=ld.year===lunar.year&&ld.month===lunar.month&&ld.day===lunar.day;return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>{setCalendarDate(date);setSelectedCalendarEvent(ev)}}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
       </View>
       {selectedCalendarEvent&&selectedCalendarEvent.length>0&&<View style={s.eventList}>{selectedCalendarEvent.map((e,i)=><Text key={i} style={s.text}>• {e.type} — {e.name}</Text>)}</View>}
      </View>
@@ -540,7 +504,7 @@ const [eventPack,setEventPack]=useState('common');
      <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
      <View style={s.dayGrid}>
       {Array.from({length:gregorianStartWeekday},(_,i)=><View key={`gregorian-blank-${i}`} style={s.dayCellBlank}/>)}
-      {gregorianDays.map(day=>{const date=new Date(gregorianDate.getFullYear(),gregorianDate.getMonth(),day);const ld=proposedLunisolarDate(date);const ev=eventsForDay(city.country,date,ld,eventPack);const isToday=date.toDateString()===now.toDateString();return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>setSelectedCalendarEvent(ev)}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
+      {gregorianDays.map(day=>{const date=new Date(gregorianDate.getFullYear(),gregorianDate.getMonth(),day);const ld=proposedLunisolarDate(date);const ev=eventsForDay(city.country,date,ld);const isToday=date.toDateString()===now.toDateString();return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>setSelectedCalendarEvent(ev)}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
      </View>
     </Card>
     <Card title='خيارات التقويم'>
@@ -579,7 +543,6 @@ const [eventPack,setEventPack]=useState('common');
      <Pressable style={s.secondaryButton} onPress={()=>setShowCopyright(v=>!v)}><Text style={s.secondaryButtonText}>{showCopyright?'إخفاء السياسة':'قراءة سياسة الطبع والتوزيع'}</Text></Pressable>
      {showCopyright&&<><Text style={s.policyText}>{COPYRIGHT_SUMMARY}</Text><Text style={s.policyMeta}>المكونات الخارجية تبقى خاضعة لتراخيص أصحابها.</Text></>}
     </Card>
-<Card title='الإعدادات العامة'><Text style={s.text}>حزمة المناسبات</Text><View style={s.wrap}>{[['common','مشتركة'],['sunni','سنية'],['shia_imami','إمامية'],['historical','تاريخية']].map(([id,n])=><Pressable key={id} style={[s.choice,eventPack===id&&s.dayCellOn]} onPress={()=>setEventPack(id)}><Text style={eventPack===id?s.dayTextOn:s.choiceText}>{n}</Text></Pressable>)}</View></Card>
    </>}
   </ScrollView>
   <View style={s.nav}>{[
@@ -597,7 +560,7 @@ const [eventPack,setEventPack]=useState('common');
 function Card({title,children}){return <View style={s.card}><Text style={s.title}>{title}</Text>{children}</View>}
 function PrayerGrid({p,onPress}){return <View style={s.pg}>{PRAYERS.map(([a,k])=><Pressable onPress={onPress} style={s.pi} key={k}><Text style={s.muted}>{a}</Text><Text style={s.gold}>{p[k]}</Text></Pressable>)}</View>}
 const s=StyleSheet.create({
- root:{flex:1,backgroundColor:'#061724',paddingTop:StatusBar.currentHeight||0},page:{padding:16,paddingBottom:95},top:{gap:6},badge:{color:'#f4bb52',fontWeight:'800',textAlign:'right'},hero:{alignItems:'center',paddingTop:20,paddingBottom:8},appName:{color:'#f4bb52',fontSize:38,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#d5dde2',fontSize:15,fontWeight:'700',textAlign:'center',marginTop:4,marginBottom:14},locationPill:{minWidth:'72%',maxWidth:'92%',paddingVertical:11,paddingHorizontal:16,borderRadius:24,borderWidth:1,borderColor:'#c89232',backgroundColor:'#0b2232',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8},locationPin:{fontSize:18},locationText:{color:'#eef4f7',fontSize:15,fontWeight:'700',textAlign:'center',flexShrink:1},loc:{color:'#b5c7d1',textAlign:'right',fontSize:12,flexShrink:1,maxWidth:'72%'},clockCard:{alignItems:'center',paddingVertical:18,paddingHorizontal:14,marginTop:14,borderRadius:22,borderWidth:1,borderColor:'#8f6827',backgroundColor:'rgba(5,17,26,0.92)'},clock:{color:'#f4bb52',fontSize:28,fontWeight:'900',marginTop:8},week:{color:'#ffffff',fontSize:20,fontWeight:'900',marginBottom:8},hdate:{textAlign:'center',fontSize:27,fontWeight:'900',color:'#fff'},gdate:{textAlign:'center',fontSize:22,fontWeight:'800',color:'#fff'},textCenter:{color:'#eef4f7',textAlign:'center',marginTop:8},prayerHint:{color:'#9fb7c5',fontSize:13,fontWeight:'700',textAlign:'right',marginBottom:10},ramadanMini:{marginTop:14,width:'100%',backgroundColor:'#b9872f',borderRadius:16,paddingVertical:12,paddingHorizontal:14,alignItems:'center'},ramadanMiniTitle:{color:'#fff',fontSize:18,fontWeight:'900'},ramadanMiniText:{color:'#fff',fontSize:13,fontWeight:'700',marginTop:4,textAlign:'center'},
+ root:{flex:1,backgroundColor:'#061724',paddingTop:StatusBar.currentHeight||0},themeSky:{position:'absolute',top:0,left:0,right:0,height:300,opacity:.72,overflow:'hidden'},themeSymbol:{position:'absolute',top:42,right:34,fontSize:82,fontWeight:'900'},themeOrb:{position:'absolute',width:240,height:240,borderRadius:120,borderWidth:2,top:115,left:-90,opacity:.28},themeLabel:{fontSize:12,fontWeight:'800',textAlign:'center',marginBottom:10},page:{padding:16,paddingBottom:95},top:{gap:6},badge:{color:'#f4bb52',fontWeight:'800',textAlign:'right'},hero:{alignItems:'center',paddingTop:20,paddingBottom:8},appName:{color:'#f4bb52',fontSize:38,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#d5dde2',fontSize:15,fontWeight:'700',textAlign:'center',marginTop:4,marginBottom:14},locationPill:{minWidth:'72%',maxWidth:'92%',paddingVertical:11,paddingHorizontal:16,borderRadius:24,borderWidth:1,borderColor:'#c89232',backgroundColor:'#0b2232',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8},locationPin:{fontSize:18},locationText:{color:'#eef4f7',fontSize:15,fontWeight:'700',textAlign:'center',flexShrink:1},loc:{color:'#b5c7d1',textAlign:'right',fontSize:12,flexShrink:1,maxWidth:'72%'},clockCard:{alignItems:'center',paddingVertical:18,paddingHorizontal:14,marginTop:14,borderRadius:22,borderWidth:1,borderColor:'#8f6827',backgroundColor:'rgba(5,17,26,0.92)'},clock:{color:'#f4bb52',fontSize:28,fontWeight:'900',marginTop:8},week:{color:'#ffffff',fontSize:20,fontWeight:'900',marginBottom:8},hdate:{textAlign:'center',fontSize:27,fontWeight:'900',color:'#fff'},gdate:{textAlign:'center',fontSize:22,fontWeight:'800',color:'#fff'},textCenter:{color:'#eef4f7',textAlign:'center',marginTop:8},prayerHint:{color:'#9fb7c5',fontSize:13,fontWeight:'700',textAlign:'right',marginBottom:10},ramadanMini:{marginTop:14,width:'100%',backgroundColor:'#b9872f',borderRadius:16,paddingVertical:12,paddingHorizontal:14,alignItems:'center'},ramadanMiniTitle:{color:'#fff',fontSize:18,fontWeight:'900'},ramadanMiniText:{color:'#fff',fontSize:13,fontWeight:'700',marginTop:4,textAlign:'center'},
  moon:{width:150,height:150,borderRadius:75,backgroundColor:'#e6c578',alignSelf:'center',marginTop:20,overflow:'hidden'},shadow:{position:'absolute',right:0,top:0,bottom:0,backgroundColor:'#0c2638',borderTopLeftRadius:75,borderBottomLeftRadius:75},phase:{color:'#fff',textAlign:'center',marginTop:12,fontWeight:'700'},sub:{color:'#91a9b7',marginTop:8,textAlign:'right',lineHeight:21},subCenter:{color:'#91a9b7',marginTop:8,textAlign:'center'},
  card:{backgroundColor:'#091d2a',borderRadius:22,padding:17,marginTop:14,borderWidth:1,borderColor:'#8f6827',shadowColor:'#000',shadowOpacity:0.22,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:4},title:{color:'#f4bb52',fontSize:19,fontWeight:'900',textAlign:'right',marginBottom:12},text:{color:'#eef4f7',textAlign:'right',lineHeight:24},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:9,borderBottomWidth:1,borderBottomColor:'#1e4055'},warn:{color:'#ffcb6b'},ok:{color:'#87d8a4'},
  pg:{flexDirection:'row',flexWrap:'wrap',gap:8},pi:{width:'31%',backgroundColor:'#091f2f',padding:12,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:'#21465e'},gold:{color:'#f4bb52',fontWeight:'900',fontSize:17,marginTop:4},muted:{color:'#99b0bd'},active:{color:'#f4bb52',fontWeight:'900'},primary:{backgroundColor:'#c89232',padding:13,borderRadius:12,marginTop:12},primaryText:{color:'#071724',fontWeight:'900',textAlign:'center'},coords:{color:'#93aab7',textAlign:'center',marginTop:10,fontSize:12},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'flex-end'},choice:{paddingVertical:9,paddingHorizontal:12,borderRadius:10,borderWidth:1,borderColor:'#31536a'},choiceOn:{backgroundColor:'#c89232',borderColor:'#c89232'},choiceText:{color:'#e8f0f4'},choiceOnText:{color:'#071724',fontWeight:'900'},
