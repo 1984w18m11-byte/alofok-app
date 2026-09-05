@@ -25,7 +25,9 @@ Notifications.setNotificationHandler({
 const fmtPct=x=>`${Math.round(x*100)}%`;
 const ADHAN_ASSETS={
  'commons-aishatu98-adhan':require('./assets/adhan/adhan-aishatu98.ogg'),
- 'commons-beautiful-adhan':require('./assets/adhan/beautiful-adhan.ogg')
+ 'commons-beautiful-adhan':require('./assets/adhan/beautiful-adhan.ogg'),
+ 'commons-andrewler-azan':require('./assets/adhan/azan-andrewler.ogg'),
+ 'commons-mecca-2013':require('./assets/adhan/mecca-adhan-2013.ogg')
 };
 const PRAYERS=[['الفجر','fajr'],['الشروق','sunrise'],['الظهر','dhuhr'],['العصر','asr'],['المغرب','maghrib'],['العشاء','isha']];
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];

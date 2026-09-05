@@ -22,3 +22,23 @@
 - يوضع الملف في `assets/audio/`.
 - يتغير `status` إلى `licensed`.
 - يتحدد `asset`.
+
+## التسجيلات المضمّنة في النسختين
+
+1. **Adhan.ogg — Aishatu98**
+   - المصدر: Wikimedia Commons.
+   - الترخيص: CC0 1.0 Universal.
+2. **Beautiful adhan.ogg — Adam-synagda**
+   - المصدر: Wikimedia Commons.
+   - الترخيص: CC0 1.0 Universal.
+3. **Azan.ogg — Andrewler**
+   - المصدر: https://commons.wikimedia.org/wiki/File:Azan.ogg
+   - الترخيص: CC BY-SA 4.0.
+   - يجب إبقاء نسبة العمل إلى Andrewler ورابط الترخيص.
+4. **Adhan, Great Mosque of Mecca (2013) — Seyfula Islam**
+   - المصدر: https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm
+   - الترخيص: CC BY 3.0.
+   - التعديل: استخراج المسار الصوتي وتحويله إلى Ogg Vorbis دون تغيير المحتوى.
+
+هذه التسجيلات متاحة في النسخة التجريبية والنسخة الربحية. لا يُضاف أي تسجيل
+جعفري أو غيره إلى الحزمة قبل وجود رخصة تجارية واضحة للملف الصوتي نفسه.
