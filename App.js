@@ -4,6 +4,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {createAudioPlayer} from 'expo-audio';
 import * as Location from 'expo-location';
 import * as Notifications from 'expo-notifications';
+import {Magnetometer} from 'expo-sensors';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import cities from './src/data/cities.seed.json';
 import nationalEvents from './src/data/national-events.json';
@@ -72,6 +73,8 @@ const [eventPack,setEventPack]=useState('common');
  const [showWeeklyAd,setShowWeeklyAd]=useState(false);
  const [showPrivacy,setShowPrivacy]=useState(false);
  const [showCopyright,setShowCopyright]=useState(false);
+ const [compassHeading,setCompassHeading]=useState(null);
+ const [compassAvailable,setCompassAvailable]=useState(true);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
 
@@ -117,6 +120,29 @@ const [eventPack,setEventPack]=useState('common');
 
 
  useEffect(()=>{useGps(false)},[]);
+
+ useEffect(()=>{
+   let subscription;
+   let active=true;
+   async function startCompass(){
+     try{
+       const available=await Magnetometer.isAvailableAsync();
+       if(!active)return;
+       setCompassAvailable(available);
+       if(!available)return;
+       Magnetometer.setUpdateInterval(250);
+       subscription=Magnetometer.addListener(({x,y})=>{
+         let heading=Math.atan2(y,x)*180/Math.PI;
+         heading=(heading+360)%360;
+         setCompassHeading(heading);
+       });
+     }catch(e){
+       if(active)setCompassAvailable(false);
+     }
+   }
+   if(tab==='qibla')startCompass();
+   return()=>{active=false;subscription?.remove()};
+ },[tab]);
 
  async function useGps(showMessage=true){
    try{
@@ -225,6 +251,8 @@ const [eventPack,setEventPack]=useState('common');
 
    return (Math.atan2(y,x)*180/Math.PI+360)%360;
  },[coords.lat,coords.lon]);
+ const qiblaDelta=compassHeading===null?0:((qiblaBearing-compassHeading+540)%360)-180;
+ const isFacingQibla=compassHeading!==null&&Math.abs(qiblaDelta)<=5;
 
  const jd=jdFromDate(now);
  const illum=illumination(jd);
@@ -469,7 +497,19 @@ const [eventPack,setEventPack]=useState('common');
     <Card title='مواقيت الصلاة'><PrayerGrid p={prayers}/></Card>
     <Card title='إعداد الأذان'><View style={s.row}><Text style={s.text}>تشغيل تنبيهات الصلاة</Text><Switch value={adhanEnabled} onValueChange={setAdhanEnabled}/></View><Pressable style={s.primary} onPress={()=>setShowAdhanVoices(showAdhanVoices===false)}><Text style={s.primaryText}>🔊 اختيار صوت الأذان</Text></Pressable>{showAdhanVoices&&packs.map(p=><Pressable key={p.id} style={s.row} onPress={async()=>{setSelectedAdhan(p);await AsyncStorage.setItem('alofq_selected_adhan_id',p.id);await AsyncStorage.setItem('alofq_adhan_manual','1');setShowAdhanVoices(false);setShowAdhanLicense(false);previewAdhan(p)}}><Text style={s.text}>{p.display_ar}</Text></Pressable>)}{selectedAdhan&&<><View style={s.row}><Text style={s.text}>{selectedAdhan.display_ar}</Text><Pressable style={s.choice} onPress={()=>setShowAdhanLicense(showAdhanLicense===false)}><Text style={s.choiceText}>الترخيص</Text></Pressable></View>{showAdhanLicense&&<Text style={selectedAdhan.status==='licensed'?s.ok:s.warn}>{selectedAdhan.status==='licensed'?'✓ الترخيص: '+(selectedAdhan.license||'غير محدد')+' • المصدر: '+(selectedAdhan.source||'غير محدد'):(selectedAdhan.note_ar||'هذا التسجيل يحتاج إلى إثبات تصريح قبل إضافته للتطبيق.')}</Text>}</>}</Card>
    </>}
-   {tab==='qibla'&&<><Card title='اتجاه القبلة'><Text style={s.hdate}>🕋 القبلة</Text><Text style={s.textCenter}>الاتجاه من موقعك الحالي</Text><Text style={[s.gold,{fontSize:28,textAlign:'center',marginTop:12}]}>{qiblaBearing.toFixed(1)}°</Text><Text style={s.subCenter}>حرّك الهاتف حتى يشير اتجاهك إلى هذه الدرجة في البوصلة.</Text><Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>{locationBusy?'جاري تحديث الموقع...':'📍 تحديث موقعي'}</Text></Pressable><Text style={s.coords}>{locState}</Text></Card></>}
+   {tab==='qibla'&&<><Card title='بوصلة القبلة'>
+    <Text style={s.textCenter}>ضع الهاتف بشكل أفقي وحرّكه على شكل رقم 8 للمعايرة.</Text>
+    <View style={[s.compass,isFacingQibla&&s.compassAligned]}>
+     <Text style={s.compassNorth}>ش</Text>
+     <View style={[s.qiblaNeedle,{transform:[{rotate:`${qiblaDelta}deg`}]}]}><Text style={s.qiblaArrow}>▲</Text><Text style={s.kaaba}>🕋</Text></View>
+     <View style={s.compassCenter}/>
+    </View>
+    {!compassAvailable?<Text style={s.warn}>مستشعر البوصلة غير متاح في هذا الهاتف.</Text>:compassHeading===null?<Text style={s.subCenter}>جاري تشغيل مستشعر البوصلة…</Text>:<>
+     <Text style={[s.qiblaStatus,isFacingQibla&&s.qiblaStatusAligned]}>{isFacingQibla?'✓ أنت باتجاه القبلة':'دوّر الهاتف باتجاه السهم'}</Text>
+     <Text style={s.subCenter}>اتجاه الهاتف: {compassHeading.toFixed(0)}° • القبلة: {qiblaBearing.toFixed(1)}°</Text>
+    </>}
+    <Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>{locationBusy?'جاري تحديث الموقع...':'📍 تحديث موقعي'}</Text></Pressable><Text style={s.coords}>{locState}</Text>
+   </Card></>}
 {tab==='settings'&&<>
     <Card title='تحديد الموقع'><Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>📍 تحديد موقعي تلقائيًا GPS</Text></Pressable><Text style={s.sub}>{locState}</Text></Card>
     <Card title='سياسة الخصوصية'>
@@ -504,5 +544,5 @@ const s=StyleSheet.create({
  moon:{width:150,height:150,borderRadius:75,backgroundColor:'#e6c578',alignSelf:'center',marginTop:20,overflow:'hidden'},shadow:{position:'absolute',right:0,top:0,bottom:0,backgroundColor:'#0c2638',borderTopLeftRadius:75,borderBottomLeftRadius:75},phase:{color:'#fff',textAlign:'center',marginTop:12,fontWeight:'700'},sub:{color:'#91a9b7',marginTop:8,textAlign:'right',lineHeight:21},subCenter:{color:'#91a9b7',marginTop:8,textAlign:'center'},
  card:{backgroundColor:'#091d2a',borderRadius:22,padding:17,marginTop:14,borderWidth:1,borderColor:'#8f6827',shadowColor:'#000',shadowOpacity:0.22,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:4},title:{color:'#f4bb52',fontSize:19,fontWeight:'900',textAlign:'right',marginBottom:12},text:{color:'#eef4f7',textAlign:'right',lineHeight:24},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:9,borderBottomWidth:1,borderBottomColor:'#1e4055'},warn:{color:'#ffcb6b'},ok:{color:'#87d8a4'},
  pg:{flexDirection:'row',flexWrap:'wrap',gap:8},pi:{width:'31%',backgroundColor:'#091f2f',padding:12,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:'#21465e'},gold:{color:'#f4bb52',fontWeight:'900',fontSize:17,marginTop:4},muted:{color:'#99b0bd'},active:{color:'#f4bb52',fontWeight:'900'},primary:{backgroundColor:'#c89232',padding:13,borderRadius:12,marginTop:12},primaryText:{color:'#071724',fontWeight:'900',textAlign:'center'},coords:{color:'#93aab7',textAlign:'center',marginTop:10,fontSize:12},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'flex-end'},choice:{paddingVertical:9,paddingHorizontal:12,borderRadius:10,borderWidth:1,borderColor:'#31536a'},choiceOn:{backgroundColor:'#c89232',borderColor:'#c89232'},choiceText:{color:'#e8f0f4'},choiceOnText:{color:'#071724',fontWeight:'900'},
- calendarTitle:{color:'#fff',fontSize:23,fontWeight:'900',textAlign:'center',marginBottom:14},calendarControls:{flexDirection:'row-reverse',alignItems:'stretch',gap:7},calendarButton:{flex:1,minHeight:46,borderWidth:1,borderColor:'#8f6827',borderRadius:12,alignItems:'center',justifyContent:'center',paddingHorizontal:5},calendarButtonText:{color:'#f4bb52',fontSize:12,fontWeight:'800',textAlign:'center'},todayButton:{minWidth:68,minHeight:46,backgroundColor:'#c89232',borderRadius:12,alignItems:'center',justifyContent:'center'},todayButtonText:{color:'#071724',fontWeight:'900'},weekRow:{flexDirection:'row',marginTop:16,marginBottom:4},weekDay:{width:'14.285%',color:'#9fb7c5',fontSize:10,fontWeight:'800',textAlign:'center'},dayGrid:{flexDirection:'row',flexWrap:'wrap',marginTop:4},dayCell:{width:'14.285%',height:46,borderRadius:10,alignItems:'center',justifyContent:'center'},dayCellBlank:{width:'14.285%',height:46},eventCell:{backgroundColor:'rgba(200,146,50,0.16)'},todayCell:{backgroundColor:'#c89232'},dayText:{color:'#eef4f7',fontWeight:'700'},eventDayText:{color:'#f4bb52',fontWeight:'900'},todayDayText:{color:'#071724',fontWeight:'900'},eventDot:{width:4,height:4,borderRadius:2,backgroundColor:'#f4bb52',marginTop:3},eventList:{marginTop:12,paddingTop:10,borderTopWidth:1,borderTopColor:'#21465e'},secondaryButton:{borderWidth:1,borderColor:'#c89232',padding:13,borderRadius:12,marginTop:10},secondaryButtonText:{color:'#f4bb52',fontWeight:'900',textAlign:'center'},policyText:{color:'#dbe6ec',textAlign:'right',lineHeight:25,marginTop:14},policyMeta:{color:'#91a9b7',textAlign:'right',lineHeight:21,marginTop:8,fontSize:12},backButton:{alignSelf:'flex-end',borderWidth:1,borderColor:'#8f6827',borderRadius:12,paddingVertical:10,paddingHorizontal:14,marginTop:8},backButtonText:{color:'#f4bb52',fontWeight:'900'},dayCellOn:{backgroundColor:'#c89232',borderColor:'#c89232'},dayTextOn:{color:'#071724',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:76,backgroundColor:'#061520',borderTopWidth:1,borderTopColor:'#21465e',flexDirection:'row',paddingTop:6},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#7f98a6',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4bb52',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:12,paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#21465e'},prayerLinkText:{color:'#f4bb52',fontSize:14,fontWeight:'800'}
+ calendarTitle:{color:'#fff',fontSize:23,fontWeight:'900',textAlign:'center',marginBottom:14},calendarControls:{flexDirection:'row-reverse',alignItems:'stretch',gap:7},calendarButton:{flex:1,minHeight:46,borderWidth:1,borderColor:'#8f6827',borderRadius:12,alignItems:'center',justifyContent:'center',paddingHorizontal:5},calendarButtonText:{color:'#f4bb52',fontSize:12,fontWeight:'800',textAlign:'center'},todayButton:{minWidth:68,minHeight:46,backgroundColor:'#c89232',borderRadius:12,alignItems:'center',justifyContent:'center'},todayButtonText:{color:'#071724',fontWeight:'900'},weekRow:{flexDirection:'row',marginTop:16,marginBottom:4},weekDay:{width:'14.285%',color:'#9fb7c5',fontSize:10,fontWeight:'800',textAlign:'center'},dayGrid:{flexDirection:'row',flexWrap:'wrap',marginTop:4},dayCell:{width:'14.285%',height:46,borderRadius:10,alignItems:'center',justifyContent:'center'},dayCellBlank:{width:'14.285%',height:46},eventCell:{backgroundColor:'rgba(200,146,50,0.16)'},todayCell:{backgroundColor:'#c89232'},dayText:{color:'#eef4f7',fontWeight:'700'},eventDayText:{color:'#f4bb52',fontWeight:'900'},todayDayText:{color:'#071724',fontWeight:'900'},eventDot:{width:4,height:4,borderRadius:2,backgroundColor:'#f4bb52',marginTop:3},eventList:{marginTop:12,paddingTop:10,borderTopWidth:1,borderTopColor:'#21465e'},secondaryButton:{borderWidth:1,borderColor:'#c89232',padding:13,borderRadius:12,marginTop:10},secondaryButtonText:{color:'#f4bb52',fontWeight:'900',textAlign:'center'},policyText:{color:'#dbe6ec',textAlign:'right',lineHeight:25,marginTop:14},policyMeta:{color:'#91a9b7',textAlign:'right',lineHeight:21,marginTop:8,fontSize:12},compass:{width:260,height:260,borderRadius:130,borderWidth:4,borderColor:'#c89232',backgroundColor:'#061520',alignSelf:'center',marginTop:20,alignItems:'center',justifyContent:'center'},compassAligned:{borderColor:'#61d68a',shadowColor:'#61d68a',shadowOpacity:.7,shadowRadius:14,elevation:8},compassNorth:{position:'absolute',top:12,color:'#f4bb52',fontSize:18,fontWeight:'900'},qiblaNeedle:{position:'absolute',width:54,height:224,alignItems:'center',justifyContent:'space-between',paddingVertical:5},qiblaArrow:{color:'#f4bb52',fontSize:38,lineHeight:42},kaaba:{fontSize:30},compassCenter:{width:20,height:20,borderRadius:10,backgroundColor:'#f4bb52',borderWidth:4,borderColor:'#fff'},qiblaStatus:{color:'#f4bb52',fontWeight:'900',fontSize:18,textAlign:'center',marginTop:16},qiblaStatusAligned:{color:'#61d68a'},backButton:{alignSelf:'flex-end',borderWidth:1,borderColor:'#8f6827',borderRadius:12,paddingVertical:10,paddingHorizontal:14,marginTop:8},backButtonText:{color:'#f4bb52',fontWeight:'900'},dayCellOn:{backgroundColor:'#c89232',borderColor:'#c89232'},dayTextOn:{color:'#071724',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:76,backgroundColor:'#061520',borderTopWidth:1,borderTopColor:'#21465e',flexDirection:'row',paddingTop:6},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#7f98a6',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4bb52',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:12,paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#21465e'},prayerLinkText:{color:'#f4bb52',fontSize:14,fontWeight:'800'}
 });
