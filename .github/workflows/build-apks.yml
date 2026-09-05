@@ -1,0 +1,65 @@
+name: Build installable Android APKs
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-apk:
+    name: Build ${{ matrix.variant }} APK
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - variant: trial
+            filename: alofok-trial.apk
+          - variant: paid
+            filename: alofok-paid.apk
+
+    env:
+      APP_VARIANT: ${{ matrix.variant }}
+      EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
+      EXPO_NO_TELEMETRY: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --no-install
+
+      - name: Build signed debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Prepare APK
+        run: |
+          mkdir -p deliverables
+          cp android/app/build/outputs/apk/debug/app-debug.apk "deliverables/${{ matrix.filename }}"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: alofok-${{ matrix.variant }}-apk
+          path: deliverables/${{ matrix.filename }}
+          if-no-files-found: error
+          retention-days: 14
