@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useState} from 'react';
-import {View,Text,ScrollView,Pressable,StyleSheet,Switch,Alert,StatusBar,Platform} from 'react-native';
+import {View,Text,ScrollView,Pressable,StyleSheet,Switch,Alert,Platform} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {createAudioPlayer} from 'expo-audio';
 import * as Location from 'expo-location';
@@ -43,6 +43,17 @@ function formatGregorian(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'lon
 function weekday(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'long'}).format(d)}
 function gregorianMonthTitle(d){return new Intl.DateTimeFormat('ar-IQ',{month:'long',year:'numeric'}).format(d)}
 function shiftGregorianMonth(date,amount){const d=new Date(date);d.setDate(1);d.setMonth(d.getMonth()+amount);return d}
+function civilDateForTimeZone(date,timeZone){
+ try{
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
+  const values=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  return new Date(Date.UTC(Number(values.year),Number(values.month)-1,Number(values.day),12));
+ }catch(e){return new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate(),12))}
+}
+function civilDayKey(date,timeZone){
+ try{return new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(date)}
+ catch(e){return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`}
+}
 function timeZoneOffsetMinutes(date,timeZone){
  try{
   const parts=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
@@ -96,9 +107,32 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [compassHeading,setCompassHeading]=useState(null);
  const [compassAvailable,setCompassAvailable]=useState(true);
  const [showCityChoices,setShowCityChoices]=useState(false);
+ const dayKey=civilDayKey(now,city?.tz);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
  useEffect(()=>()=>{adhanSound?.release()},[adhanSound]);
+
+ useEffect(()=>{
+  let active=true;
+  async function restoreLocationAndMethod(){
+   try{
+    const [cityId,savedMethod]=await Promise.all([
+     AsyncStorage.getItem('alofq_city_id'),
+     AsyncStorage.getItem('alofq_prayer_method')
+    ]);
+    if(!active)return;
+    const savedCity=cities.find(x=>x.id===cityId);
+    if(savedCity){
+     setCity(savedCity);
+     setCoords({lat:savedCity.lat,lon:savedCity.lon});
+     setLocState(`${savedCity.name_ar} • محفوظ`);
+    }
+    if(PRAYER_METHODS.some(([id])=>id===savedMethod))setMethod(savedMethod);
+   }catch(e){console.log('Saved settings restore error:',e)}
+  }
+  restoreLocationAndMethod();
+  return()=>{active=false};
+ },[]);
 
 
  useEffect(()=>{
@@ -193,6 +227,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
      setCity(nearest);
      setLocState(label);
+     try{await AsyncStorage.setItem('alofq_city_id',nearest.id)}catch(e){console.log('GPS city save error:',e)}
    }catch(e){
      setLocState('تعذر قراءة GPS');
      if(showMessage) Alert.alert('تعذر تحديد الموقع','تأكد من تشغيل GPS ومنح الإذن للتطبيق.');
@@ -201,32 +236,34 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    }
  }
 
- function chooseCity(id){
+ async function chooseCity(id){
    const c=cities.find(x=>x.id===id);
    if(!c)return;
    setCity(c);
    setCoords({lat:c.lat,lon:c.lon});
    setLocState(`${c.name_ar} • اختيار يدوي`);
+   try{await AsyncStorage.setItem('alofq_city_id',c.id)}catch(e){console.log('City save error:',e)}
  }
 
  const tzOffsetMin=timeZoneOffsetMinutes(now,city?.tz);
+ const prayerCalcDate=useMemo(()=>civilDateForTimeZone(now,city?.tz),[dayKey,city?.tz]);
 
  const prayerData=useMemo(()=>calculatePrayerTimes({
-   date:new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),12)),
+   date:prayerCalcDate,
    lat:coords.lat,
    lon:coords.lon,
    tzOffsetMin,
    method,
    asrFactor:1
- }),[coords.lat,coords.lon,now.toDateString(),method,tzOffsetMin]);
+ }),[coords.lat,coords.lon,prayerCalcDate,method,tzOffsetMin]);
  const prayers=prayerData.formatted;
 
  const fastingData=useMemo(()=>calculateFastingTimes({
-   date:new Date(Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate(),12)),
+   date:prayerCalcDate,
    lat:coords.lat,
    lon:coords.lon,
    tzOffsetMin
- }),[coords.lat,coords.lon,now.toDateString(),tzOffsetMin]);
+ }),[coords.lat,coords.lon,prayerCalcDate,tzOffsetMin]);
 
  const fasting=fastingData.formatted;
 
@@ -284,14 +321,14 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        const savedId=await AsyncStorage.getItem('alofq_selected_adhan_id');
 
        if(manual==='1'&&savedId){
-         const saved=adhanRegistry.find(p=>p.id===savedId&&p.status==='licensed');
+         const saved=adhanRegistry.find(p=>p.id===savedId&&p.status==='licensed'&&ADHAN_ASSETS[p.id]);
          if(saved&&active){
            setSelectedAdhan(saved);
            return;
          }
        }
 
-       const licensed=adhanRegistry.filter(p=>p.status==='licensed');
+       const licensed=adhanRegistry.filter(p=>p.status==='licensed'&&ADHAN_ASSETS[p.id]);
        if(!licensed.length)return;
 
        const country=(city?.country||'').toUpperCase();
@@ -331,7 +368,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     if(permission.status!=='granted')return;
     const prayerNames={fajr:'الفجر',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء'};
     for(const [key,title] of Object.entries(prayerNames)){
-     const date=utcDateFromMinutes(now,prayerData.rawMinutesUtc[key]);
+     const date=utcDateFromMinutes(prayerCalcDate,prayerData.rawMinutesUtc[key]);
      if(!date||date.getTime()<=Date.now())continue;
      await Notifications.scheduleNotificationAsync({
       content:{title:`حان وقت صلاة ${title}`,body:'افتح تطبيق الأفق لمشاهدة التفاصيل والاستماع إلى صوت الأذان المختار.',sound:'default',data:{kind:'alofq-prayer',prayer:key}},
@@ -342,7 +379,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   }
   setupPrayerNotifications();
   return()=>{active=false};
- },[adhanEnabled,now.toDateString(),prayerData,selectedAdhan?.id]);
+ },[adhanEnabled,dayKey,prayerData,prayerCalcDate]);
 
  useEffect(()=>{
    let active=true;
@@ -373,8 +410,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
        if(!isRamadan)return;
 
-       const imsakDate=utcDateFromMinutes(now,fastingData.rawMinutesUtc.imsak);
-       const iftarDate=utcDateFromMinutes(now,fastingData.rawMinutesUtc.iftar);
+       const imsakDate=utcDateFromMinutes(prayerCalcDate,fastingData.rawMinutesUtc.imsak);
+       const iftarDate=utcDateFromMinutes(prayerCalcDate,fastingData.rawMinutesUtc.iftar);
 
        if(imsakAlertEnabled&&imsakDate&&imsakDate>Date.now()){
          await Notifications.scheduleNotificationAsync({
@@ -420,10 +457,11 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    imsakAlertEnabled,
    iftarAlertEnabled,
    isRamadan,
-   now.toDateString()
+   dayKey,
+   prayerCalcDate
  ]);
 
- const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset);
+ const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]);
  async function previewAdhan(pack){
   try{
    if(adhanSound){adhanSound.release();setAdhanSound(null)}
@@ -497,15 +535,16 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <Card title='التقويم الميلادي'>
      <Text style={s.calendarTitle}>{gregorianMonthTitle(gregorianDate)}</Text>
      <View style={s.calendarControls}>
-      <Pressable style={s.calendarButton} onPress={()=>setGregorianDate(d=>shiftGregorianMonth(d,-1))}><Text style={s.calendarButtonText}>الشهر السابق</Text></Pressable>
-      <Pressable style={s.todayButton} onPress={()=>setGregorianDate(new Date())}><Text style={s.todayButtonText}>اليوم</Text></Pressable>
-      <Pressable style={s.calendarButton} onPress={()=>setGregorianDate(d=>shiftGregorianMonth(d,1))}><Text style={s.calendarButtonText}>الشهر القادم</Text></Pressable>
+      <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,-1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>الشهر السابق</Text></Pressable>
+      <Pressable style={s.todayButton} onPress={()=>{setGregorianDate(new Date());setSelectedCalendarEvent(null)}}><Text style={s.todayButtonText}>اليوم</Text></Pressable>
+      <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>الشهر القادم</Text></Pressable>
      </View>
      <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
      <View style={s.dayGrid}>
       {Array.from({length:gregorianStartWeekday},(_,i)=><View key={`gregorian-blank-${i}`} style={s.dayCellBlank}/>)}
       {gregorianDays.map(day=>{const date=new Date(gregorianDate.getFullYear(),gregorianDate.getMonth(),day);const ld=proposedLunisolarDate(date);const ev=eventsForDay(city.country,date,ld);const isToday=date.toDateString()===now.toDateString();return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>setSelectedCalendarEvent(ev)}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
      </View>
+     {selectedCalendarEvent&&selectedCalendarEvent.length>0&&<View style={s.eventList}>{selectedCalendarEvent.map((e,i)=><Text key={`${e.type}-${e.name}-${i}`} style={s.text}>• {e.type} — {e.name}</Text>)}</View>}
     </Card>
     <Card title='خيارات التقويم'>
      <Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>{locationBusy?'جاري تحديد الموقع...':'📍 تحديث الموقع'}</Text></Pressable>
@@ -532,7 +571,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    </Card></>}
 {tab==='settings'&&<>
     <Card title='تحديد الموقع'><Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>📍 تحديد موقعي تلقائيًا GPS</Text></Pressable><Text style={s.sub}>{locState}</Text><Pressable style={s.secondaryButton} onPress={()=>setShowCityChoices(v=>!v)}><Text style={s.secondaryButtonText}>{showCityChoices?'إخفاء المدن':'اختيار المدينة يدويًا'}</Text></Pressable>{showCityChoices&&cities.map(item=><Pressable key={item.id} style={[s.cityChoice,item.id===city?.id&&s.cityChoiceActive]} onPress={()=>{chooseCity(item.id);setShowCityChoices(false)}}><Text style={item.id===city?.id?s.cityChoiceTextActive:s.cityChoiceText}>{item.name_ar}</Text></Pressable>)}</Card>
-    <Card title='طريقة حساب مواقيت الصلاة'><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={()=>setMethod(id)}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></Card>
+    <Card title='طريقة حساب مواقيت الصلاة'><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={async()=>{setMethod(id);try{await AsyncStorage.setItem('alofq_prayer_method',id)}catch(e){console.log('Method save error:',e)}}}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></Card>
     <Card title='سياسة الخصوصية'>
      <Text style={s.text}>الموقع للمواقيت والقبلة فقط، والتفضيلات محفوظة على جهازك.</Text>
      <Pressable style={s.secondaryButton} onPress={()=>setShowPrivacy(v=>!v)}><Text style={s.secondaryButtonText}>{showPrivacy?'إخفاء السياسة':'قراءة سياسة الخصوصية'}</Text></Pressable>
@@ -560,7 +599,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 function Card({title,children}){return <View style={s.card}><Text style={s.title}>{title}</Text>{children}</View>}
 function PrayerGrid({p,onPress}){return <View style={s.pg}>{PRAYERS.map(([a,k])=><Pressable onPress={onPress} style={s.pi} key={k}><Text style={s.muted}>{a}</Text><Text style={s.gold}>{p[k]}</Text></Pressable>)}</View>}
 const s=StyleSheet.create({
- root:{flex:1,backgroundColor:'#061724',paddingTop:StatusBar.currentHeight||0},themeSky:{position:'absolute',top:0,left:0,right:0,height:300,opacity:.72,overflow:'hidden'},themeSymbol:{position:'absolute',top:42,right:34,fontSize:82,fontWeight:'900'},themeOrb:{position:'absolute',width:240,height:240,borderRadius:120,borderWidth:2,top:115,left:-90,opacity:.28},themeLabel:{fontSize:12,fontWeight:'800',textAlign:'center',marginBottom:10},page:{padding:16,paddingBottom:95},top:{gap:6},badge:{color:'#f4bb52',fontWeight:'800',textAlign:'right'},hero:{alignItems:'center',paddingTop:20,paddingBottom:8},appName:{color:'#f4bb52',fontSize:38,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#d5dde2',fontSize:15,fontWeight:'700',textAlign:'center',marginTop:4,marginBottom:14},locationPill:{minWidth:'72%',maxWidth:'92%',paddingVertical:11,paddingHorizontal:16,borderRadius:24,borderWidth:1,borderColor:'#c89232',backgroundColor:'#0b2232',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8},locationPin:{fontSize:18},locationText:{color:'#eef4f7',fontSize:15,fontWeight:'700',textAlign:'center',flexShrink:1},loc:{color:'#b5c7d1',textAlign:'right',fontSize:12,flexShrink:1,maxWidth:'72%'},clockCard:{alignItems:'center',paddingVertical:18,paddingHorizontal:14,marginTop:14,borderRadius:22,borderWidth:1,borderColor:'#8f6827',backgroundColor:'rgba(5,17,26,0.92)'},clock:{color:'#f4bb52',fontSize:28,fontWeight:'900',marginTop:8},week:{color:'#ffffff',fontSize:20,fontWeight:'900',marginBottom:8},hdate:{textAlign:'center',fontSize:27,fontWeight:'900',color:'#fff'},gdate:{textAlign:'center',fontSize:22,fontWeight:'800',color:'#fff'},textCenter:{color:'#eef4f7',textAlign:'center',marginTop:8},prayerHint:{color:'#9fb7c5',fontSize:13,fontWeight:'700',textAlign:'right',marginBottom:10},ramadanMini:{marginTop:14,width:'100%',backgroundColor:'#b9872f',borderRadius:16,paddingVertical:12,paddingHorizontal:14,alignItems:'center'},ramadanMiniTitle:{color:'#fff',fontSize:18,fontWeight:'900'},ramadanMiniText:{color:'#fff',fontSize:13,fontWeight:'700',marginTop:4,textAlign:'center'},
+ root:{flex:1,backgroundColor:'#061724'},themeSky:{position:'absolute',top:0,left:0,right:0,height:300,opacity:.72,overflow:'hidden'},themeSymbol:{position:'absolute',top:42,right:34,fontSize:82,fontWeight:'900'},themeOrb:{position:'absolute',width:240,height:240,borderRadius:120,borderWidth:2,top:115,left:-90,opacity:.28},themeLabel:{fontSize:12,fontWeight:'800',textAlign:'center',marginBottom:10},page:{padding:16,paddingBottom:104},top:{gap:6},badge:{color:'#f4bb52',fontWeight:'800',textAlign:'right'},hero:{alignItems:'center',paddingTop:12,paddingBottom:8},appName:{color:'#f4bb52',fontSize:38,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#d5dde2',fontSize:15,fontWeight:'700',textAlign:'center',marginTop:4,marginBottom:14},locationPill:{minWidth:'72%',maxWidth:'92%',minHeight:48,paddingVertical:11,paddingHorizontal:16,borderRadius:24,borderWidth:1,borderColor:'#c89232',backgroundColor:'#0b2232',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:8},locationPin:{fontSize:18},locationText:{color:'#eef4f7',fontSize:15,fontWeight:'700',textAlign:'center',flexShrink:1},loc:{color:'#b5c7d1',textAlign:'right',fontSize:12,flexShrink:1,maxWidth:'72%'},clockCard:{alignItems:'center',paddingVertical:18,paddingHorizontal:14,marginTop:14,borderRadius:22,borderWidth:1,borderColor:'#8f6827',backgroundColor:'rgba(5,17,26,0.92)'},clock:{color:'#f4bb52',fontSize:28,fontWeight:'900',marginTop:8},week:{color:'#ffffff',fontSize:20,fontWeight:'900',marginBottom:8},hdate:{textAlign:'center',fontSize:27,fontWeight:'900',color:'#fff'},gdate:{textAlign:'center',fontSize:20,fontWeight:'800',color:'#fff'},textCenter:{color:'#eef4f7',textAlign:'center',marginTop:8},prayerHint:{color:'#9fb7c5',fontSize:13,fontWeight:'700',textAlign:'right',marginBottom:10},ramadanMini:{marginTop:14,width:'100%',backgroundColor:'#b9872f',borderRadius:16,paddingVertical:12,paddingHorizontal:14,alignItems:'center'},ramadanMiniTitle:{color:'#fff',fontSize:18,fontWeight:'900'},ramadanMiniText:{color:'#fff',fontSize:13,fontWeight:'700',marginTop:4,textAlign:'center'},
  moon:{width:150,height:150,borderRadius:75,backgroundColor:'#e6c578',alignSelf:'center',marginTop:20,overflow:'hidden'},shadow:{position:'absolute',right:0,top:0,bottom:0,backgroundColor:'#0c2638',borderTopLeftRadius:75,borderBottomLeftRadius:75},phase:{color:'#fff',textAlign:'center',marginTop:12,fontWeight:'700'},sub:{color:'#91a9b7',marginTop:8,textAlign:'right',lineHeight:21},subCenter:{color:'#91a9b7',marginTop:8,textAlign:'center'},
  card:{backgroundColor:'#091d2a',borderRadius:22,padding:17,marginTop:14,borderWidth:1,borderColor:'#8f6827',shadowColor:'#000',shadowOpacity:0.22,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:4},title:{color:'#f4bb52',fontSize:19,fontWeight:'900',textAlign:'right',marginBottom:12},text:{color:'#eef4f7',textAlign:'right',lineHeight:24},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:9,borderBottomWidth:1,borderBottomColor:'#1e4055'},warn:{color:'#ffcb6b'},ok:{color:'#87d8a4'},
  pg:{flexDirection:'row',flexWrap:'wrap',gap:8},pi:{width:'31%',backgroundColor:'#091f2f',padding:12,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:'#21465e'},gold:{color:'#f4bb52',fontWeight:'900',fontSize:17,marginTop:4},muted:{color:'#99b0bd'},active:{color:'#f4bb52',fontWeight:'900'},primary:{backgroundColor:'#c89232',padding:13,borderRadius:12,marginTop:12},primaryText:{color:'#071724',fontWeight:'900',textAlign:'center'},coords:{color:'#93aab7',textAlign:'center',marginTop:10,fontSize:12},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'flex-end'},choice:{paddingVertical:9,paddingHorizontal:12,borderRadius:10,borderWidth:1,borderColor:'#31536a'},choiceOn:{backgroundColor:'#c89232',borderColor:'#c89232'},choiceText:{color:'#e8f0f4'},choiceOnText:{color:'#071724',fontWeight:'900'},
