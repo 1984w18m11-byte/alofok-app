@@ -2,6 +2,9 @@ name: Validate and build Android APK manually
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
 
 permissions:
   contents: read
