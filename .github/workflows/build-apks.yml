@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - main
-    paths:
-      - ".github/workflows/build-apks.yml"
 
 permissions:
   contents: read
@@ -48,8 +46,36 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Repair PNG checksums
+        run: |
+          python3 - <<'PY'
+          import pathlib, struct, zlib
+          for name in ('assets/icon-trial.png','assets/icon-paid.png'):
+              path=pathlib.Path(name)
+              data=path.read_bytes()
+              if data[:8] != b'\x89PNG\r\n\x1a\n':
+                  raise SystemExit(f'{name}: invalid PNG signature')
+              out=bytearray(data[:8])
+              pos=8
+              while pos < len(data):
+                  length=struct.unpack('>I',data[pos:pos+4])[0]
+                  kind=data[pos+4:pos+8]
+                  payload=data[pos+8:pos+8+length]
+                  if len(payload) != length:
+                      raise SystemExit(f'{name}: truncated PNG chunk')
+                  out += struct.pack('>I',length)+kind+payload+struct.pack('>I',zlib.crc32(kind+payload)&0xffffffff)
+                  pos += 12+length
+                  if kind == b'IEND':
+                      break
+              path.write_bytes(out)
+              print(f'Repaired {name}')
+          PY
+
+      - name: Validate Expo configuration
+        run: npx expo config --type public
+
       - name: Generate Android project
-        run: npx expo prebuild --platform android --no-install
+        run: npx expo prebuild --platform android --no-install --clean
 
       - name: Build signed debug APK
         working-directory: android
