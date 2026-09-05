@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "تقويم الأفق",
+    "slug": "horizon-calendar-v2",
+    "version": "0.2.1",
+    "orientation": "portrait",
+    "scheme": "horizoncalendar",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.horizon.calendar",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "نستخدم موقعك لحساب مواقيت الصلاة ورؤية الهلال محلياً.",
+        "NSUserNotificationUsageDescription": "نستخدم الإشعارات لتذكيرك بالصلاة والمناسبات."
+      }
+    },
+    "android": {
+      "package": "com.horizon.calendar",
+      "permissions": [
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_FINE_LOCATION",
+        "POST_NOTIFICATIONS",
+        "VIBRATE",
+        "SCHEDULE_EXACT_ALARM",
+        "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ],
+      "versionCode": 2
+    },
+    "plugins": [
+      "expo-location",
+      [
+        "expo-notifications",
+        {
+          "sounds": []
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "524b2de5-2dd1-4be8-b073-9a87fa6137b7"
+      }
+    }
+  }
+}

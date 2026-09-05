@@ -1,0 +1,97 @@
+[
+  {
+    "id": "muharram1",
+    "m": 1,
+    "d": 1,
+    "ar": "أول محرم",
+    "pack": "common",
+    "notifyBefore": true
+  },
+  {
+    "id": "ashura",
+    "m": 1,
+    "d": 10,
+    "ar": "عاشوراء",
+    "pack": "common",
+    "notifyBefore": true
+  },
+  {
+    "id": "ramadan1",
+    "m": 9,
+    "d": 1,
+    "ar": "أول رمضان",
+    "pack": "common",
+    "notifyBefore": true
+  },
+  {
+    "id": "qadr",
+    "m": 9,
+    "range": [
+      21,
+      29
+    ],
+    "ar": "ليالي القدر المحتملة",
+    "pack": "common",
+    "note": "range"
+  },
+  {
+    "id": "eidfitr",
+    "m": 10,
+    "d": 1,
+    "ar": "عيد الفطر المبارك",
+    "pack": "common",
+    "notifyBefore": true
+  },
+  {
+    "id": "arafah",
+    "m": 12,
+    "d": 9,
+    "ar": "يوم عرفة",
+    "pack": "common",
+    "notifyBefore": true
+  },
+  {
+    "id": "eidadha",
+    "m": 12,
+    "d": 10,
+    "ar": "عيد الأضحى المبارك",
+    "pack": "common",
+    "notifyBefore": true
+  },
+  {
+    "id": "ali_birth",
+    "m": 7,
+    "d": 13,
+    "ar": "مولد الإمام علي",
+    "pack": "shia_imami",
+    "sourceStatus": "tradition_specific"
+  },
+  {
+    "id": "fatima_death",
+    "ar": "وفاة السيدة فاطمة الزهراء",
+    "pack": "shia_imami",
+    "sourceStatus": "multiple_reported_dates",
+    "dates": [
+      {
+        "m": 3,
+        "d": 13
+      },
+      {
+        "m": 3,
+        "d": 3
+      }
+    ]
+  },
+  {
+    "id": "umar_death",
+    "ar": "وفاة عمر بن الخطاب",
+    "pack": "historical",
+    "sourceStatus": "source_review_required"
+  },
+  {
+    "id": "aisha_death",
+    "ar": "وفاة السيدة عائشة",
+    "pack": "historical",
+    "sourceStatus": "source_review_required"
+  }
+]

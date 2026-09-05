@@ -1,0 +1,218 @@
+[
+  {
+    "id": "iq-baghdad",
+    "country": "IQ",
+    "name_ar": "بغداد",
+    "name_en": "Baghdad",
+    "lat": 33.3152,
+    "lon": 44.3661,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-madain",
+    "country": "IQ",
+    "name_ar": "المدائن",
+    "name_en": "Al-Mada'in",
+    "lat": 33.0936,
+    "lon": 44.58,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-mahmudiya",
+    "country": "IQ",
+    "name_ar": "المحمودية",
+    "name_en": "Mahmudiya",
+    "lat": 33.0618,
+    "lon": 44.3592,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-taji",
+    "country": "IQ",
+    "name_ar": "التاجي",
+    "name_en": "Taji",
+    "lat": 33.5297,
+    "lon": 44.2775,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-abu-ghraib",
+    "country": "IQ",
+    "name_ar": "أبو غريب",
+    "name_en": "Abu Ghraib",
+    "lat": 33.3056,
+    "lon": 44.1848,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-baghdad-outskirts",
+    "country": "IQ",
+    "name_ar": "أطراف بغداد",
+    "name_en": "Baghdad Outskirts",
+    "lat": 33.3,
+    "lon": 44.2,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-adhamiya",
+    "country": "IQ",
+    "name_ar": "الأعظمية",
+    "name_en": "Al-Adhamiya",
+    "lat": 33.3717,
+    "lon": 44.374,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-fallujah",
+    "country": "IQ",
+    "name_ar": "الفلوجة",
+    "name_en": "Fallujah",
+    "lat": 33.3491,
+    "lon": 43.7842,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-najaf",
+    "country": "IQ",
+    "name_ar": "النجف",
+    "name_en": "Najaf",
+    "lat": 31.9985,
+    "lon": 44.3398,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-karbala",
+    "country": "IQ",
+    "name_ar": "كربلاء",
+    "name_en": "Karbala",
+    "lat": 32.616,
+    "lon": 44.0249,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-basra",
+    "country": "IQ",
+    "name_ar": "البصرة",
+    "name_en": "Basra",
+    "lat": 30.5085,
+    "lon": 47.7804,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-mosul",
+    "country": "IQ",
+    "name_ar": "الموصل",
+    "name_en": "Mosul",
+    "lat": 36.335,
+    "lon": 43.1189,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "iq-erbil",
+    "country": "IQ",
+    "name_ar": "أربيل",
+    "name_en": "Erbil",
+    "lat": 36.1911,
+    "lon": 44.0092,
+    "tz": "Asia/Baghdad"
+  },
+  {
+    "id": "sa-makkah",
+    "country": "SA",
+    "name_ar": "مكة المكرمة",
+    "name_en": "Makkah",
+    "lat": 21.3891,
+    "lon": 39.8579,
+    "tz": "Asia/Riyadh"
+  },
+  {
+    "id": "sa-madinah",
+    "country": "SA",
+    "name_ar": "المدينة المنورة",
+    "name_en": "Madinah",
+    "lat": 24.5247,
+    "lon": 39.5692,
+    "tz": "Asia/Riyadh"
+  },
+  {
+    "id": "sa-riyadh",
+    "country": "SA",
+    "name_ar": "الرياض",
+    "name_en": "Riyadh",
+    "lat": 24.7136,
+    "lon": 46.6753,
+    "tz": "Asia/Riyadh"
+  },
+  {
+    "id": "sa-jeddah",
+    "country": "SA",
+    "name_ar": "جدة",
+    "name_en": "Jeddah",
+    "lat": 21.4858,
+    "lon": 39.1925,
+    "tz": "Asia/Riyadh"
+  },
+  {
+    "id": "eg-cairo",
+    "country": "EG",
+    "name_ar": "القاهرة",
+    "name_en": "Cairo",
+    "lat": 30.0444,
+    "lon": 31.2357,
+    "tz": "Africa/Cairo"
+  },
+  {
+    "id": "eg-alex",
+    "country": "EG",
+    "name_ar": "الإسكندرية",
+    "name_en": "Alexandria",
+    "lat": 31.2001,
+    "lon": 29.9187,
+    "tz": "Africa/Cairo"
+  },
+  {
+    "id": "eg-luxor",
+    "country": "EG",
+    "name_ar": "الأقصر",
+    "name_en": "Luxor",
+    "lat": 25.6872,
+    "lon": 32.6396,
+    "tz": "Africa/Cairo"
+  },
+  {
+    "id": "us-nyc",
+    "country": "US",
+    "name_ar": "نيويورك",
+    "name_en": "New York",
+    "lat": 40.7128,
+    "lon": -74.006,
+    "tz": "America/New_York"
+  },
+  {
+    "id": "gb-london",
+    "country": "GB",
+    "name_ar": "لندن",
+    "name_en": "London",
+    "lat": 51.5074,
+    "lon": -0.1278,
+    "tz": "Europe/London"
+  },
+  {
+    "id": "fr-paris",
+    "country": "FR",
+    "name_ar": "باريس",
+    "name_en": "Paris",
+    "lat": 48.8566,
+    "lon": 2.3522,
+    "tz": "Europe/Paris"
+  },
+  {
+    "id": "es-madrid",
+    "country": "ES",
+    "name_ar": "مدريد",
+    "name_en": "Madrid",
+    "lat": 40.4168,
+    "lon": -3.7038,
+    "tz": "Europe/Madrid"
+  }
+]

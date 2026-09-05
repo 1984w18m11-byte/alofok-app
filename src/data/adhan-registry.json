@@ -1,0 +1,101 @@
+[
+  {
+    "id": "generic-licensed",
+    "country": "*",
+    "city": "*",
+    "display_ar": "أذان عام مرخّص للمشروع",
+    "performer": "Project licensed voice",
+    "status": "asset_missing",
+    "license_required": true,
+    "asset": null
+  },
+  {
+    "id": "sa-sudais",
+    "country": "SA",
+    "city": "*",
+    "display_ar": "صوت الشيخ عبد الرحمن السديس",
+    "performer": "Abdul Rahman Al-Sudais",
+    "status": "permission_required",
+    "license_required": true,
+    "asset": null,
+    "note_ar": "لا يُضمّن التسجيل قبل إثبات الترخيص من صاحب الحقوق."
+  },
+  {
+    "id": "eg-abdelbasit",
+    "country": "EG",
+    "city": "*",
+    "display_ar": "صوت الشيخ عبد الباسط عبد الصمد",
+    "performer": "Abdul Basit Abdus-Samad",
+    "status": "permission_required",
+    "license_required": true,
+    "asset": null,
+    "note_ar": "قد توجد حقوق متعددة للتسجيلات؛ يلزم تحديد التسجيل ومالك حقوقه."
+  },
+  {
+    "id": "iq-fallujah-waleed",
+    "country": "IQ",
+    "city": "iq-fallujah",
+    "display_ar": "صوت وليد الفلوجي",
+    "performer": "Waleed Al-Falluji",
+    "status": "permission_required",
+    "license_required": true,
+    "asset": null,
+    "note_ar": "الاسم مُدرج كخيار مطلوب من صاحب المشروع فقط، ولا توجد دعوى بوجود ترخيص."
+  },
+  {
+    "id": "iq-adhamiya-local",
+    "country": "IQ",
+    "city": "iq-adhamiya",
+    "display_ar": "أذان الأعظمية المحلي",
+    "performer": "TBD",
+    "status": "permission_required",
+    "license_required": true,
+    "asset": null
+  },
+  {
+    "id": "iq-najaf-local",
+    "country": "IQ",
+    "city": "iq-najaf",
+    "display_ar": "أذان النجف المحلي",
+    "performer": "TBD",
+    "status": "permission_required",
+    "license_required": true,
+    "asset": null
+  },
+  {
+    "id": "commons-aishatu98-adhan",
+    "country": "*",
+    "city": "*",
+    "display_ar": "أذان عام — Aishatu98",
+    "performer": "Aishatu98",
+    "status": "licensed",
+    "license_required": false,
+    "license": "CC0 1.0 Universal",
+    "source": "Wikimedia Commons — Adhan.ogg",
+    "asset": "assets/adhan/adhan-aishatu98.ogg"
+  },
+  {
+    "id": "commons-beautiful-adhan",
+    "country": "*",
+    "city": "*",
+    "display_ar": "أذان جميل — Adam-synagda",
+    "performer": "Adam-synagda",
+    "status": "licensed",
+    "license_required": false,
+    "license": "CC0 1.0 Universal",
+    "source": "Wikimedia Commons — Beautiful adhan.ogg",
+    "asset": "assets/adhan/beautiful-adhan.ogg"
+  },
+  {
+    "id": "commons-istanbul-adhan",
+    "country": "TR",
+    "city": "*",
+    "display_ar": "أذان إسطنبول — Viceskeeni2",
+    "performer": "Viceskeeni2",
+    "status": "licensed",
+    "license_required": false,
+    "license": "CC0 1.0 Universal",
+    "source": "Wikimedia Commons — Adhan in Istanbul.webm",
+    "asset": null
+  }
+]
