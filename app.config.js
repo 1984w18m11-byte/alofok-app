@@ -18,7 +18,7 @@ module.exports = () => {
     android: {
       ...base.android,
       package: `com.alofok.${variant}`,
-      versionCode: 4,
+      versionCode: 5,
       blockedPermissions: ['android.permission.RECORD_AUDIO'],
       adaptiveIcon: {
         foregroundImage: icon,
