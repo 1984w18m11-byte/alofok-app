@@ -1,6 +1,6 @@
 {
   "name": "horizon-calendar-v2",
-  "version": "0.2.5",
+  "version": "0.2.6",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {

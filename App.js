@@ -25,10 +25,11 @@ Notifications.setNotificationHandler({
 const fmtPct=x=>`${Math.round(x*100)}%`;
 const APP_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
 const ADHAN_ASSETS={
- 'commons-aishatu98-adhan':require('./assets/adhan/adhan-aishatu98.ogg'),
  'commons-beautiful-adhan':require('./assets/adhan/beautiful-adhan.ogg'),
- 'commons-andrewler-azan':require('./assets/adhan/azan-andrewler.ogg'),
- 'commons-mecca-2013':require('./assets/adhan/mecca-adhan-2013.ogg')
+ 'commons-syria-sabah-fakhry':require('./assets/adhan/adhan-syria-sabah-fakhry.ogg'),
+ 'commons-morocco-hassan-ii':require('./assets/adhan/adhan-morocco-hassan-ii.ogg'),
+ 'commons-kazakhstan-shalqar':require('./assets/adhan/adhan-kazakhstan-shalqar.ogg'),
+ 'commons-aaqib-azeez':require('./assets/adhan/adhan-aaqib-azeez.ogg')
 };
 const PRAYERS=[['الفجر','fajr'],['الشروق','sunrise'],['الظهر','dhuhr'],['العصر','asr'],['المغرب','maghrib'],['العشاء','isha']];
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
@@ -74,14 +75,13 @@ const lunarEventsForDay=lunar=>religiousFor(lunar.month,lunar.day).map(e=>({type
 const gregorianEventsForDay=(country,date)=>nationalFor(country,date).map(e=>({type:'مناسبة وطنية',name:e.name_ar,details:e.note_ar||''}));
 
 const LUNAR_ACCENTS=['#f5b94c','#65c7d0','#d6a8ff','#ffb36b','#73d6a1','#83b9ff','#ffc857','#e8a0bf','#f2c14e','#79c9c5','#9ab7ff','#d0a4ff'];
-function paidTheme(date,lunarMonth,isRamadan){
- const hour=date.getHours();
- const month=date.getMonth();
- const season=month>=2&&month<=4?'الربيع':month>=5&&month<=7?'الصيف':month>=8&&month<=10?'الخريف':'الشتاء';
- const period=hour>=5&&hour<10?{name:'الصباح',bg:'#71431f',sky:'#d9863d',symbol:'☀'}:hour>=10&&hour<17?{name:'النهار',bg:'#075b82',sky:'#27a4c8',symbol:'☀'}:hour>=17&&hour<20?{name:'المساء',bg:'#742f35',sky:'#d66a3c',symbol:'◒'}:{name:'الليل',bg:'#120f32',sky:'#302060',symbol:'☾'};
- if(isRamadan)return {background:'#17233f',sky:'#49376f',accent:'#f5c96a',label:'رمضان • '+period.name+' • '+season,symbol:'☾'};
- return {background:period.bg,sky:period.sky,accent:LUNAR_ACCENTS[(lunarMonth-1)%12],label:period.name+' • '+season+' • الشهر القمري '+lunarMonth,symbol:period.symbol};
-}
+const PAID_THEMES={
+ night:{name:'ليلي',background:'#06121f',sky:'#152b4c',accent:'#f4bb52',symbol:'☾'},
+ sunrise:{name:'شروق',background:'#24182a',sky:'#d06e4d',accent:'#ffd06a',symbol:'◒'},
+ autumn:{name:'خريفي',background:'#21150f',sky:'#8c472d',accent:'#e9a94c',symbol:'🍂'},
+ winter:{name:'شتوي',background:'#14202a',sky:'#7894a6',accent:'#e9f5ff',symbol:'❄'}
+};
+const THEME_CHOICES=[['night','ليلي'],['sunrise','شروق'],['autumn','خريفي'],['winter','شتوي']];
 
 export default function App(){
  const [tab,setTab]=useState('today');
@@ -108,6 +108,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [showPrivacy,setShowPrivacy]=useState(false);
  const [showCopyright,setShowCopyright]=useState(false);
  const [showCityChoices,setShowCityChoices]=useState(false);
+ const [selectedTheme,setSelectedTheme]=useState('night');
  const dayKey=civilDayKey(now,city?.tz);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
@@ -136,6 +137,13 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   }
   restoreLocationAndMethod();
   return()=>{active=false};
+ },[]);
+
+ useEffect(()=>{
+  if(APP_VARIANT!=='paid')return;
+  AsyncStorage.getItem('alofq_paid_theme').then(id=>{
+   if(PAID_THEMES[id])setSelectedTheme(id);
+  }).catch(e=>console.log('Theme restore error:',e));
  },[]);
 
 
@@ -276,7 +284,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const illum=illumination(jd);
  const elong=elongationDeg(jd);
  const conj=findConjunctionNear(now);
- const theme=APP_VARIANT==='paid'?paidTheme(now,lunar.month,isRamadan):{background:'#061724',sky:'#0b2232',accent:'#f4bb52',label:'الثيم الداكن الثابت',symbol:'☾'};
+ const selectedPaidTheme=PAID_THEMES[selectedTheme]||PAID_THEMES.night;
+ const theme=APP_VARIANT==='paid'?{...selectedPaidTheme,label:`الثيم ${selectedPaidTheme.name}`}:{background:'#061724',sky:'#0b2232',accent:'#f4bb52',label:'الثيم الداكن الثابت',symbol:'☾'};
 
  useEffect(()=>{
    let active=true;
@@ -287,14 +296,14 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        const savedId=await AsyncStorage.getItem('alofq_selected_adhan_id');
 
        if(manual==='1'&&savedId){
-         const saved=adhanRegistry.find(p=>p.id===savedId&&p.status==='licensed'&&ADHAN_ASSETS[p.id]);
+         const saved=adhanRegistry.find(p=>p.id===savedId&&p.status==='licensed'&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
          if(saved&&active){
            setSelectedAdhan(saved);
            return;
          }
        }
 
-       const licensed=adhanRegistry.filter(p=>p.status==='licensed'&&ADHAN_ASSETS[p.id]);
+       const licensed=adhanRegistry.filter(p=>p.status==='licensed'&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
        if(!licensed.length)return;
 
        const country=(city?.country||'').toUpperCase();
@@ -427,7 +436,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    prayerCalcDate
  ]);
 
- const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]);
+ const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
  async function previewAdhan(pack){
   try{
    stopAdhan();
@@ -531,6 +540,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <Card title='إعداد الأذان'><View style={s.row}><Text style={s.text}>تشغيل تنبيهات الصلاة</Text><Switch value={adhanEnabled} onValueChange={v=>setNotificationPreference('prayer',v)}/></View><Text style={s.sub}>يُطلب إذن الإشعارات فقط عند تفعيل التنبيهات. يستخدم الإشعار المجدول صوت النظام، ويمكن الاستماع إلى الأذان المختار من داخل التطبيق.</Text><Pressable style={s.primary} onPress={()=>{if(showAdhanVoices){stopAdhan();setShowAdhanVoices(false)}else setShowAdhanVoices(true)}}><Text style={s.primaryText}>{showAdhanVoices?'إغلاق قائمة الأصوات ✕':'🔊 اختيار ومعاينة صوت الأذان'}</Text></Pressable>{showAdhanVoices&&packs.map(p=><Pressable key={p.id} style={s.adhanChoice} onPress={async()=>{setSelectedAdhan(p);await AsyncStorage.setItem('alofq_selected_adhan_id',p.id);await AsyncStorage.setItem('alofq_adhan_manual','1');setShowAdhanLicense(false);previewAdhan(p)}}><Text style={s.playIcon}>▶</Text><Text style={s.text}>{p.display_ar}</Text></Pressable>)}{showAdhanVoices&&<Pressable disabled={!adhanSound} style={[s.stopButton,!adhanSound&&s.stopButtonDisabled]} onPress={stopAdhan}><Text style={s.stopButtonText}>■ إيقاف الصوت فورًا</Text></Pressable>}{selectedAdhan&&<><View style={s.row}><Text style={s.text}>{selectedAdhan.display_ar}</Text><Pressable style={s.choice} onPress={()=>setShowAdhanLicense(showAdhanLicense===false)}><Text style={s.choiceText}>الترخيص</Text></Pressable></View>{showAdhanLicense&&<Text style={selectedAdhan.status==='licensed'?s.ok:s.warn}>{selectedAdhan.status==='licensed'?'✓ الترخيص: '+(selectedAdhan.license||'غير محدد')+' • المصدر: '+(selectedAdhan.source||'غير محدد'):(selectedAdhan.note_ar||'هذا التسجيل يحتاج إلى إثبات تصريح قبل إضافته للتطبيق.')}</Text>}</>}</Card>
    </>}
 {tab==='settings'&&<>
+    {APP_VARIANT==='paid'&&<Card title='الثيمات'>
+     <Text style={s.sub}>اختر شكل التطبيق، وسيُحفظ اختيارك تلقائيًا.</Text>
+     <View style={s.themeChoices}>{THEME_CHOICES.map(([id,label])=>{const item=PAID_THEMES[id];return <Pressable key={id} style={[s.themeChoice,{backgroundColor:item.sky,borderColor:item.accent},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}><Text style={s.themeChoiceSymbol}>{item.symbol}</Text><Text style={s.themeChoiceText}>{label}</Text></Pressable>})}</View>
+    </Card>}
     <Card title='اختيار المدينة يدويًا'><Pressable style={s.secondaryButton} onPress={()=>setShowCityChoices(v=>!v)}><Text style={s.secondaryButtonText}>{showCityChoices?'إغلاق قائمة المدن':'عرض المدن'}</Text></Pressable>{showCityChoices&&cities.map(item=><Pressable key={item.id} style={[s.cityChoice,item.id===city?.id&&s.cityChoiceActive]} onPress={()=>{chooseCity(item.id);setShowCityChoices(false)}}><Text style={item.id===city?.id?s.cityChoiceTextActive:s.cityChoiceText}>{item.name_ar}</Text></Pressable>)}</Card>
     <Card title='طريقة حساب مواقيت الصلاة'><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={async()=>{setMethod(id);try{await AsyncStorage.setItem('alofq_prayer_method',id)}catch(e){console.log('Method save error:',e)}}}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></Card>
     <Card title='سياسة الخصوصية'>
@@ -564,5 +577,5 @@ const s=StyleSheet.create({
  moon:{width:150,height:150,borderRadius:75,backgroundColor:'#e6c578',alignSelf:'center',marginTop:20,overflow:'hidden'},shadow:{position:'absolute',right:0,top:0,bottom:0,backgroundColor:'#0c2638',borderTopLeftRadius:75,borderBottomLeftRadius:75},phase:{color:'#fff',textAlign:'center',marginTop:12,fontWeight:'700'},sub:{color:'#91a9b7',marginTop:8,textAlign:'right',lineHeight:21},subCenter:{color:'#91a9b7',marginTop:8,textAlign:'center'},
  card:{backgroundColor:'#091d2a',borderRadius:24,padding:17,marginTop:14,borderWidth:1,borderColor:'#9b732e',shadowColor:'#000',shadowOpacity:0.22,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:4},title:{color:'#f4bb52',fontSize:21,fontWeight:'900',textAlign:'right',marginBottom:14},text:{color:'#eef4f7',textAlign:'right',lineHeight:24},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:11,borderBottomWidth:1,borderBottomColor:'#1e4055'},adhanChoice:{flexDirection:'row-reverse',justifyContent:'space-between',alignItems:'center',paddingVertical:13,borderBottomWidth:1,borderBottomColor:'#1e4055'},playIcon:{color:'#f4bb52',fontSize:18},stopButton:{backgroundColor:'#5b2525',borderWidth:1,borderColor:'#e16b6b',padding:13,borderRadius:12,marginTop:10},stopButtonDisabled:{opacity:.4},stopButtonText:{color:'#fff',fontWeight:'900',textAlign:'center'},warn:{color:'#ffcb6b'},ok:{color:'#87d8a4'},
  pg:{flexDirection:'row',flexWrap:'wrap',gap:8},pi:{width:'31%',backgroundColor:'#091f2f',padding:12,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:'#21465e'},gold:{color:'#f4bb52',fontWeight:'900',fontSize:17,marginTop:4},muted:{color:'#99b0bd'},active:{color:'#f4bb52',fontWeight:'900'},primary:{backgroundColor:'#c89232',padding:13,borderRadius:12,marginTop:12},primaryText:{color:'#071724',fontWeight:'900',textAlign:'center'},coords:{color:'#93aab7',textAlign:'center',marginTop:10,fontSize:12},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'flex-end'},choice:{paddingVertical:9,paddingHorizontal:12,borderRadius:10,borderWidth:1,borderColor:'#31536a'},choiceOn:{backgroundColor:'#c89232',borderColor:'#c89232'},choiceText:{color:'#e8f0f4'},choiceOnText:{color:'#071724',fontWeight:'900'},
- calendarTitle:{color:'#fff',fontSize:23,fontWeight:'900',textAlign:'center',marginBottom:14},researchNotice:{color:'#ffcb6b',fontSize:12,textAlign:'center',lineHeight:19,marginBottom:12},calendarControls:{flexDirection:'row-reverse',alignItems:'stretch',gap:7},calendarButton:{flex:1,minHeight:50,borderWidth:1,borderColor:'#9b732e',borderRadius:14,alignItems:'center',justifyContent:'center',paddingHorizontal:5},calendarButtonText:{color:'#f4bb52',fontSize:12,fontWeight:'800',textAlign:'center'},todayButton:{minWidth:72,minHeight:50,backgroundColor:'#d19a32',borderRadius:14,alignItems:'center',justifyContent:'center'},todayButtonText:{color:'#071724',fontWeight:'900'},weekRow:{flexDirection:'row-reverse',marginTop:16,marginBottom:4},weekDay:{width:'14.285%',color:'#9fb7c5',fontSize:10,fontWeight:'800',textAlign:'center'},dayGrid:{flexDirection:'row-reverse',flexWrap:'wrap',marginTop:4},dayCell:{width:'14.285%',height:48,borderRadius:11,alignItems:'center',justifyContent:'center'},dayCellBlank:{width:'14.285%',height:48},eventCell:{backgroundColor:'rgba(200,146,50,0.18)',borderWidth:1,borderColor:'#8f6827'},todayCell:{backgroundColor:'#d19a32'},dayText:{color:'#eef4f7',fontWeight:'700'},eventDayText:{color:'#f4bb52',fontWeight:'900'},todayDayText:{color:'#071724',fontWeight:'900'},eventDot:{width:5,height:5,borderRadius:3,backgroundColor:'#f4bb52',marginTop:3},eventList:{marginTop:12,padding:12,borderWidth:1,borderColor:'#8f6827',borderRadius:14,backgroundColor:'#071722'},eventTitle:{color:'#f4bb52',fontWeight:'900',fontSize:16,textAlign:'right',marginBottom:8},eventItem:{paddingVertical:7,borderTopWidth:1,borderTopColor:'#173548'},eventName:{color:'#f4bb52',fontWeight:'900',fontSize:15,textAlign:'right'},eventType:{color:'#9fb7c5',fontSize:12,textAlign:'right',marginTop:3},noEvent:{color:'#9fb7c5',textAlign:'right'},secondaryButton:{borderWidth:1,borderColor:'#c89232',padding:13,borderRadius:12,marginTop:10},secondaryButtonText:{color:'#f4bb52',fontWeight:'900',textAlign:'center'},cityChoice:{paddingVertical:11,paddingHorizontal:12,borderBottomWidth:1,borderBottomColor:'#1e4055'},cityChoiceActive:{backgroundColor:'rgba(200,146,50,.16)'},cityChoiceText:{color:'#dbe6ec',textAlign:'right'},cityChoiceTextActive:{color:'#f4bb52',textAlign:'right',fontWeight:'900'},policyText:{color:'#dbe6ec',textAlign:'right',lineHeight:25,marginTop:14},policyMeta:{color:'#91a9b7',textAlign:'right',lineHeight:21,marginTop:8,fontSize:12},backButton:{alignSelf:'flex-end',borderWidth:1,borderColor:'#8f6827',borderRadius:12,paddingVertical:10,paddingHorizontal:14,marginTop:8},backButtonText:{color:'#f4bb52',fontWeight:'900'},dayCellOn:{backgroundColor:'#c89232',borderColor:'#c89232'},dayTextOn:{color:'#071724',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:76,backgroundColor:'#051722',borderTopWidth:1,borderTopColor:'#21465e',flexDirection:'row-reverse',paddingTop:6},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#7f98a6',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4bb52',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:12,paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#21465e'},prayerLinkText:{color:'#f4bb52',fontSize:14,fontWeight:'800'}
+ calendarTitle:{color:'#fff',fontSize:23,fontWeight:'900',textAlign:'center',marginBottom:14},researchNotice:{color:'#ffcb6b',fontSize:12,textAlign:'center',lineHeight:19,marginBottom:12},calendarControls:{flexDirection:'row-reverse',alignItems:'stretch',gap:7},calendarButton:{flex:1,minHeight:50,borderWidth:1,borderColor:'#9b732e',borderRadius:14,alignItems:'center',justifyContent:'center',paddingHorizontal:5},calendarButtonText:{color:'#f4bb52',fontSize:12,fontWeight:'800',textAlign:'center'},todayButton:{minWidth:72,minHeight:50,backgroundColor:'#d19a32',borderRadius:14,alignItems:'center',justifyContent:'center'},todayButtonText:{color:'#071724',fontWeight:'900'},weekRow:{flexDirection:'row-reverse',marginTop:16,marginBottom:4},weekDay:{width:'14.285%',color:'#9fb7c5',fontSize:10,fontWeight:'800',textAlign:'center'},dayGrid:{flexDirection:'row-reverse',flexWrap:'wrap',marginTop:4},dayCell:{width:'14.285%',height:48,borderRadius:11,alignItems:'center',justifyContent:'center'},dayCellBlank:{width:'14.285%',height:48},eventCell:{backgroundColor:'rgba(200,146,50,0.18)',borderWidth:1,borderColor:'#8f6827'},todayCell:{backgroundColor:'#d19a32'},dayText:{color:'#eef4f7',fontWeight:'700'},eventDayText:{color:'#f4bb52',fontWeight:'900'},todayDayText:{color:'#071724',fontWeight:'900'},eventDot:{width:5,height:5,borderRadius:3,backgroundColor:'#f4bb52',marginTop:3},eventList:{marginTop:12,padding:12,borderWidth:1,borderColor:'#8f6827',borderRadius:14,backgroundColor:'#071722'},eventTitle:{color:'#f4bb52',fontWeight:'900',fontSize:16,textAlign:'right',marginBottom:8},eventItem:{paddingVertical:7,borderTopWidth:1,borderTopColor:'#173548'},eventName:{color:'#f4bb52',fontWeight:'900',fontSize:15,textAlign:'right'},eventType:{color:'#9fb7c5',fontSize:12,textAlign:'right',marginTop:3},noEvent:{color:'#9fb7c5',textAlign:'right'},themeChoices:{flexDirection:'row-reverse',flexWrap:'wrap',gap:10,marginTop:14},themeChoice:{width:'47%',minHeight:96,borderRadius:16,borderWidth:1,alignItems:'center',justifyContent:'center'},themeChoiceOn:{borderWidth:3},themeChoiceSymbol:{fontSize:31},themeChoiceText:{color:'#fff',fontWeight:'900',marginTop:5},secondaryButton:{borderWidth:1,borderColor:'#c89232',padding:13,borderRadius:12,marginTop:10},secondaryButtonText:{color:'#f4bb52',fontWeight:'900',textAlign:'center'},cityChoice:{paddingVertical:11,paddingHorizontal:12,borderBottomWidth:1,borderBottomColor:'#1e4055'},cityChoiceActive:{backgroundColor:'rgba(200,146,50,.16)'},cityChoiceText:{color:'#dbe6ec',textAlign:'right'},cityChoiceTextActive:{color:'#f4bb52',textAlign:'right',fontWeight:'900'},policyText:{color:'#dbe6ec',textAlign:'right',lineHeight:25,marginTop:14},policyMeta:{color:'#91a9b7',textAlign:'right',lineHeight:21,marginTop:8,fontSize:12},backButton:{alignSelf:'flex-end',borderWidth:1,borderColor:'#8f6827',borderRadius:12,paddingVertical:10,paddingHorizontal:14,marginTop:8},backButtonText:{color:'#f4bb52',fontWeight:'900'},dayCellOn:{backgroundColor:'#c89232',borderColor:'#c89232'},dayTextOn:{color:'#071724',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:76,backgroundColor:'#051722',borderTopWidth:1,borderTopColor:'#21465e',flexDirection:'row-reverse',paddingTop:6},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#7f98a6',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4bb52',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:12,paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#21465e'},prayerLinkText:{color:'#f4bb52',fontSize:14,fontWeight:'800'}
 });
