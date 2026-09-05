@@ -32,6 +32,14 @@
     "notifyBefore": true
   },
   {
+    "id": "ali_martyrdom",
+    "m": 9,
+    "d": 21,
+    "ar": "ذكرى استشهاد الإمام علي بن أبي طالب",
+    "pack": "historical",
+    "note_ar": "تُحيى الذكرى في 21 رمضان، بعد إصابته في 19 رمضان."
+  },
+  {
     "id": "qadr",
     "m": 9,
     "d": 27,
@@ -69,7 +77,30 @@
     "d": 13,
     "ar": "مولد الإمام علي",
     "pack": "shia_imami",
-    "sourceStatus": "tradition_specific"
+    "sourceStatus": "tradition_specific",
+    "note_ar": "المشهور في عدد من المصادر الإسلامية: 13 رجب."
+  },
+  {
+    "id": "prophet_birth",
+    "ar": "ذكرى مولد النبي محمد ﷺ",
+    "pack": "common",
+    "sourceStatus": "multiple_reported_dates",
+    "note_ar": "توجد روايتان مشهورتان: 12 و17 ربيع الأول.",
+    "dates": [
+      {"m": 3, "d": 12},
+      {"m": 3, "d": 17}
+    ]
+  },
+  {
+    "id": "prophet_death",
+    "ar": "ذكرى وفاة النبي محمد ﷺ",
+    "pack": "common",
+    "sourceStatus": "multiple_reported_dates",
+    "note_ar": "يعرض التطبيق الروايتين المتداولتين: 28 صفر و12 ربيع الأول.",
+    "dates": [
+      {"m": 2, "d": 28},
+      {"m": 3, "d": 12}
+    ]
   },
   {
     "id": "fatima_death",
@@ -78,20 +109,26 @@
     "sourceStatus": "multiple_reported_dates",
     "dates": [
       {
-        "m": 3,
+        "m": 5,
         "d": 13
       },
       {
-        "m": 3,
+        "m": 6,
         "d": 3
       }
-    ]
+    ],
+    "note_ar": "توجد روايتان مشهورتان: 13 جمادى الأولى و3 جمادى الآخرة."
   },
   {
     "id": "umar_death",
-    "ar": "وفاة عمر بن الخطاب",
+    "ar": "ذكرى استشهاد عمر بن الخطاب",
     "pack": "historical",
-    "sourceStatus": "source_review_required"
+    "sourceStatus": "multiple_reported_dates",
+    "note_ar": "طُعن في 26 ذي الحجة، وتذكر مصادر أن وفاته كانت في 1 محرم.",
+    "dates": [
+      {"m": 12, "d": 26},
+      {"m": 1, "d": 1}
+    ]
   },
   {
     "id": "aisha_death",
