@@ -140,7 +140,6 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  },[]);
 
  useEffect(()=>{
-  if(APP_VARIANT!=='paid')return;
   AsyncStorage.getItem('alofq_paid_theme').then(id=>{
    if(PAID_THEMES[id])setSelectedTheme(id);
   }).catch(e=>console.log('Theme restore error:',e));
@@ -285,7 +284,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const elong=elongationDeg(jd);
  const conj=findConjunctionNear(now);
  const selectedPaidTheme=PAID_THEMES[selectedTheme]||PAID_THEMES.night;
- const theme=APP_VARIANT==='paid'?{...selectedPaidTheme,label:`الثيم ${selectedPaidTheme.name}`}:{background:'#061724',sky:'#0b2232',accent:'#f4bb52',label:'الثيم الداكن الثابت',symbol:'☾'};
+ const theme={...selectedPaidTheme,label:`الثيم ${selectedPaidTheme.name}`};
 
  useEffect(()=>{
    let active=true;
@@ -463,7 +462,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
 
  return <SafeAreaView style={[s.root,{backgroundColor:theme.background}]}>
-  {APP_VARIANT==='paid'&&<View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>}
+  <View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>
  <ScrollView contentContainerStyle={s.page}>
    {tab==='today'&&<View style={s.hero}>
     <Text style={[s.appName,{color:theme.accent}]}>الأفق</Text>
@@ -540,10 +539,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <Card title='إعداد الأذان'><View style={s.row}><Text style={s.text}>تشغيل تنبيهات الصلاة</Text><Switch value={adhanEnabled} onValueChange={v=>setNotificationPreference('prayer',v)}/></View><Text style={s.sub}>يُطلب إذن الإشعارات فقط عند تفعيل التنبيهات. يستخدم الإشعار المجدول صوت النظام، ويمكن الاستماع إلى الأذان المختار من داخل التطبيق.</Text><Pressable style={s.primary} onPress={()=>{if(showAdhanVoices){stopAdhan();setShowAdhanVoices(false)}else setShowAdhanVoices(true)}}><Text style={s.primaryText}>{showAdhanVoices?'إغلاق قائمة الأصوات ✕':'🔊 اختيار ومعاينة صوت الأذان'}</Text></Pressable>{showAdhanVoices&&packs.map(p=><Pressable key={p.id} style={s.adhanChoice} onPress={async()=>{setSelectedAdhan(p);await AsyncStorage.setItem('alofq_selected_adhan_id',p.id);await AsyncStorage.setItem('alofq_adhan_manual','1');setShowAdhanLicense(false);previewAdhan(p)}}><Text style={s.playIcon}>▶</Text><Text style={s.text}>{p.display_ar}</Text></Pressable>)}{showAdhanVoices&&<Pressable disabled={!adhanSound} style={[s.stopButton,!adhanSound&&s.stopButtonDisabled]} onPress={stopAdhan}><Text style={s.stopButtonText}>■ إيقاف الصوت فورًا</Text></Pressable>}{selectedAdhan&&<><View style={s.row}><Text style={s.text}>{selectedAdhan.display_ar}</Text><Pressable style={s.choice} onPress={()=>setShowAdhanLicense(showAdhanLicense===false)}><Text style={s.choiceText}>الترخيص</Text></Pressable></View>{showAdhanLicense&&<Text style={selectedAdhan.status==='licensed'?s.ok:s.warn}>{selectedAdhan.status==='licensed'?'✓ الترخيص: '+(selectedAdhan.license||'غير محدد')+' • المصدر: '+(selectedAdhan.source||'غير محدد'):(selectedAdhan.note_ar||'هذا التسجيل يحتاج إلى إثبات تصريح قبل إضافته للتطبيق.')}</Text>}</>}</Card>
    </>}
 {tab==='settings'&&<>
-    {APP_VARIANT==='paid'&&<Card title='الثيمات'>
+    <Card title='الثيمات'>
      <Text style={s.sub}>اختر شكل التطبيق، وسيُحفظ اختيارك تلقائيًا.</Text>
      <View style={s.themeChoices}>{THEME_CHOICES.map(([id,label])=>{const item=PAID_THEMES[id];return <Pressable key={id} style={[s.themeChoice,{backgroundColor:item.sky,borderColor:item.accent},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}><Text style={s.themeChoiceSymbol}>{item.symbol}</Text><Text style={s.themeChoiceText}>{label}</Text></Pressable>})}</View>
-    </Card>}
+    </Card>
     <Card title='اختيار المدينة يدويًا'><Pressable style={s.secondaryButton} onPress={()=>setShowCityChoices(v=>!v)}><Text style={s.secondaryButtonText}>{showCityChoices?'إغلاق قائمة المدن':'عرض المدن'}</Text></Pressable>{showCityChoices&&cities.map(item=><Pressable key={item.id} style={[s.cityChoice,item.id===city?.id&&s.cityChoiceActive]} onPress={()=>{chooseCity(item.id);setShowCityChoices(false)}}><Text style={item.id===city?.id?s.cityChoiceTextActive:s.cityChoiceText}>{item.name_ar}</Text></Pressable>)}</Card>
     <Card title='طريقة حساب مواقيت الصلاة'><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={async()=>{setMethod(id);try{await AsyncStorage.setItem('alofq_prayer_method',id)}catch(e){console.log('Method save error:',e)}}}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></Card>
     <Card title='سياسة الخصوصية'>

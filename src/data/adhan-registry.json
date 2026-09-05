@@ -101,7 +101,7 @@
     "source": "Wikimedia Commons — Llamada a oración Mezquita Hassan II.wav",
     "source_url": "https://commons.wikimedia.org/wiki/File:Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav",
     "asset": "assets/adhan/adhan-morocco-hassan-ii.ogg",
-    "available_in": ["paid"]
+    "available_in": ["trial", "paid"]
   },
   {
     "id": "commons-kazakhstan-shalqar",
@@ -115,7 +115,7 @@
     "source": "Wikimedia Commons — Adhan in Shalqar mosque.webm",
     "source_url": "https://commons.wikimedia.org/wiki/File:Adhan_in_Shalqar_mosque.webm",
     "asset": "assets/adhan/adhan-kazakhstan-shalqar.ogg",
-    "available_in": ["paid"]
+    "available_in": ["trial", "paid"]
   },
   {
     "id": "commons-aaqib-azeez",
@@ -129,7 +129,7 @@
     "source": "Wikimedia Commons — The Adhan - Muslim Call to Prayer - Aaqib Azeez.mp3",
     "source_url": "https://commons.wikimedia.org/wiki/File:The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3",
     "asset": "assets/adhan/adhan-aaqib-azeez.ogg",
-    "available_in": ["paid"]
+    "available_in": ["trial", "paid"]
   },
   {
     "id": "commons-istanbul-adhan",
