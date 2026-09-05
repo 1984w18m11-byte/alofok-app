@@ -19,6 +19,7 @@ module.exports = () => {
       ...base.android,
       package: `com.alofok.${variant}`,
       versionCode: 3,
+      blockedPermissions: ['android.permission.RECORD_AUDIO'],
       adaptiveIcon: {
         foregroundImage: icon,
         backgroundColor: isPaid ? '#061724' : '#06334a'
