@@ -1,6 +1,6 @@
 {
   "name": "horizon-calendar-v2",
-  "version": "0.2.2",
+  "version": "0.2.4",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -16,7 +16,6 @@
     "expo-audio": "~1.1.1",
     "expo-location": "~19.0.8",
     "expo-notifications": "~0.32.17",
-    "expo-sensors": "~15.0.8",
     "expo-system-ui": "~6.0.9",
     "react": "19.1.0",
     "react-native": "0.81.5",
