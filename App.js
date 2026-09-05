@@ -28,12 +28,15 @@ const ADHAN_ASSETS={
  'commons-beautiful-adhan':require('./assets/adhan/beautiful-adhan.ogg')
 };
 const PRAYERS=[['الفجر','fajr'],['الشروق','sunrise'],['الظهر','dhuhr'],['العصر','asr'],['المغرب','maghrib'],['العشاء','isha']];
+const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
 const BAGHDAD_CHOICES=['iq-baghdad','iq-baghdad-outskirts','iq-adhamiya','iq-abu-ghraib','iq-taji','iq-mahmudiya','iq-madain','iq-fallujah'];
 
 function formatArabicClock(d){return new Intl.DateTimeFormat('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(d)}
 function formatGregorian(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d)}
 function weekday(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'long'}).format(d)}
+function gregorianMonthTitle(d){return new Intl.DateTimeFormat('ar-IQ',{month:'long',year:'numeric'}).format(d)}
+function shiftGregorianMonth(date,amount){const d=new Date(date);d.setDate(1);d.setMonth(d.getMonth()+amount);return d}
 function distanceKm(a,b){const R=6371,rad=x=>x*Math.PI/180;const dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon);const x=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
 const religiousFor=(m,d,pack='common')=>religiousEvents.filter(e=>(e.pack==='common'||e.pack===pack)&&((e.m===m&&e.d===d)||(e.m===m&&e.range&&d>=e.range[0]&&d<=e.range[1])||(e.dates||[]).some(x=>x.m===m&&x.d===d)));
 const nationalFor=(country,date)=>(nationalEvents[country]||[]).filter(e=>e.month===date.getUTCMonth()+1&&e.day===date.getUTCDate());
@@ -49,6 +52,7 @@ export default function App(){
  const [locationBusy,setLocationBusy]=useState(false);
  const [method,setMethod]=useState('MWL');
  const [calendarDate,setCalendarDate]=useState(new Date());
+ const [gregorianDate,setGregorianDate]=useState(new Date());
  const [selectedAdhan,setSelectedAdhan]=useState(null);
  const [showAdhanVoices,setShowAdhanVoices]=useState(false);
  const [showAdhanLicense,setShowAdhanLicense]=useState(false);
@@ -194,6 +198,13 @@ const [eventPack,setEventPack]=useState('common');
  },[calendarDate,calendarView.day]);
 
  const calendarStartWeekday=calendarMonthStart.getUTCDay();
+
+ const gregorianDays=useMemo(()=>{
+   const year=gregorianDate.getFullYear();
+   const month=gregorianDate.getMonth();
+   return Array.from({length:new Date(year,month+1,0).getDate()},(_,i)=>i+1);
+ },[gregorianDate]);
+ const gregorianStartWeekday=new Date(gregorianDate.getFullYear(),gregorianDate.getMonth(),1).getDay();
 
  const qiblaBearing=useMemo(()=>{
    const lat1=coords.lat*Math.PI/180;
@@ -411,8 +422,43 @@ const [eventPack,setEventPack]=useState('common');
 </Card>
     <Card title='الموقع'><Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>{locationBusy?'جاري تحديد الموقع...':'📍 تحديث موقعي'}</Text></Pressable><Text style={s.textCenter}>{locState}</Text></Card>
    </>}
-   {tab==="calendar"&&<Card title="التقويم القمري–الشمسي"><View onStartShouldSetResponder={()=>true} onResponderGrant={(e)=>setSwipeStartX(e.nativeEvent.pageX)} onResponderRelease={(e)=>{if(swipeStartX===null)return;const dx=e.nativeEvent.pageX-swipeStartX;if(dx>50)setCalendarDate(d=>addLunisolarMonths(d,-1));if(dx<-50)setCalendarDate(d=>addLunisolarMonths(d,1));setSwipeStartX(null)}}><Text style={s.hdate}>{calendarView.day} {calendarView.monthNameAr} {calendarView.year}</Text><Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>{locationBusy?"جاري تحديد الموقع...":"📍 تشغيل الموقع"}</Text></Pressable><Pressable style={s.primary} onPress={()=>setTab("adhan")}><Text style={s.primaryText}>🔊 اختيار صوت الأذان</Text></Pressable><View style={s.wrap}><Pressable style={[s.choice,s.choiceOn]} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,-1))}><Text style={s.choiceOnText}>‹ شهر</Text></Pressable><Pressable style={[s.choice,s.choiceOn]} onPress={()=>setCalendarDate(new Date())}><Text style={s.choiceOnText}>اليوم</Text></Pressable><Pressable style={[s.choice,s.choiceOn]} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,1))}><Text style={s.choiceOnText}>شهر ›</Text></Pressable><Pressable style={[s.choice,s.choiceOn]} onPress={()=>setCalendarDate(d=>addLunisolarYears(d,-1))}><Text style={s.choiceOnText}>‹ سنة</Text></Pressable><Pressable style={[s.choice,s.choiceOn]} onPress={()=>setCalendarDate(d=>addLunisolarYears(d,1))}><Text style={s.choiceOnText}>سنة ›</Text></Pressable></View><View style={s.weekRow}>{["أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"].map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View><View style={s.dayGrid}>{Array.from({length:calendarStartWeekday},(_,i)=><View key={`blank-${i}`} style={s.dayCellBlank}/>)}{calendarDays.map(d=>{const x=new Date(calendarDate);x.setUTCDate(x.getUTCDate()+(d-calendarView.day));const ld=proposedLunisolarDate(x);const ev=eventsForDay(city.country,x,ld,eventPack);return <Pressable key={d} style={[s.dayCell,ev.length>0&&s.dayCellOn,(ld.year===lunar.year&&ld.month===lunar.month&&ld.day===lunar.day)&&s.todayCell]} onPress={()=>{setCalendarDate(x);setSelectedCalendarEvent(ev)}}><Text style={ev.length>0?s.dayTextOn:s.dayText}>{d}</Text></Pressable>})}</View>{selectedCalendarEvent&&selectedCalendarEvent.length>0&&<View style={{marginTop:12}}>{selectedCalendarEvent.map((e,i)=><Text key={i} style={s.text}>• {e.type} — {e.name}</Text>)}</View>}</View></Card>}
+   {tab==='calendar'&&<>
+    <Card title='التقويم القمري–الشمسي'>
+     <View onStartShouldSetResponder={()=>true} onResponderGrant={e=>setSwipeStartX(e.nativeEvent.pageX)} onResponderRelease={e=>{if(swipeStartX===null)return;const dx=e.nativeEvent.pageX-swipeStartX;if(dx>50)setCalendarDate(d=>addLunisolarMonths(d,-1));if(dx<-50)setCalendarDate(d=>addLunisolarMonths(d,1));setSwipeStartX(null)}}>
+      <Text style={s.calendarTitle}>{calendarView.monthNameAr} {calendarView.year} هـ</Text>
+      <View style={s.calendarControls}>
+       <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,-1))}><Text style={s.calendarButtonText}>الشهر السابق</Text></Pressable>
+       <Pressable style={s.todayButton} onPress={()=>setCalendarDate(new Date())}><Text style={s.todayButtonText}>اليوم</Text></Pressable>
+       <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,1))}><Text style={s.calendarButtonText}>الشهر القادم</Text></Pressable>
+      </View>
+      <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
+      <View style={s.dayGrid}>
+       {Array.from({length:calendarStartWeekday},(_,i)=><View key={`lunar-blank-${i}`} style={s.dayCellBlank}/>)}
+       {calendarDays.map(day=>{const date=new Date(calendarDate);date.setUTCDate(date.getUTCDate()+(day-calendarView.day));const ld=proposedLunisolarDate(date);const ev=eventsForDay(city.country,date,ld,eventPack);const isToday=ld.year===lunar.year&&ld.month===lunar.month&&ld.day===lunar.day;return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>{setCalendarDate(date);setSelectedCalendarEvent(ev)}}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
+      </View>
+      {selectedCalendarEvent&&selectedCalendarEvent.length>0&&<View style={s.eventList}>{selectedCalendarEvent.map((e,i)=><Text key={i} style={s.text}>• {e.type} — {e.name}</Text>)}</View>}
+     </View>
+    </Card>
+    <Card title='التقويم الميلادي'>
+     <Text style={s.calendarTitle}>{gregorianMonthTitle(gregorianDate)}</Text>
+     <View style={s.calendarControls}>
+      <Pressable style={s.calendarButton} onPress={()=>setGregorianDate(d=>shiftGregorianMonth(d,-1))}><Text style={s.calendarButtonText}>الشهر السابق</Text></Pressable>
+      <Pressable style={s.todayButton} onPress={()=>setGregorianDate(new Date())}><Text style={s.todayButtonText}>اليوم</Text></Pressable>
+      <Pressable style={s.calendarButton} onPress={()=>setGregorianDate(d=>shiftGregorianMonth(d,1))}><Text style={s.calendarButtonText}>الشهر القادم</Text></Pressable>
+     </View>
+     <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
+     <View style={s.dayGrid}>
+      {Array.from({length:gregorianStartWeekday},(_,i)=><View key={`gregorian-blank-${i}`} style={s.dayCellBlank}/>)}
+      {gregorianDays.map(day=>{const date=new Date(gregorianDate.getFullYear(),gregorianDate.getMonth(),day);const ld=proposedLunisolarDate(date);const ev=eventsForDay(city.country,date,ld,eventPack);const isToday=date.toDateString()===now.toDateString();return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>setSelectedCalendarEvent(ev)}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
+     </View>
+    </Card>
+    <Card title='خيارات التقويم'>
+     <Pressable style={s.primary} onPress={()=>useGps(true)}><Text style={s.primaryText}>{locationBusy?'جاري تحديد الموقع...':'📍 تحديث الموقع'}</Text></Pressable>
+     <Pressable style={s.secondaryButton} onPress={()=>setTab('adhan')}><Text style={s.secondaryButtonText}>🔊 اختيار صوت الأذان</Text></Pressable>
+    </Card>
+   </>}
    {tab==='adhan'&&<>
+    <Pressable style={s.backButton} onPress={()=>setTab('calendar')}><Text style={s.backButtonText}>← الرجوع إلى التقويم</Text></Pressable>
     <Card title='مواقيت الصلاة'><PrayerGrid p={prayers}/></Card>
     <Card title='إعداد الأذان'><View style={s.row}><Text style={s.text}>تشغيل تنبيهات الصلاة</Text><Switch value={adhanEnabled} onValueChange={setAdhanEnabled}/></View><Pressable style={s.primary} onPress={()=>setShowAdhanVoices(showAdhanVoices===false)}><Text style={s.primaryText}>🔊 اختيار صوت الأذان</Text></Pressable>{showAdhanVoices&&packs.map(p=><Pressable key={p.id} style={s.row} onPress={async()=>{setSelectedAdhan(p);await AsyncStorage.setItem('alofq_selected_adhan_id',p.id);await AsyncStorage.setItem('alofq_adhan_manual','1');setShowAdhanVoices(false);setShowAdhanLicense(false);previewAdhan(p)}}><Text style={s.text}>{p.display_ar}</Text></Pressable>)}{selectedAdhan&&<><View style={s.row}><Text style={s.text}>{selectedAdhan.display_ar}</Text><Pressable style={s.choice} onPress={()=>setShowAdhanLicense(showAdhanLicense===false)}><Text style={s.choiceText}>الترخيص</Text></Pressable></View>{showAdhanLicense&&<Text style={selectedAdhan.status==='licensed'?s.ok:s.warn}>{selectedAdhan.status==='licensed'?'✓ الترخيص: '+(selectedAdhan.license||'غير محدد')+' • المصدر: '+(selectedAdhan.source||'غير محدد'):(selectedAdhan.note_ar||'هذا التسجيل يحتاج إلى إثبات تصريح قبل إضافته للتطبيق.')}</Text>}</>}</Card>
    </>}
@@ -442,5 +488,5 @@ const s=StyleSheet.create({
  moon:{width:150,height:150,borderRadius:75,backgroundColor:'#e6c578',alignSelf:'center',marginTop:20,overflow:'hidden'},shadow:{position:'absolute',right:0,top:0,bottom:0,backgroundColor:'#0c2638',borderTopLeftRadius:75,borderBottomLeftRadius:75},phase:{color:'#fff',textAlign:'center',marginTop:12,fontWeight:'700'},sub:{color:'#91a9b7',marginTop:8,textAlign:'right',lineHeight:21},subCenter:{color:'#91a9b7',marginTop:8,textAlign:'center'},
  card:{backgroundColor:'#091d2a',borderRadius:22,padding:17,marginTop:14,borderWidth:1,borderColor:'#8f6827',shadowColor:'#000',shadowOpacity:0.22,shadowRadius:10,shadowOffset:{width:0,height:4},elevation:4},title:{color:'#f4bb52',fontSize:19,fontWeight:'900',textAlign:'right',marginBottom:12},text:{color:'#eef4f7',textAlign:'right',lineHeight:24},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:9,borderBottomWidth:1,borderBottomColor:'#1e4055'},warn:{color:'#ffcb6b'},ok:{color:'#87d8a4'},
  pg:{flexDirection:'row',flexWrap:'wrap',gap:8},pi:{width:'31%',backgroundColor:'#091f2f',padding:12,borderRadius:12,alignItems:'center',borderWidth:1,borderColor:'#21465e'},gold:{color:'#f4bb52',fontWeight:'900',fontSize:17,marginTop:4},muted:{color:'#99b0bd'},active:{color:'#f4bb52',fontWeight:'900'},primary:{backgroundColor:'#c89232',padding:13,borderRadius:12,marginTop:12},primaryText:{color:'#071724',fontWeight:'900',textAlign:'center'},coords:{color:'#93aab7',textAlign:'center',marginTop:10,fontSize:12},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'flex-end'},choice:{paddingVertical:9,paddingHorizontal:12,borderRadius:10,borderWidth:1,borderColor:'#31536a'},choiceOn:{backgroundColor:'#c89232',borderColor:'#c89232'},choiceText:{color:'#e8f0f4'},choiceOnText:{color:'#071724',fontWeight:'900'},
- dayGrid:{flexDirection:'row',flexWrap:'wrap',gap:8,marginTop:12,justifyContent:'center'},dayCell:{width:'13%',minWidth:38,paddingVertical:10,borderRadius:10,borderWidth:1,borderColor:'#31536a',alignItems:'center'},dayCellBlank:{width:'13%',minWidth:38,paddingVertical:10},dayCellOn:{backgroundColor:'#c89232',borderColor:'#c89232'},dayText:{color:'#eef4f7',fontWeight:'700'},dayTextOn:{color:'#071724',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:76,backgroundColor:'#061520',borderTopWidth:1,borderTopColor:'#21465e',flexDirection:'row',paddingTop:6},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#7f98a6',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4bb52',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:12,paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#21465e'},prayerLinkText:{color:'#f4bb52',fontSize:14,fontWeight:'800'}
+ calendarTitle:{color:'#fff',fontSize:23,fontWeight:'900',textAlign:'center',marginBottom:14},calendarControls:{flexDirection:'row-reverse',alignItems:'stretch',gap:7},calendarButton:{flex:1,minHeight:46,borderWidth:1,borderColor:'#8f6827',borderRadius:12,alignItems:'center',justifyContent:'center',paddingHorizontal:5},calendarButtonText:{color:'#f4bb52',fontSize:12,fontWeight:'800',textAlign:'center'},todayButton:{minWidth:68,minHeight:46,backgroundColor:'#c89232',borderRadius:12,alignItems:'center',justifyContent:'center'},todayButtonText:{color:'#071724',fontWeight:'900'},weekRow:{flexDirection:'row',marginTop:16,marginBottom:4},weekDay:{width:'14.285%',color:'#9fb7c5',fontSize:10,fontWeight:'800',textAlign:'center'},dayGrid:{flexDirection:'row',flexWrap:'wrap',marginTop:4},dayCell:{width:'14.285%',height:46,borderRadius:10,alignItems:'center',justifyContent:'center'},dayCellBlank:{width:'14.285%',height:46},eventCell:{backgroundColor:'rgba(200,146,50,0.16)'},todayCell:{backgroundColor:'#c89232'},dayText:{color:'#eef4f7',fontWeight:'700'},eventDayText:{color:'#f4bb52',fontWeight:'900'},todayDayText:{color:'#071724',fontWeight:'900'},eventDot:{width:4,height:4,borderRadius:2,backgroundColor:'#f4bb52',marginTop:3},eventList:{marginTop:12,paddingTop:10,borderTopWidth:1,borderTopColor:'#21465e'},secondaryButton:{borderWidth:1,borderColor:'#c89232',padding:13,borderRadius:12,marginTop:10},secondaryButtonText:{color:'#f4bb52',fontWeight:'900',textAlign:'center'},backButton:{alignSelf:'flex-end',borderWidth:1,borderColor:'#8f6827',borderRadius:12,paddingVertical:10,paddingHorizontal:14,marginTop:8},backButtonText:{color:'#f4bb52',fontWeight:'900'},dayCellOn:{backgroundColor:'#c89232',borderColor:'#c89232'},dayTextOn:{color:'#071724',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:76,backgroundColor:'#061520',borderTopWidth:1,borderTopColor:'#21465e',flexDirection:'row',paddingTop:6},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#7f98a6',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4bb52',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:12,paddingVertical:10,alignItems:'center',borderTopWidth:1,borderTopColor:'#21465e'},prayerLinkText:{color:'#f4bb52',fontSize:14,fontWeight:'800'}
 });
