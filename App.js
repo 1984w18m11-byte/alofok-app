@@ -701,9 +701,6 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 <Card title='مواقيت الصلاة'>
   <Text style={s.prayerHint}>مواقيت اليوم حسب موقعك الحالي</Text>
   <PrayerGrid p={prayers} onPress={()=>changeTab('adhan')}/>
-  <Pressable style={s.prayerLink} onPress={()=>changeTab('adhan')}>
-    <Text style={s.prayerLinkText}>عرض التفاصيل واختيار الأذان ←</Text>
-  </Pressable>
 </Card>
    </>}
    {tab==='calendar'&&<>
