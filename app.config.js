@@ -7,7 +7,7 @@ module.exports = () => {
 
   return {
     ...base,
-    name: isPaid ? 'الأفق المدفوعة' : 'الأفق',
+    name: isPaid ? 'الأفق بلس' : 'الأفق',
     slug: `alofok-${variant}`,
     scheme: `alofok-${variant}`,
     icon,
