@@ -3,7 +3,7 @@ const base = require('./app.json').expo;
 module.exports = () => {
   const isPaid = process.env.APP_VARIANT === 'paid';
   const variant = isPaid ? 'paid' : 'trial';
-  const icon = isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png';
+  const icon = isPaid ? './assets/mecca-night-background.png' : './assets/icon-trial.png';
 
   return {
     ...base,
