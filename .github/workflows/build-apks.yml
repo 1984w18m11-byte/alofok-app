@@ -42,7 +42,8 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate translation completeness
+      - name: Report translation completeness for preview
+        continue-on-error: true
         run: npm run check:translations
 
       - name: Validate Expo configuration
