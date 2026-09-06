@@ -14,6 +14,7 @@ import {calculatePrayerTimes,calculateFastingTimes} from './src/engine/prayer';
 import {jdFromDate,illumination,elongationDeg,findConjunctionNear} from './src/engine/astronomy';
 import {proposedLunisolarDate,addLunisolarMonths,addLunisolarYears,lunisolarMonthLength} from './src/engine/lunisolar';
 import {LOCALES,localeTag,isRtlLocale} from './src/i18n/locales';
+import {makeTranslator} from './src/i18n/translations';
 
 Notifications.setNotificationHandler({
   handleNotification:async()=>({
@@ -131,6 +132,7 @@ export default function App(){
  const [showLanguageChoices,setShowLanguageChoices]=useState(false);
  const activeLocale=appLanguage==='system'?undefined:localeTag(appLanguage);
  const interfaceIsRtl=appLanguage==='system'?true:isRtlLocale(appLanguage);
+ const t=makeTranslator(appLanguage);
  const [coords,setCoords]=useState({lat:33.3152,lon:44.3661});
  const [city,setCity]=useState(cities.find(x=>x.id==='iq-baghdad'));
  const [locState,setLocState]=useState('بغداد • افتراضي');
@@ -716,18 +718,18 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
       {!!weeklyAd.action_url&&<Pressable style={s.adAction} onPress={()=>Linking.openURL(weeklyAd.action_url)}><Text style={s.adActionText}>{weeklyAd.action_label||'عرض الإعلان'}</Text></Pressable>}
     </View>}
     
-<Card title='مواقيت الصلاة'>
-  <Text style={s.prayerHint}>مواقيت اليوم حسب موقعك الحالي</Text>
+<Card title={t('prayerTimes')}>
+  <Text style={s.prayerHint}>{t('prayerHint')}</Text>
   <PrayerGrid p={prayers}/>
 </Card>
-    <Card title='التقويم العربي'>
+    <Card title={t('arabicCalendar')}>
      <Text style={s.researchNotice}>نسخة بحثية تقديرية وليست تقويمًا شرعيًا أو رسميًا معتمدًا.</Text>
      <View onStartShouldSetResponder={()=>true} onResponderGrant={e=>setSwipeStartX(e.nativeEvent.pageX)} onResponderRelease={e=>{if(swipeStartX===null)return;const dx=e.nativeEvent.pageX-swipeStartX;if(dx>50)setCalendarDate(d=>addLunisolarMonths(d,-1));if(dx<-50)setCalendarDate(d=>addLunisolarMonths(d,1));setSwipeStartX(null)}}>
       <Text style={s.calendarTitle}>{calendarView.monthNameAr} {calendarView.year} هـ</Text>
       <View style={s.calendarControls}>
-       <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,-1))}><Text style={s.calendarButtonText}>الشهر السابق</Text></Pressable>
-       <Pressable style={s.todayButton} onPress={()=>setCalendarDate(new Date())}><Text style={s.todayButtonText}>اليوم</Text></Pressable>
-       <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,1))}><Text style={s.calendarButtonText}>الشهر القادم</Text></Pressable>
+       <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,-1))}><Text style={s.calendarButtonText}>{t('previousMonth')}</Text></Pressable>
+       <Pressable style={s.todayButton} onPress={()=>setCalendarDate(new Date())}><Text style={s.todayButtonText}>{t('today')}</Text></Pressable>
+       <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,1))}><Text style={s.calendarButtonText}>{t('nextMonth')}</Text></Pressable>
       </View>
       <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
       <View style={s.dayGrid}>
@@ -737,12 +739,12 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
       {selectedEventCalendar==='lunar'&&selectedCalendarEvent&&<EventDetails title={selectedEventTitle} events={selectedCalendarEvent}/>}
      </View>
     </Card>
-    <Card title='التقويم الميلادي'>
+    <Card title={t('gregorianCalendar')}>
      <Text style={s.calendarTitle}>{gregorianMonthTitle(gregorianDate)}</Text>
      <View style={s.calendarControls}>
-      <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,-1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>الشهر السابق</Text></Pressable>
-      <Pressable style={s.todayButton} onPress={()=>{setGregorianDate(new Date());setSelectedCalendarEvent(null)}}><Text style={s.todayButtonText}>اليوم</Text></Pressable>
-      <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>الشهر القادم</Text></Pressable>
+      <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,-1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>{t('previousMonth')}</Text></Pressable>
+      <Pressable style={s.todayButton} onPress={()=>{setGregorianDate(new Date());setSelectedCalendarEvent(null)}}><Text style={s.todayButtonText}>{t('today')}</Text></Pressable>
+      <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>{t('nextMonth')}</Text></Pressable>
      </View>
      <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
      <View style={s.dayGrid}>
@@ -754,13 +756,13 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    </>}
 {tab==='settings'&&<>
     <View style={s.settingsHeader}>
-     <Pressable accessibilityLabel='الرجوع إلى الصفحة الرئيسية' style={s.settingsBackButton} onPress={()=>changeTab('today')}><Text style={s.settingsBackIcon}>←</Text></Pressable>
-     <View style={s.settingsHeaderText}><Text style={s.settingsHeaderTitle}>الإعدادات</Text><Text style={s.settingsHeaderSub}>اضغط على أي خيار لتعديله</Text></View>
+     <Pressable accessibilityLabel={t('backHome')} style={s.settingsBackButton} onPress={()=>changeTab('today')}><Text style={s.settingsBackIcon}>←</Text></Pressable>
+     <View style={s.settingsHeaderText}><Text style={s.settingsHeaderTitle}>{t('settings')}</Text><Text style={s.settingsHeaderSub}>{t('settingsHint')}</Text></View>
     </View>
-    <SettingsCard title='لغة التطبيق'>
+    <SettingsCard title={t('appLanguage')}>
      <Pressable style={s.soundSelector} onPress={()=>setShowLanguageChoices(v=>!v)}>
       <View style={s.compactSquare}><Text style={s.compactSquareIcon}>文</Text></View>
-      <View style={s.settingText}><Text style={s.text}>اختيار لغة الواجهة</Text><Text style={s.sub}>{LANGUAGE_CHOICES.find(([id])=>id===appLanguage)?.[1]||'لغة الجهاز'}</Text></View>
+      <View style={s.settingText}><Text style={s.text}>{t('chooseLanguage')}</Text><Text style={s.sub}>{LANGUAGE_CHOICES.find(([id])=>id===appLanguage)?.[1]||'لغة الجهاز'}</Text></View>
       <Text style={s.chevron}>‹</Text>
      </Pressable>
      {showLanguageChoices&&<View style={s.languageList}>{LANGUAGE_CHOICES.map(([id,label])=><Pressable key={id} style={[s.languageChoice,appLanguage===id&&s.languageChoiceOn]} onPress={()=>chooseAppLanguage(id)}><Text style={[s.languageChoiceText,appLanguage===id&&s.languageChoiceTextOn]}>{label}</Text></Pressable>)}</View>}
@@ -776,22 +778,22 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Text style={s.text}>مكان مخصص مستقبلاً لشراء ثيمات وأصوات وحزم موسمية بصورة منفردة.</Text>
      <View style={s.shopRow}><View style={s.shopItem}><Text style={s.shopIcon}>◐</Text><Text style={s.shopText}>ثيمات</Text></View><View style={s.shopItem}><Text style={s.shopIcon}>♪</Text><Text style={s.shopText}>أصوات</Text></View><View style={s.shopItem}><Text style={s.shopIcon}>✦</Text><Text style={s.shopText}>حزم موسمية</Text></View></View>
     </SettingsCard>}
-    <SettingsCard title='تحديثات الأفق'>
+    <SettingsCard title={t('updates')}>
      <Pressable style={[s.updateButton,updateInfo&&s.updateButtonAvailable]} onPress={()=>updateInfo?showUpdateDialog():checkForUpdate(true)}>
       <View style={s.updateIconWrap}><Text style={s.updateIcon}>↻</Text>{updateInfo&&<View style={s.redDot}/>}</View>
       <View style={s.updateTextWrap}>
-       <Text style={s.updateTitle}>{updateInfo?`تحديث جديد — الإصدار ${updateInfo.version}`:'البحث عن تحديث'}</Text>
-       <Text style={s.updateSub}>{updateChecking?'جاري البحث…':updateInfo?'اضغط لعرض التفاصيل والتحديث':`الإصدار الحالي ${APP_VERSION}`}</Text>
+       <Text style={s.updateTitle}>{updateInfo?`تحديث جديد — الإصدار ${updateInfo.version}`:t('checkUpdate')}</Text>
+       <Text style={s.updateSub}>{updateChecking?t('checking'):updateInfo?'اضغط لعرض التفاصيل والتحديث':`الإصدار الحالي ${APP_VERSION}`}</Text>
       </View>
       <Text style={s.chevron}>‹</Text>
      </Pressable>
      {lastUpdateCheck&&<Text style={s.lastCheck}>آخر فحص: {lastUpdateCheck.toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'})}</Text>}
     </SettingsCard>
-    <SettingsCard title='إعدادات التنبيهات'>
-     <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>تنبيه الإمساك</Text><Text style={s.sub}>{fasting.imsak}</Text></View><Switch value={imsakAlertEnabled} onValueChange={v=>setNotificationPreference('imsak',v)} trackColor={{true:'#c89232'}}/></View>
-     <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>تنبيه الإفطار</Text><Text style={s.sub}>{fasting.iftar}</Text></View><Switch value={iftarAlertEnabled} onValueChange={v=>setNotificationPreference('iftar',v)} trackColor={{true:'#c89232'}}/></View>
-     <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>تنبيهات الصلوات</Text></View><Switch value={adhanEnabled} onValueChange={v=>setNotificationPreference('prayer',v)} trackColor={{true:'#c89232'}}/></View>
-     <Pressable style={s.soundSelector} onPress={()=>{if(showAdhanVoices)stopAdhan();setShowAdhanVoices(v=>!v)}}><Text style={s.settingIcon}>🔊</Text><View style={s.settingText}><Text style={s.text}>صوت التنبيه والأذان</Text><Text numberOfLines={1} style={s.sub}>{selectedAdhan?.display_ar||'اختر صوت الأذان'}</Text></View><Text style={s.chevron}>‹</Text></Pressable>
+    <SettingsCard title={t('alertSettings')}>
+     <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>{t('imsakAlert')}</Text><Text style={s.sub}>{fasting.imsak}</Text></View><Switch value={imsakAlertEnabled} onValueChange={v=>setNotificationPreference('imsak',v)} trackColor={{true:'#c89232'}}/></View>
+     <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>{t('iftarAlert')}</Text><Text style={s.sub}>{fasting.iftar}</Text></View><Switch value={iftarAlertEnabled} onValueChange={v=>setNotificationPreference('iftar',v)} trackColor={{true:'#c89232'}}/></View>
+     <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>{t('prayerAlerts')}</Text></View><Switch value={adhanEnabled} onValueChange={v=>setNotificationPreference('prayer',v)} trackColor={{true:'#c89232'}}/></View>
+     <Pressable style={s.soundSelector} onPress={()=>{if(showAdhanVoices)stopAdhan();setShowAdhanVoices(v=>!v)}}><Text style={s.settingIcon}>🔊</Text><View style={s.settingText}><Text style={s.text}>{t('adhanSound')}</Text><Text numberOfLines={1} style={s.sub}>{selectedAdhan?.display_ar||t('chooseAdhan')}</Text></View><Text style={s.chevron}>‹</Text></Pressable>
      {showAdhanVoices&&packs.map(p=><Pressable key={p.id} style={[s.adhanChoice,selectedAdhan?.id===p.id&&s.selectedSound]} onPress={async()=>{setSelectedAdhan(p);await AsyncStorage.setItem('alofq_selected_adhan_id',p.id);await AsyncStorage.setItem('alofq_adhan_manual','1');previewAdhan(p)}}><Text style={s.playIcon}>▶</Text><Text style={s.text}>{p.display_ar}</Text></Pressable>)}
      {showAdhanVoices&&<Pressable disabled={!adhanSound} style={[s.stopButton,!adhanSound&&s.stopButtonDisabled]} onPress={stopAdhan}><Text style={s.stopButtonText}>■ إيقاف المعاينة</Text></Pressable>}
      <View style={s.volumeBox}><Text style={s.text}>مستوى الصوت — {Math.round(adhanVolume*100)}٪</Text><View style={s.volumeTrack}>{[.2,.4,.6,.8,1].map(level=><Pressable key={level} onPress={()=>changeAdhanVolume(level)} style={[s.volumeStep,adhanVolume>=level&&s.volumeStepOn]}/>)}</View></View>
@@ -821,19 +823,19 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Pressable style={s.secondaryButton} onPress={()=>Platform.OS==='android'?Linking.sendIntent('android.settings.WALLPAPER_SETTINGS').catch(()=>Linking.openSettings()):Alert.alert('الآيفون','احفظ الصورة وطبّقها يدوياً أو بواسطة تطبيق الاختصارات.')}><Text style={s.secondaryButtonText}>فتح إعدادات خلفية الجهاز</Text></Pressable>
      <Text style={s.policyMeta}>قد تختلف خيارات الشاشة الرئيسية والقفل حسب الشركة وإصدار أندرويد. لا يتجاوز الأفق قرار النظام.</Text>
     </SettingsCard>}
-    <SettingsCard title='اختيار المدينة يدويًا'><Pressable style={s.secondaryButton} onPress={()=>setShowCityChoices(v=>!v)}><Text style={s.secondaryButtonText}>{showCityChoices?'إغلاق قائمة المدن':'عرض المدن'}</Text></Pressable>{showCityChoices&&cities.map(item=><Pressable key={item.id} style={[s.cityChoice,item.id===city?.id&&s.cityChoiceActive]} onPress={()=>{chooseCity(item.id);setShowCityChoices(false)}}><Text style={item.id===city?.id?s.cityChoiceTextActive:s.cityChoiceText}>{item.name_ar}</Text></Pressable>)}</SettingsCard>
-    <SettingsCard title='طريقة حساب مواقيت الصلاة'><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={async()=>{setMethod(id);try{await AsyncStorage.setItem('alofq_prayer_method',id)}catch(e){console.log('Method save error:',e)}}}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></SettingsCard>
+    <SettingsCard title={t('city')}><Pressable style={s.secondaryButton} onPress={()=>setShowCityChoices(v=>!v)}><Text style={s.secondaryButtonText}>{showCityChoices?t('closeCities'):t('showCities')}</Text></Pressable>{showCityChoices&&cities.map(item=><Pressable key={item.id} style={[s.cityChoice,item.id===city?.id&&s.cityChoiceActive]} onPress={()=>{chooseCity(item.id);setShowCityChoices(false)}}><Text style={item.id===city?.id?s.cityChoiceTextActive:s.cityChoiceText}>{item.name_ar}</Text></Pressable>)}</SettingsCard>
+    <SettingsCard title={t('calculation')}><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={async()=>{setMethod(id);try{await AsyncStorage.setItem('alofq_prayer_method',id)}catch(e){console.log('Method save error:',e)}}}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></SettingsCard>
     {APP_VARIANT==='trial'&&<SettingsCard title='الإعلان في تطبيق الأفق'>
      <Text style={s.text}>مساحة لإعلان واحد في الأسبوع. لا يظهر أي إعلان عندما لا توجد حملة فعّالة.</Text>
      <Pressable style={s.secondaryButton} onPress={contactForAdvertising}><Text style={s.secondaryButtonText}>أعلن في تطبيق الأفق</Text></Pressable>
      <Text style={s.sub}>التواصل عبر واتساب أو الاتصال سيُفعّل بعد إضافة رقم الإعلانات.</Text>
     </SettingsCard>}
-    <SettingsCard title='سياسة الخصوصية'>
+    <SettingsCard title={t('privacy')}>
      <Text style={s.text}>الموقع لحساب المواقيت فقط، والتفضيلات محفوظة على جهازك.</Text>
      <Pressable style={s.secondaryButton} onPress={()=>setShowPrivacy(v=>!v)}><Text style={s.secondaryButtonText}>{showPrivacy?'إخفاء السياسة':'قراءة سياسة الخصوصية'}</Text></Pressable>
      {showPrivacy&&<><Text style={s.policyText}>{PRIVACY_SUMMARY}</Text><Text style={s.policyMeta}>سارية على النسختين • آخر تحديث: 6 سبتمبر 2026</Text></>}
     </SettingsCard>
-    <SettingsCard title='حقوق الطبع والنشر والتوزيع'>
+    <SettingsCard title={t('copyright')}>
      <Text style={s.text}>© 2026 الأفق — تصميم وفكرة وتطوير: وسام محمد</Text>
      <Pressable style={s.secondaryButton} onPress={()=>setShowCopyright(v=>!v)}><Text style={s.secondaryButtonText}>{showCopyright?'إخفاء السياسة':'قراءة سياسة الطبع والتوزيع'}</Text></Pressable>
      {showCopyright&&<><Text style={s.policyText}>{COPYRIGHT_SUMMARY}</Text><Text style={s.policyMeta}>المكونات الخارجية تبقى خاضعة لتراخيص أصحابها.</Text></>}
