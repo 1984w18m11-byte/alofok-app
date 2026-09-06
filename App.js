@@ -631,7 +631,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  }
 
 
- return <ImageBackground source={require('./assets/mecca-night-background.png')} resizeMode='cover' style={s.background}>
+ return <View style={s.background}>
   <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background}]}/>
   <SafeAreaView style={s.root}>
   <View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>
@@ -779,7 +779,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <Text style={tab===id?s.active:s.muted}>{t}</Text>
   </Pressable>)}</View>
   </SafeAreaView>
- </ImageBackground>
+ </View>
 }
 function Card({title,children}){return <View style={s.card}><Text style={s.title}>{title}</Text>{children}</View>}
 function PrayerGrid({p,onPress}){return <View style={s.pg}>{PRAYERS.map(([a,k,icon])=><Pressable onPress={onPress} style={[s.prayerRow,k==='maghrib'&&s.prayerRowAccent]} key={k}><Text style={[s.prayerTime,k==='maghrib'&&s.prayerTimeAccent]}>{p[k]}</Text><Text style={s.prayerName}>{a}</Text><Text style={[s.prayerIcon,k==='maghrib'&&s.prayerIconAccent]}>{icon}</Text></Pressable>)}</View>}
