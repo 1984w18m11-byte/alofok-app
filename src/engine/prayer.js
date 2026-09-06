@@ -55,8 +55,20 @@ export function calculatePrayerTimes({date,lat,lon,tzOffsetMin,method="MWL",asrF
     maghrib:Hrise==null?null:noonMin+4*Hrise,
     isha: cfg.ishaMinutes ? noonMin+4*Hrise+cfg.ishaMinutes : (Hisha==null?null:noonMin+4*Hisha)
   };
+  let highLatitudeAdjusted=false;
+  if(raw.sunrise!=null&&raw.maghrib!=null){
+    const nightDuration=1440-(raw.maghrib-raw.sunrise);
+    if(raw.fajr==null){
+      raw.fajr=raw.sunrise-Math.min(0.5,cfg.fajr/60)*nightDuration;
+      highLatitudeAdjusted=true;
+    }
+    if(raw.isha==null&&cfg.isha){
+      raw.isha=raw.maghrib+Math.min(0.5,cfg.isha/60)*nightDuration;
+      highLatitudeAdjusted=true;
+    }
+  }
   const formatted=Object.fromEntries(Object.entries(raw).map(([k,v])=>[k,v==null?"--:--":fmtMinutes(v,tzOffsetMin)]));
-  return {rawMinutesUtc:raw,formatted,method,declinationDeg:decl};
+  return {rawMinutesUtc:raw,formatted,method,declinationDeg:decl,highLatitudeAdjusted};
 }
 
 /*
@@ -65,14 +77,11 @@ export function calculatePrayerTimes({date,lat,lon,tzOffsetMin,method="MWL",asrF
  * الإفطار: نهاية الشفق المسائي المدني عندما يكون مركز الشمس عند -6°
  * القاعدة ثابتة، والوقت يتغير حسب الموقع والتاريخ.
  */
-export function calculateFastingTimes({date,lat,lon,tzOffsetMin}){
-  const FASTING_ALTITUDE=-6;
-  const {decl,noonMin}=solarNoonAndDecl(date,lon);
-  const H=hourAngle(lat,decl,FASTING_ALTITUDE);
-
+export function calculateFastingTimes({date,lat,lon,tzOffsetMin,method="MWL",imsakMinutesBeforeFajr=10}){
+  const prayer=calculatePrayerTimes({date,lat,lon,tzOffsetMin,method,asrFactor:1});
   const raw={
-    imsak:H==null?null:noonMin-4*H,
-    iftar:H==null?null:noonMin+4*H
+    imsak:prayer.rawMinutesUtc.fajr==null?null:prayer.rawMinutesUtc.fajr-imsakMinutesBeforeFajr,
+    iftar:prayer.rawMinutesUtc.maghrib
   };
 
   const formatted={
@@ -83,8 +92,9 @@ export function calculateFastingTimes({date,lat,lon,tzOffsetMin}){
   return {
     rawMinutesUtc:raw,
     formatted,
-    criterion:"ALOFQ_CIVIL_TWILIGHT",
-    sunAltitudeDeg:FASTING_ALTITUDE,
-    declinationDeg:decl
+    criterion:"FAJR_MINUS_OFFSET_AND_SUNSET",
+    imsakMinutesBeforeFajr,
+    prayerMethod:method,
+    declinationDeg:prayer.declinationDeg
   };
 }

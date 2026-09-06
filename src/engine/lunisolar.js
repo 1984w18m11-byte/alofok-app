@@ -2,6 +2,8 @@ import {findConjunctionNear} from './astronomy';
 
 export const MONTHS_AR=['محرم','صفر','ربيع الأول','ربيع الآخر','جمادى الأولى','جمادى الآخرة','رجب','شعبان','رمضان','شوال','ذو القعدة','ذو الحجة'];
 export const MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada II','Rajab',"Sha'ban",'Ramadan','Shawwal','Dhu al-Qidah','Dhu al-Hijjah'];
+export const CORRECTION_PERIOD_AR='فترة التصحيح السنوية';
+export const CORRECTION_PERIOD_EN='Annual correction period';
 const SYNODIC=29.530588853;
 const DAY=86400000;
 
@@ -12,6 +14,7 @@ export const SEASONAL_POLICY={
 };
 
 export function monthName(index,lang='ar'){
+  if(index===13)return lang==='ar'?CORRECTION_PERIOD_AR:CORRECTION_PERIOD_EN;
   const arr=lang==='ar'?MONTHS_AR:MONTHS_EN;
   return arr[index-1]||'';
 }
@@ -36,18 +39,27 @@ export function proposedLunisolarDate(date=new Date()){
     start=muharramStartForGregorianYear(solarYear);
   }
   const days=(date-start)/DAY;
+  const nextStart=muharramStartForGregorianYear(solarYear+1);
+  const regularYearDays=12*SYNODIC;
+  if(days>=regularYearDays){
+    const correctionStart=new Date(start.getTime()+regularYearDays*DAY);
+    const correctionLength=Math.max(1,Math.ceil((nextStart-correctionStart)/DAY));
+    const correctionDay=Math.max(1,Math.min(correctionLength,Math.floor((date-correctionStart)/DAY)+1));
+    return {year:solarYear-578,month:13,day:correctionDay,monthNameAr:CORRECTION_PERIOD_AR,estimated:true,start,correctionStart,correctionLength,isCorrection:true};
+  }
   let month=Math.floor(days/SYNODIC)+1;
   if(month<1) month=1;
-  if(month>12) month=12; // intercalation period handled separately in future validated engine
+  if(month>12) month=12;
   const monthStart=new Date(start.getTime()+(month-1)*SYNODIC*DAY);
   const day=Math.max(1,Math.min(30,Math.floor((date-monthStart)/DAY)+1));
   // Research year numbering aligned so Gregorian 2026 maps to Hijri year 1448.
   const year=solarYear-578;
-  return {year,month,day,monthNameAr:MONTHS_AR[month-1],estimated:true,start};
+  return {year,month,day,monthNameAr:MONTHS_AR[month-1],estimated:true,start,isCorrection:false};
 }
 
 export function lunisolarMonthLength(date=new Date()){
   const current=proposedLunisolarDate(date);
+  if(current.isCorrection)return current.correctionLength;
   const first=new Date(date);
   first.setUTCDate(first.getUTCDate()-(current.day-1));
   for(let n=29;n<=30;n++){

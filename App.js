@@ -47,9 +47,9 @@ const COPYRIGHT_SUMMARY=`© 2026 وسام محمد — جميع الحقوق م�
 
 فكرة التقويم والمبادئ والحسابات العامة لا تصبح احتكارًا مطلقًا بمجرد إشعار حقوق الطبع؛ حمايتها، إن استوفت الشروط القانونية، قد تتطلب براءة أو تسجيلًا آخر. أما التعبير البرمجي والتصميم والنصوص والتجميع الأصلي فهي محمية وفق القانون. تبقى النصوص القرآنية والمكتبات والأصوات والمواد الخارجية خاضعة لحقوق وتراخيص أصحابها.`;
 
-function formatArabicClock(d){return new Intl.DateTimeFormat('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(d)}
-function formatGregorian(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d)}
-function weekday(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'long'}).format(d)}
+function formatArabicClock(d,timeZone){return new Intl.DateTimeFormat('ar-IQ',{timeZone,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(d)}
+function formatGregorian(d,timeZone){return new Intl.DateTimeFormat('ar-IQ',{timeZone,weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d)}
+function weekday(d,timeZone){return new Intl.DateTimeFormat('ar-IQ',{timeZone,weekday:'long'}).format(d)}
 function gregorianMonthTitle(d){return new Intl.DateTimeFormat('ar-IQ',{month:'long',year:'numeric'}).format(d)}
 function shiftGregorianMonth(date,amount){const d=new Date(date);d.setDate(1);d.setMonth(d.getMonth()+amount);return d}
 function civilDateForTimeZone(date,timeZone){
@@ -63,6 +63,7 @@ function civilDayKey(date,timeZone){
  try{return new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).format(date)}
  catch(e){return `${date.getFullYear()}-${date.getMonth()+1}-${date.getDate()}`}
 }
+function isValidTimeZone(timeZone){try{new Intl.DateTimeFormat('en-US',{timeZone}).format();return true}catch(e){return false}}
 function timeZoneOffsetMinutes(date,timeZone){
  try{
   const parts=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
@@ -105,6 +106,7 @@ export default function App(){
  const [tab,setTab]=useState('today');
  const [coords,setCoords]=useState({lat:33.3152,lon:44.3661});
  const [city,setCity]=useState(cities.find(x=>x.id==='iq-baghdad'));
+ const [timeZone,setTimeZone]=useState('Asia/Baghdad');
  const [locState,setLocState]=useState('بغداد • افتراضي');
  const [adhanEnabled,setAdhanEnabled]=useState(false);
  const [now,setNow]=useState(new Date());
@@ -128,7 +130,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [showCityChoices,setShowCityChoices]=useState(false);
  const [selectedTheme,setSelectedTheme]=useState('night');
  const [adhanVolume,setAdhanVolume]=useState(.7);
- const dayKey=civilDayKey(now,city?.tz);
+ const dayKey=civilDayKey(now,timeZone);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
  useEffect(()=>()=>{
@@ -140,16 +142,24 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   let active=true;
   async function restoreLocationAndMethod(){
    try{
-    const [cityId,savedMethod]=await Promise.all([
+    const [cityId,savedMethod,savedLat,savedLon,savedLabel,savedLocationMode,savedTimeZone]=await Promise.all([
      AsyncStorage.getItem('alofq_city_id'),
-     AsyncStorage.getItem('alofq_prayer_method')
+     AsyncStorage.getItem('alofq_prayer_method'),
+     AsyncStorage.getItem('alofq_location_lat'),
+     AsyncStorage.getItem('alofq_location_lon'),
+     AsyncStorage.getItem('alofq_location_label'),
+     AsyncStorage.getItem('alofq_location_mode'),
+     AsyncStorage.getItem('alofq_location_timezone')
     ]);
     if(!active)return;
     const savedCity=cities.find(x=>x.id===cityId);
+    const lat=Number(savedLat),lon=Number(savedLon);
+    const hasSavedGps=savedLocationMode==='gps'&&Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
     if(savedCity){
      setCity(savedCity);
-     setCoords({lat:savedCity.lat,lon:savedCity.lon});
-     setLocState(`${savedCity.name_ar} • محفوظ`);
+     setTimeZone(isValidTimeZone(savedTimeZone)?savedTimeZone:savedCity.tz);
+     setCoords(hasSavedGps?{lat,lon}:{lat:savedCity.lat,lon:savedCity.lon});
+     setLocState(hasSavedGps?(savedLabel||`${savedCity.name_ar} • GPS محفوظ`):`${savedCity.name_ar} • محفوظ`);
     }
     if(PRAYER_METHODS.some(([id])=>id===savedMethod))setMethod(savedMethod);
    }catch(e){console.log('Saved settings restore error:',e)}
@@ -217,8 +227,9 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        return;
      }
 
-     const pos=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.High});
+     const pos=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.Highest,mayShowUserSettingsDialog:true});
      const c={lat:pos.coords.latitude,lon:pos.coords.longitude};
+     if(!Number.isFinite(c.lat)||!Number.isFinite(c.lon)||Math.abs(c.lat)>90||Math.abs(c.lon)>180)throw new Error('Invalid GPS coordinates');
      setCoords(c);
 
      let nearest=cities[0],best=99999;
@@ -240,8 +251,21 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      }
 
      setCity(nearest);
-     setLocState(label);
-     try{await AsyncStorage.setItem('alofq_city_id',nearest.id)}catch(e){console.log('GPS city save error:',e)}
+     const accuracy=Math.max(0,Math.round(pos.coords.accuracy||0));
+     const locationLabel=`${label} • دقة ±${accuracy}م`;
+     const deviceTimeZone=Intl.DateTimeFormat().resolvedOptions().timeZone;
+     const gpsTimeZone=isValidTimeZone(deviceTimeZone)?deviceTimeZone:nearest.tz;
+     setLocState(locationLabel);
+     setTimeZone(gpsTimeZone);
+     try{await Promise.all([
+      AsyncStorage.setItem('alofq_city_id',nearest.id),
+      AsyncStorage.setItem('alofq_location_lat',String(c.lat)),
+      AsyncStorage.setItem('alofq_location_lon',String(c.lon)),
+      AsyncStorage.setItem('alofq_location_label',locationLabel),
+      AsyncStorage.setItem('alofq_location_mode','gps'),
+      AsyncStorage.setItem('alofq_location_timezone',gpsTimeZone)
+     ])}catch(e){console.log('GPS location save error:',e)}
+     if(showMessage&&accuracy>200)Alert.alert('دقة الموقع منخفضة',`الدقة الحالية نحو ±${accuracy} متر. انتقل إلى مكان مفتوح وشغّل دقة الموقع العالية ثم حدّث الموقع مرة أخرى.`);
    }catch(e){
      setLocState('تعذر قراءة GPS');
      if(showMessage) Alert.alert('تعذر تحديد الموقع','تأكد من تشغيل GPS ومنح الإذن للتطبيق.');
@@ -254,13 +278,21 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    const c=cities.find(x=>x.id===id);
    if(!c)return;
    setCity(c);
+   setTimeZone(c.tz);
    setCoords({lat:c.lat,lon:c.lon});
    setLocState(`${c.name_ar} • اختيار يدوي`);
-   try{await AsyncStorage.setItem('alofq_city_id',c.id)}catch(e){console.log('City save error:',e)}
+   try{await Promise.all([
+    AsyncStorage.setItem('alofq_city_id',c.id),
+    AsyncStorage.setItem('alofq_location_mode','manual'),
+    AsyncStorage.setItem('alofq_location_timezone',c.tz),
+    AsyncStorage.removeItem('alofq_location_lat'),
+    AsyncStorage.removeItem('alofq_location_lon'),
+    AsyncStorage.removeItem('alofq_location_label')
+   ])}catch(e){console.log('City save error:',e)}
  }
 
- const tzOffsetMin=timeZoneOffsetMinutes(now,city?.tz);
- const prayerCalcDate=useMemo(()=>civilDateForTimeZone(now,city?.tz),[dayKey,city?.tz]);
+ const tzOffsetMin=timeZoneOffsetMinutes(now,timeZone);
+ const prayerCalcDate=useMemo(()=>civilDateForTimeZone(now,timeZone),[dayKey,timeZone]);
 
  const prayerData=useMemo(()=>calculatePrayerTimes({
    date:prayerCalcDate,
@@ -276,12 +308,14 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    date:prayerCalcDate,
    lat:coords.lat,
    lon:coords.lon,
-   tzOffsetMin
- }),[coords.lat,coords.lon,prayerCalcDate,tzOffsetMin]);
+   tzOffsetMin,
+   method,
+   imsakMinutesBeforeFajr:10
+ }),[coords.lat,coords.lon,prayerCalcDate,tzOffsetMin,method]);
 
  const fasting=fastingData.formatted;
 
- const lunar=useMemo(()=>proposedLunisolarDate(now),[now.toDateString()]);
+ const lunar=useMemo(()=>proposedLunisolarDate(prayerCalcDate),[dayKey,prayerCalcDate]);
  const isRamadan=lunar.month===9;
  const calendarView=useMemo(()=>proposedLunisolarDate(calendarDate),[calendarDate]);
 
@@ -367,19 +401,25 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     const permission=await Notifications.getPermissionsAsync();
     if(permission.status!=='granted')return;
     const prayerNames={fajr:'الفجر',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء'};
-    for(const [key,title] of Object.entries(prayerNames)){
-     const date=utcDateFromMinutes(prayerCalcDate,prayerData.rawMinutesUtc[key]);
-     if(!date||date.getTime()<=Date.now())continue;
-     await Notifications.scheduleNotificationAsync({
-      content:{title:`حان وقت صلاة ${title}`,body:'افتح تطبيق الأفق لمشاهدة التفاصيل والاستماع إلى صوت الأذان المختار.',sound:'default',data:{kind:'alofq-prayer',prayer:key}},
-      trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date,channelId:'prayers'}
-     });
+    for(let dayOffset=0;dayOffset<7;dayOffset++){
+     const targetDay=new Date(prayerCalcDate);
+     targetDay.setUTCDate(targetDay.getUTCDate()+dayOffset);
+     const targetOffset=timeZoneOffsetMinutes(targetDay,timeZone);
+     const targetPrayers=calculatePrayerTimes({date:targetDay,lat:coords.lat,lon:coords.lon,tzOffsetMin:targetOffset,method,asrFactor:1});
+     for(const [key,title] of Object.entries(prayerNames)){
+      const date=utcDateFromMinutes(targetDay,targetPrayers.rawMinutesUtc[key]);
+      if(!date||date.getTime()<=Date.now())continue;
+      await Notifications.scheduleNotificationAsync({
+       content:{title:`حان وقت صلاة ${title}`,body:'افتح تطبيق الأفق لمشاهدة التفاصيل والاستماع إلى صوت الأذان المختار.',sound:'default',data:{kind:'alofq-prayer',prayer:key}},
+       trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date,channelId:'prayers'}
+      });
+     }
     }
    }catch(e){console.log('Prayer notifications error:',e)}
   }
   setupPrayerNotifications();
   return()=>{active=false};
- },[adhanEnabled,dayKey,prayerData,prayerCalcDate]);
+ },[adhanEnabled,dayKey,prayerCalcDate,coords.lat,coords.lon,method,timeZone]);
 
  useEffect(()=>{
    let active=true;
@@ -408,41 +448,21 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        const current=await Notifications.getPermissionsAsync();
        if(current.status!=='granted'||!active)return;
 
-       if(!isRamadan)return;
+       for(let dayOffset=0;dayOffset<7;dayOffset++){
+         const targetDay=new Date(prayerCalcDate);
+         targetDay.setUTCDate(targetDay.getUTCDate()+dayOffset);
+         if(proposedLunisolarDate(targetDay).month!==9)continue;
+         const targetOffset=timeZoneOffsetMinutes(targetDay,timeZone);
+         const targetFasting=calculateFastingTimes({date:targetDay,lat:coords.lat,lon:coords.lon,tzOffsetMin:targetOffset,method,imsakMinutesBeforeFajr:10});
+         const imsakDate=utcDateFromMinutes(targetDay,targetFasting.rawMinutesUtc.imsak);
+         const iftarDate=utcDateFromMinutes(targetDay,targetFasting.rawMinutesUtc.iftar);
 
-       const imsakDate=utcDateFromMinutes(prayerCalcDate,fastingData.rawMinutesUtc.imsak);
-       const iftarDate=utcDateFromMinutes(prayerCalcDate,fastingData.rawMinutesUtc.iftar);
-
-       if(imsakAlertEnabled&&imsakDate&&imsakDate>Date.now()){
-         await Notifications.scheduleNotificationAsync({
-           content:{
-             title:'موعد الإمساك',
-             body:'حان الآن موعد الإمساك بحسب المعيار الفلكي المعتمد في الأفق.',
-             sound:'default',
-             data:{kind:'alofq-imsak'}
-           },
-           trigger:{
-             type:Notifications.SchedulableTriggerInputTypes.DATE,
-             date:imsakDate,
-             channelId:'fasting'
-           }
-         });
-       }
-
-       if(iftarAlertEnabled&&iftarDate&&iftarDate>Date.now()){
-         await Notifications.scheduleNotificationAsync({
-           content:{
-             title:'موعد الإفطار',
-             body:RAMADAN_VERSE+' — سورة البقرة، الآية 187',
-             sound:'default',
-             data:{kind:'alofq-iftar'}
-           },
-           trigger:{
-             type:Notifications.SchedulableTriggerInputTypes.DATE,
-             date:iftarDate,
-             channelId:'fasting'
-           }
-         });
+         if(imsakAlertEnabled&&imsakDate&&imsakDate>Date.now()){
+           await Notifications.scheduleNotificationAsync({content:{title:'موعد الإمساك',body:'حان الآن موعد الإمساك، قبل وقت الفجر المحسوب بعشر دقائق.',sound:'default',data:{kind:'alofq-imsak'}},trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:imsakDate,channelId:'fasting'}});
+         }
+         if(iftarAlertEnabled&&iftarDate&&iftarDate>Date.now()){
+           await Notifications.scheduleNotificationAsync({content:{title:'موعد الإفطار',body:RAMADAN_VERSE+' — سورة البقرة، الآية 187',sound:'default',data:{kind:'alofq-iftar'}},trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:iftarDate,channelId:'fasting'}});
+         }
        }
      }catch(e){
        console.log('Fasting notifications error:',e);
@@ -452,13 +472,14 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    setupFastingNotifications();
    return()=>{active=false};
  },[
-   fastingData.rawMinutesUtc.imsak,
-   fastingData.rawMinutesUtc.iftar,
    imsakAlertEnabled,
    iftarAlertEnabled,
-   isRamadan,
    dayKey,
-   prayerCalcDate
+   prayerCalcDate,
+   coords.lat,
+   coords.lon,
+   method,
+   timeZone
  ]);
 
  const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
@@ -526,10 +547,11 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Pressable style={s.quickAction} onPress={()=>changeTab('education')}><Text style={s.quickIcon}>◉</Text><Text style={s.quickText}>فكرة التقويم</Text></Pressable>
     </View>
     <View style={s.clockCard}>
-  <Text style={s.week}>{weekday(now)}</Text>
+  <Text style={s.week}>{weekday(now,timeZone)}</Text>
   <Text style={s.hdate}>{lunar.day} {lunar.monthNameAr} {lunar.year} هـ</Text>
-  <Text style={s.gdate}>{formatGregorian(now)}</Text>
-  <Text style={s.clock}>{formatArabicClock(now)}</Text>
+  {lunar.isCorrection&&<Text style={s.researchNotice}>فترة حسابية لمعادلة السنة مع الفصول، وليست شهرًا دينيًا ثالث عشر.</Text>}
+  <Text style={s.gdate}>{formatGregorian(now,timeZone)}</Text>
+  <Text style={s.clock}>{formatArabicClock(now,timeZone)}</Text>
   {isRamadan&&<View style={s.ramadanMini}>
     <Text style={s.ramadanMiniTitle}>رَمَضَانُ مُبَارَك</Text>
     <Text style={s.ramadanMiniText}>تقبل الله منا ومنكم صالح الأعمال</Text>
@@ -542,9 +564,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
       <Text style={s.subCenter}>الاستطالة {elong.toFixed(1)}°</Text>
       <Text style={s.subCenter}>أقرب اقتران محسوب: {conj.toLocaleString('ar-IQ')}</Text>
     </Card>
-    {isRamadan&&<Card title='رمضان — الإمساك والإفطار'><View style={s.pg}><View style={s.pi}><Text style={s.muted}>الإمساك</Text><Text style={s.gold}>{fasting.imsak}</Text></View><View style={s.pi}><Text style={s.muted}>الإفطار</Text><Text style={s.gold}>{fasting.iftar}</Text></View></View><View style={s.row}><Text style={s.text}>تنبيه موعد الإمساك</Text><Switch value={imsakAlertEnabled} onValueChange={v=>setNotificationPreference('imsak',v)}/></View><View style={s.row}><Text style={s.text}>تنبيه موعد الإفطار</Text><Switch value={iftarAlertEnabled} onValueChange={v=>setNotificationPreference('iftar',v)}/></View><Text style={s.sub}>سيُحسب موعد الإمساك وموعد الإفطار بشكل مستقل عن أذان الفجر والمغرب.</Text><Text style={[s.text,{marginTop:12,lineHeight:28}]}>{RAMADAN_VERSE}</Text><Text style={s.sub}>سورة البقرة — الآية 187</Text></Card>}
+    {isRamadan&&<Card title='رمضان — الإمساك والإفطار'><View style={s.pg}><View style={s.pi}><Text style={s.muted}>الإمساك</Text><Text style={s.gold}>{fasting.imsak}</Text></View><View style={s.pi}><Text style={s.muted}>الإفطار</Text><Text style={s.gold}>{fasting.iftar}</Text></View></View><View style={s.row}><Text style={s.text}>تنبيه موعد الإمساك</Text><Switch value={imsakAlertEnabled} onValueChange={v=>setNotificationPreference('imsak',v)}/></View><View style={s.row}><Text style={s.text}>تنبيه موعد الإفطار</Text><Switch value={iftarAlertEnabled} onValueChange={v=>setNotificationPreference('iftar',v)}/></View><Text style={s.sub}>الإمساك قبل الفجر المحسوب بعشر دقائق، والإفطار عند غروب الشمس (وقت المغرب). راجع الجهة الدينية المحلية عند اختلاف المعايير.</Text><Text style={[s.text,{marginTop:12,lineHeight:28}]}>{RAMADAN_VERSE}</Text><Text style={s.sub}>سورة البقرة — الآية 187</Text></Card>}
 <Card title='مواقيت الصلاة'>
   <Text style={s.prayerHint}>مواقيت اليوم حسب موقعك الحالي</Text>
+  {prayerData.highLatitudeAdjusted&&<Text style={s.researchNotice}>استُخدمت معالجة الليالي القصيرة للفجر أو العشاء بسبب خط العرض والموسم.</Text>}
   <PrayerGrid p={prayers} onPress={()=>changeTab('adhan')}/>
   <Pressable style={s.prayerLink} onPress={()=>changeTab('adhan')}>
     <Text style={s.prayerLinkText}>عرض التفاصيل واختيار الأذان ←</Text>
@@ -581,6 +604,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Text style={s.researchNotice}>نسخة بحثية تقديرية وليست تقويمًا شرعيًا أو رسميًا معتمدًا.</Text>
      <View onStartShouldSetResponder={()=>true} onResponderGrant={e=>setSwipeStartX(e.nativeEvent.pageX)} onResponderRelease={e=>{if(swipeStartX===null)return;const dx=e.nativeEvent.pageX-swipeStartX;if(dx>50)setCalendarDate(d=>addLunisolarMonths(d,-1));if(dx<-50)setCalendarDate(d=>addLunisolarMonths(d,1));setSwipeStartX(null)}}>
       <Text style={s.calendarTitle}>{calendarView.monthNameAr} {calendarView.year} هـ</Text>
+      {calendarView.isCorrection&&<Text style={s.researchNotice}>هذه فترة تصحيح حسابية بين السنتين وليست اسم شهر عربي أو ديني.</Text>}
       <View style={s.calendarControls}>
        <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,-1))}><Text style={s.calendarButtonText}>الشهر السابق</Text></Pressable>
        <Pressable style={s.todayButton} onPress={()=>setCalendarDate(new Date())}><Text style={s.todayButtonText}>اليوم</Text></Pressable>
@@ -611,7 +635,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    </>}
    {tab==='adhan'&&<>
     <Pressable style={s.backButton} onPress={()=>changeTab('today')}><Text style={s.backButtonText}>‹ الرجوع إلى الرئيسية</Text></Pressable>
-    <Card title='مواقيت الصلاة'><PrayerGrid p={prayers}/></Card>
+    <Card title='مواقيت الصلاة'>{prayerData.highLatitudeAdjusted&&<Text style={s.researchNotice}>استُخدمت معالجة الليالي القصيرة للفجر أو العشاء بسبب خط العرض والموسم.</Text>}<PrayerGrid p={prayers}/></Card>
     <Card title='إعداد الأذان'><View style={s.row}><Text style={s.text}>تشغيل تنبيهات الصلاة</Text><Switch value={adhanEnabled} onValueChange={v=>setNotificationPreference('prayer',v)}/></View><Text style={s.sub}>يُطلب إذن الإشعارات فقط عند تفعيل التنبيهات. يستخدم الإشعار المجدول صوت النظام، ويمكن الاستماع إلى الأذان المختار من داخل التطبيق.</Text><Pressable style={s.primary} onPress={()=>{if(showAdhanVoices){stopAdhan();setShowAdhanVoices(false)}else setShowAdhanVoices(true)}}><Text style={s.primaryText}>{showAdhanVoices?'إغلاق قائمة الأصوات ✕':'🔊 اختيار ومعاينة صوت الأذان'}</Text></Pressable>{showAdhanVoices&&packs.map(p=><Pressable key={p.id} style={s.adhanChoice} onPress={async()=>{setSelectedAdhan(p);await AsyncStorage.setItem('alofq_selected_adhan_id',p.id);await AsyncStorage.setItem('alofq_adhan_manual','1');setShowAdhanLicense(false);previewAdhan(p)}}><Text style={s.playIcon}>▶</Text><Text style={s.text}>{p.display_ar}</Text></Pressable>)}{showAdhanVoices&&<Pressable disabled={!adhanSound} style={[s.stopButton,!adhanSound&&s.stopButtonDisabled]} onPress={stopAdhan}><Text style={s.stopButtonText}>■ إيقاف الصوت فورًا</Text></Pressable>}{selectedAdhan&&<><View style={s.row}><Text style={s.text}>{selectedAdhan.display_ar}</Text><Pressable style={s.choice} onPress={()=>setShowAdhanLicense(showAdhanLicense===false)}><Text style={s.choiceText}>الترخيص</Text></Pressable></View>{showAdhanLicense&&<Text style={selectedAdhan.status==='licensed'?s.ok:s.warn}>{selectedAdhan.status==='licensed'?'✓ الترخيص: '+(selectedAdhan.license||'غير محدد')+' • المصدر: '+(selectedAdhan.source||'غير محدد'):(selectedAdhan.note_ar||'هذا التسجيل يحتاج إلى إثبات تصريح قبل إضافته للتطبيق.')}</Text>}</>}</Card>
    </>}
    {tab==='adhkar'&&<>
@@ -641,7 +665,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <Card title='سياسة الخصوصية'>
      <Text style={s.text}>الموقع لحساب المواقيت فقط، والتفضيلات محفوظة على جهازك.</Text>
      <Pressable style={s.secondaryButton} onPress={()=>setShowPrivacy(v=>!v)}><Text style={s.secondaryButtonText}>{showPrivacy?'إخفاء السياسة':'قراءة سياسة الخصوصية'}</Text></Pressable>
-     {showPrivacy&&<><Text style={s.policyText}>{PRIVACY_SUMMARY}</Text><Text style={s.policyMeta}>سارية على النسختين • آخر تحديث: 5 سبتمبر 2026</Text></>}
+     {showPrivacy&&<><Text style={s.policyText}>{PRIVACY_SUMMARY}</Text><Text style={s.policyMeta}>سارية على النسختين • آخر تحديث: 6 سبتمبر 2026</Text></>}
     </Card>
     <Card title='حقوق الطبع والملكية الفكرية'>
      <Text style={s.text}>© 2026 الأفق — المالك والمصمم والمطور: وسام محمد</Text>
