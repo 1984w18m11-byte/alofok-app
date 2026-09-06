@@ -13,6 +13,7 @@ import weeklyAd from './src/data/weekly-ad.json';
 import {calculatePrayerTimes,calculateFastingTimes} from './src/engine/prayer';
 import {jdFromDate,illumination,elongationDeg,findConjunctionNear} from './src/engine/astronomy';
 import {proposedLunisolarDate,addLunisolarMonths,addLunisolarYears,lunisolarMonthLength} from './src/engine/lunisolar';
+import {LOCALES,localeTag,isRtlLocale} from './src/i18n/locales';
 
 Notifications.setNotificationHandler({
   handleNotification:async()=>({
@@ -49,17 +50,7 @@ const ADHAN_NOTIFICATION_SOUNDS={
 const PRAYERS=[['الفجر','fajr','♜'],['الشروق','sunrise','☼'],['الظهر','dhuhr','☀'],['العصر','asr','☀'],['المغرب','maghrib','◒'],['العشاء','isha','☾']];
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
-const LANGUAGE_CHOICES=[
- ['system','لغة الجهاز'],
- ['ar','العربية'],['en-US','English — United States'],['en-AU','English — Australia'],['en-GB','English — United Kingdom'],
- ['tr','Türkçe'],['ru','Русский'],['fr','Français'],['de','Deutsch'],['es','Español'],['it','Italiano'],['pt-BR','Português — Brasil'],['pt-PT','Português — Portugal'],
- ['fa','فارسی'],['ku','کوردی'],['ur','اردو'],['hi','हिन्दी'],['bn','বাংলা'],['pa','ਪੰਜਾਬੀ'],
- ['zh-CN','简体中文'],['zh-TW','繁體中文'],['ja','日本語'],['ko','한국어'],
- ['id','Bahasa Indonesia'],['ms','Bahasa Melayu'],['th','ไทย'],['vi','Tiếng Việt'],['fil','Filipino'],
- ['sw','Kiswahili'],['am','አማርኛ'],['ha','Hausa'],['so','Soomaali'],
- ['nl','Nederlands'],['pl','Polski'],['uk','Українська'],['ro','Română'],['el','Ελληνικά'],['sv','Svenska'],['no','Norsk'],['da','Dansk'],['fi','Suomi'],
- ['cs','Čeština'],['hu','Magyar'],['he','עברית']
-];
+const LANGUAGE_CHOICES=LOCALES.map(([id,label])=>[id,label]);
 const PRAYER_METHODS=[['MWL','رابطة العالم الإسلامي'],['EGYPT','الهيئة المصرية'],['KARACHI','جامعة كراتشي'],['UMM_AL_QURA','أم القرى']];
 const PRIVACY_SUMMARY='يستخدم الأفق الموقع الدقيق أثناء تشغيل التطبيق لحساب المواقيت وعرض اسم المنطقة. تُحفظ الإحداثيات والتفضيلات محليًا ولا يرسل التطبيق موقعك إلى المطور أو المعلن. قد تعرض النسخة التجريبية إعلانًا مباشرًا واحدًا في الأسبوع بعد مراجعته من إدارة التطبيق، دون شبكة إعلانات أو تتبع إعلاني. يتصل التطبيق بـ GitHub لفحص رقم الإصدار فقط، دون إرسال إحداثياتك. لا توجد حسابات مستخدمين ولا نبيع بيانات شخصية.';
 const COPYRIGHT_SUMMARY='© 2026 وسام محمد — جميع الحقوق محفوظة. يُمنح المستخدم حقًا شخصيًا لاستخدام النسخة التي حصل عليها بصورة مشروعة. يُحظر نسخ التطبيق أو إعادة بيعه أو نشره أو تعديله أو استخراج تصميمه وأصوله دون إذن كتابي. شراء النسخة المدفوعة لا ينقل ملكية التطبيق. تبقى المكتبات والأصوات الخارجية خاضعة لتراخيص أصحابها.';
@@ -138,6 +129,8 @@ export default function App(){
  const [tab,setTab]=useState('today');
  const [appLanguage,setAppLanguage]=useState('system');
  const [showLanguageChoices,setShowLanguageChoices]=useState(false);
+ const activeLocale=appLanguage==='system'?undefined:localeTag(appLanguage);
+ const interfaceIsRtl=appLanguage==='system'?true:isRtlLocale(appLanguage);
  const [coords,setCoords]=useState({lat:33.3152,lon:44.3661});
  const [city,setCity]=useState(cities.find(x=>x.id==='iq-baghdad'));
  const [locState,setLocState]=useState('بغداد • افتراضي');
@@ -688,7 +681,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background,opacity:IS_PLUS?.2:.76}]}/>
   <SafeAreaView style={s.root}>
   <View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>
- <ScrollView contentContainerStyle={s.page}>
+ <ScrollView contentContainerStyle={[s.page,{direction:interfaceIsRtl?'rtl':'ltr'}]}>
    {tab==='today'&&<View style={s.hero}>
     <View style={s.heroTopRow}>
      <View style={s.headerLocationWrap}>
