@@ -85,16 +85,13 @@
     "city": "*",
     "display_ar": "أذان سوريا — صباح فخري",
     "performer": "Sabah Fakhri",
-    "status": "licensed",
-    "license_required": false,
+    "status": "removed_license_unclear",
+    "license_required": true,
     "license": "Public domain",
     "source": "Wikimedia Commons — Call to prayer by Sabah Fakhry.mp3",
     "source_url": "https://commons.wikimedia.org/wiki/File:Call_to_prayer_by_Sabah_Fakhry.mp3",
-    "asset": "assets/adhan/adhan-syria-sabah-fakhry.ogg",
-    "available_in": [
-      "trial",
-      "paid"
-    ]
+    "asset": null,
+    "note_ar": "أزيل من التطبيق لأن إثبات حقوق التسجيل والأداء غير كافٍ للنشر التجاري الآمن."
   },
   {
     "id": "commons-morocco-hassan-ii",
