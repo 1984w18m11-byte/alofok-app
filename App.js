@@ -25,18 +25,18 @@ Notifications.setNotificationHandler({
 const fmtPct=x=>`${Math.round(x*100)}%`;
 const APP_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
 const ADHAN_ASSETS={
- 'commons-beautiful-adhan':require('./assets/adhan/beautiful-adhan.ogg'),
- 'commons-syria-sabah-fakhry':require('./assets/adhan/adhan-syria-sabah-fakhry.ogg'),
- 'commons-morocco-hassan-ii':require('./assets/adhan/adhan-morocco-hassan-ii.ogg'),
- 'commons-kazakhstan-shalqar':require('./assets/adhan/adhan-kazakhstan-shalqar.ogg'),
- 'commons-aaqib-azeez':require('./assets/adhan/adhan-aaqib-azeez.ogg')
+ 'commons-beautiful-adhan':require('./assets/adhan/beautiful_adhan.ogg'),
+ 'commons-syria-sabah-fakhry':require('./assets/adhan/adhan_syria_sabah_fakhry.ogg'),
+ 'commons-morocco-hassan-ii':require('./assets/adhan/adhan_morocco_hassan_ii.ogg'),
+ 'commons-kazakhstan-shalqar':require('./assets/adhan/adhan_kazakhstan_shalqar.ogg'),
+ 'commons-aaqib-azeez':require('./assets/adhan/adhan_aaqib_azeez.ogg')
 };
 const ADHAN_NOTIFICATION_SOUNDS={
- 'commons-beautiful-adhan':'beautiful-adhan.ogg',
- 'commons-syria-sabah-fakhry':'adhan-syria-sabah-fakhry.ogg',
- 'commons-morocco-hassan-ii':'adhan-morocco-hassan-ii.ogg',
- 'commons-kazakhstan-shalqar':'adhan-kazakhstan-shalqar.ogg',
- 'commons-aaqib-azeez':'adhan-aaqib-azeez.ogg'
+ 'commons-beautiful-adhan':'beautiful_adhan.ogg',
+ 'commons-syria-sabah-fakhry':'adhan_syria_sabah_fakhry.ogg',
+ 'commons-morocco-hassan-ii':'adhan_morocco_hassan_ii.ogg',
+ 'commons-kazakhstan-shalqar':'adhan_kazakhstan_shalqar.ogg',
+ 'commons-aaqib-azeez':'adhan_aaqib_azeez.ogg'
 };
 const PRAYERS=[['الفجر','fajr'],['الشروق','sunrise'],['الظهر','dhuhr'],['العصر','asr'],['المغرب','maghrib'],['العشاء','isha']];
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
@@ -345,7 +345,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   let active=true;
   async function setupPrayerNotifications(){
    try{
-    const soundFile=ADHAN_NOTIFICATION_SOUNDS[selectedAdhan?.id]||'beautiful-adhan.ogg';
+    const soundFile=ADHAN_NOTIFICATION_SOUNDS[selectedAdhan?.id]||'beautiful_adhan.ogg';
     // Android notification-channel sounds are immutable after creation, so each
     // bundled adhan gets its own stable channel. The OS can then play it while
     // the app is backgrounded, closed, or the screen is locked.
