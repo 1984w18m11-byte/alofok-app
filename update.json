@@ -1,8 +1,8 @@
 {
-  "version": "0.4.0",
-  "versionCode": 19,
-  "title_ar": "تحديث الأفق 0.4.0",
-  "notes_ar": "تحسين دقة الموقع، تصحيح تنبيهات الأذان، توحيد الثيم، وإضافة فحص تحديث آمن بحسب قناة التوزيع.",
+  "version": "0.4.1",
+  "versionCode": 20,
+  "title_ar": "تحديث الأفق 0.4.1",
+  "notes_ar": "إضافة مساحة اختيارية لإعلان مباشر واحد أسبوعياً في النسخة التجريبية، مع زر إغلاق وإخفاء كامل عند عدم وجود إعلان.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/latest",
   "play_url": null,
   "app_store_url": null,
