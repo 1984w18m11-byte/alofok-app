@@ -1,0 +1,13 @@
+{
+  "enabled": false,
+  "id": "",
+  "title": "",
+  "body": "",
+  "action_label": "",
+  "action_url": "",
+  "start_at": "",
+  "end_at": "",
+  "contact_phone": "",
+  "contact_method": "whatsapp",
+  "note_ar": "عند عدم وجود إعلان تبقى enabled=false فتختفي الخانة بالكامل."
+}
