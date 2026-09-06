@@ -24,7 +24,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
-const APP_VERSION='0.5.1';
+const APP_VERSION='0.5.2';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
 const UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update.json';
 function isNewerVersion(remote,current){
@@ -150,6 +150,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [updateChecking,setUpdateChecking]=useState(false);
  const [lastUpdateCheck,setLastUpdateCheck]=useState(null);
  const [dismissedAdWeek,setDismissedAdWeek]=useState(null);
+ const [mobileThemesEnabled,setMobileThemesEnabled]=useState(false);
+ const [wallpaperMode,setWallpaperMode]=useState('time');
+ const [wallpaperTarget,setWallpaperTarget]=useState('both');
+ const [wallpaperFallback,setWallpaperFallback]=useState(false);
  const dayKey=civilDayKey(now,city?.tz);
  const currentAdWeek=weeklyKey(now);
  const adStart=weeklyAd.start_at?new Date(weeklyAd.start_at):null;
@@ -158,6 +162,16 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
  useEffect(()=>{AsyncStorage.getItem('alofq_dismissed_ad_week').then(setDismissedAdWeek).catch(e=>console.log('Ad preference restore error:',e))},[]);
+ useEffect(()=>{Promise.all([AsyncStorage.getItem('alofq_mobile_themes'),AsyncStorage.getItem('alofq_wallpaper_mode'),AsyncStorage.getItem('alofq_wallpaper_target'),AsyncStorage.getItem('alofq_wallpaper_fallback')]).then(([enabled,mode,target,fallback])=>{setMobileThemesEnabled(IS_PLUS&&enabled==='1');if(['time','lunar','season','fixed'].includes(mode))setWallpaperMode(mode);if(['home','lock','both'].includes(target))setWallpaperTarget(target);setWallpaperFallback(fallback==='1')}).catch(e=>console.log('Wallpaper settings restore error:',e))},[]);
+ async function setWallpaperPreference(key,value){try{await AsyncStorage.setItem(key,value)}catch(e){console.log('Wallpaper preference save error:',e)}}
+ async function toggleMobileThemes(value){
+  if(!IS_PLUS){Alert.alert('ميزة الأفق بلس','ثيمات خلفية الجهاز متاحة لمشتركي الأفق بلس فقط.');return}
+  if(!value){setMobileThemesEnabled(false);await setWallpaperPreference('alofq_mobile_themes','0');return}
+  if(Platform.OS!=='android'){setWallpaperFallback(true);setWallpaperMode('fixed');Alert.alert('الخلفيات الثابتة','على الآيفون احفظ الخلفية المختارة ثم طبّقها من إعدادات الجهاز أو الاختصارات.');return}
+  setMobileThemesEnabled(true);await setWallpaperPreference('alofq_mobile_themes','1');
+  try{await Linking.sendIntent('android.settings.WALLPAPER_SETTINGS')}
+  catch(e){setWallpaperFallback(true);setWallpaperMode('fixed');await Promise.all([setWallpaperPreference('alofq_wallpaper_fallback','1'),setWallpaperPreference('alofq_wallpaper_mode','fixed')]);Alert.alert('الوضع الثابت','لم يسمح الجهاز بالتغيير التلقائي. اختر خلفية ثابتة ثم طبّقها من نافذة أندرويد الرسمية.')}
+ }
  async function closeWeeklyAd(){
   setDismissedAdWeek(currentAdWeek);
   try{await AsyncStorage.setItem('alofq_dismissed_ad_week',currentAdWeek)}catch(e){console.log('Ad close save error:',e)}
@@ -766,6 +780,16 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Text style={s.sub}>{IS_PLUS?'اختر من جميع ثيمات الأفق بلس، وسيُحفظ اختيارك تلقائيًا.':'الثيم الليلي متاح مجاناً. بقية الثيمات ضمن الأفق بلس.'}</Text>
      <View style={s.themeChoices}>{availableThemes.map(([id,label,index])=>{const item=PAID_THEMES[id]||PAID_THEMES.night;return <Pressable key={id} style={[s.themeChoice,{backgroundColor:item.sky,borderColor:item.accent},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}><Text style={s.themeChoiceSymbol}>{index===null?'◉':item.symbol}</Text><Text style={s.themeChoiceText}>{label}</Text></Pressable>})}</View>
     </Card>
+    {IS_PLUS&&<Card title='ثيمات خلفية الجهاز'>
+     <View style={s.settingRow}><Text style={s.settingIcon}>▣</Text><View style={s.settingText}><Text style={s.text}>تفعيل ثيمات الموبايل</Text><Text style={s.sub}>لا يتم التفعيل إلا بعد موافقتك من نظام الجهاز.</Text></View><Switch value={mobileThemesEnabled} onValueChange={toggleMobileThemes} trackColor={{true:'#c89232'}}/></View>
+     <Text style={s.sub}>طريقة التغيير</Text>
+     <View style={s.wrap}>{[['time','حسب وقت اليوم'],['lunar','حسب الشهر القمري'],['season','حسب الفصل'],['fixed','ثيم ثابت']].map(([id,label])=><Pressable key={id} style={[s.choice,wallpaperMode===id&&s.choiceOn]} onPress={async()=>{setWallpaperMode(id);await setWallpaperPreference('alofq_wallpaper_mode',id)}}><Text style={wallpaperMode===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View>
+     <Text style={s.sub}>مكان الخلفية</Text>
+     <View style={s.wrap}>{[['home','الشاشة الرئيسية'],['lock','شاشة القفل'],['both','الاثنتان']].map(([id,label])=><Pressable key={id} style={[s.choice,wallpaperTarget===id&&s.choiceOn]} onPress={async()=>{setWallpaperTarget(id);await setWallpaperPreference('alofq_wallpaper_target',id)}}><Text style={wallpaperTarget===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View>
+     {(wallpaperFallback||wallpaperMode==='fixed')&&<Text style={s.warn}>وضع الخلفية الثابتة: اختر ثيمًا من الأعلى ثم افتح نافذة النظام لتطبيقه.</Text>}
+     <Pressable style={s.secondaryButton} onPress={()=>Platform.OS==='android'?Linking.sendIntent('android.settings.WALLPAPER_SETTINGS').catch(()=>Linking.openSettings()):Alert.alert('الآيفون','احفظ الصورة وطبّقها يدوياً أو بواسطة تطبيق الاختصارات.')}><Text style={s.secondaryButtonText}>فتح إعدادات خلفية الجهاز</Text></Pressable>
+     <Text style={s.policyMeta}>قد تختلف خيارات الشاشة الرئيسية والقفل حسب الشركة وإصدار أندرويد. لا يتجاوز الأفق قرار النظام.</Text>
+    </Card>}
     <Card title='اختيار المدينة يدويًا'><Pressable style={s.secondaryButton} onPress={()=>setShowCityChoices(v=>!v)}><Text style={s.secondaryButtonText}>{showCityChoices?'إغلاق قائمة المدن':'عرض المدن'}</Text></Pressable>{showCityChoices&&cities.map(item=><Pressable key={item.id} style={[s.cityChoice,item.id===city?.id&&s.cityChoiceActive]} onPress={()=>{chooseCity(item.id);setShowCityChoices(false)}}><Text style={item.id===city?.id?s.cityChoiceTextActive:s.cityChoiceText}>{item.name_ar}</Text></Pressable>)}</Card>
     <Card title='طريقة حساب مواقيت الصلاة'><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={async()=>{setMethod(id);try{await AsyncStorage.setItem('alofq_prayer_method',id)}catch(e){console.log('Method save error:',e)}}}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></Card>
     {APP_VARIANT==='trial'&&<Card title='الإعلان في تطبيق الأفق'>
