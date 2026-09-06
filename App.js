@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {View,Text,ScrollView,Pressable,StyleSheet,Switch,Alert,Platform,ImageBackground,Linking} from 'react-native';
+import {View,Text,ScrollView,Pressable,StyleSheet,Switch,Alert,Platform,ImageBackground,Image,Dimensions,Linking} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {createAudioPlayer} from 'expo-audio';
 import * as Location from 'expo-location';
@@ -24,7 +24,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
-const APP_VERSION='0.5.0';
+const APP_VERSION='0.5.1';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
 const UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update.json';
 function isNewerVersion(remote,current){
@@ -104,7 +104,19 @@ const PAID_THEMES={
  autumn:{name:'خريفي',background:'#21150f',sky:'#8c472d',accent:'#e9a94c',symbol:'🍂'},
  winter:{name:'شتوي',background:'#14202a',sky:'#7894a6',accent:'#e9f5ff',symbol:'❄'}
 };
-const THEME_CHOICES=[['night','ليلي'],['sunrise','شروق'],['autumn','خريفي'],['winter','شتوي']];
+const THEME_CHOICES=[
+ ['auto-time','تلقائي حسب وقت اليوم',null],
+ ['dawn','الفجر والصباح الباكر',0],['morning','الصباح',1],['midday','النهار',2],['sunset','الغروب',3],['evening','المساء',4],['starry-night','الليل والنجوم',5],['moon-night','الليل والقمر',6],
+ ['muharram','محرم',7],['safar','صفر',8],['rabi1','ربيع الأول',9],['rabi2','ربيع الآخر',10],['jumada1','جمادى الأولى',11],['jumada2','جمادى الآخرة',12],['rajab','رجب',13],['shaban','شعبان',14],['ramadan','رمضان',15],['shawwal','شوال',16],['dhulqida','ذو القعدة',17],['dhulhijja','ذو الحجة',18],
+ ['spring','الربيع',19],['summer','الصيف',20],['autumn','الخريف',21],['winter','الشتاء',22],
+ ['new-year','رأس السنة',23],['earth-sun','الانقلاب والاعتدال',24],['solar-eclipse','الكسوف الشمسي',25],['lunar-eclipse','الخسوف القمري',26],['galaxy','المجرة والنجوم',27]
+];
+const SCREEN=Dimensions.get('window');
+function AtlasThemeBackground({index}){
+ const safe=Math.max(0,Math.min(27,Number(index)||0));
+ const col=safe%7,row=Math.floor(safe/7);
+ return <View pointerEvents='none' style={StyleSheet.absoluteFillObject} overflow='hidden'><Image source={require('./assets/themes/alofok-plus-theme-atlas-v1.jpg')} resizeMode='stretch' style={{position:'absolute',width:SCREEN.width*7,height:SCREEN.height*4,left:-col*SCREEN.width,top:-row*SCREEN.height}}/></View>;
+}
 
 export default function App(){
  const [tab,setTab]=useState('today');
@@ -132,7 +144,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [showPrivacy,setShowPrivacy]=useState(false);
  const [showCopyright,setShowCopyright]=useState(false);
  const [showCityChoices,setShowCityChoices]=useState(false);
- const [selectedTheme,setSelectedTheme]=useState('night');
+ const [selectedTheme,setSelectedTheme]=useState(IS_PLUS?'auto-time':'night');
  const [adhanVolume,setAdhanVolume]=useState(.7);
  const [updateInfo,setUpdateInfo]=useState(null);
  const [updateChecking,setUpdateChecking]=useState(false);
@@ -194,8 +206,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
  useEffect(()=>{
   AsyncStorage.getItem('alofq_paid_theme').then(id=>{
-   if(IS_PLUS&&PAID_THEMES[id])setSelectedTheme(id);
-   else setSelectedTheme('night');
+   if(IS_PLUS&&THEME_CHOICES.some(([themeId])=>themeId===id))setSelectedTheme(id);
+   else setSelectedTheme(IS_PLUS?'auto-time':'night');
   }).catch(e=>console.log('Theme restore error:',e));
  },[]);
 
@@ -597,7 +609,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  ]);
 
  const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
- const availableThemes=IS_PLUS?THEME_CHOICES:THEME_CHOICES.filter(([id])=>id==='night');
+ const availableThemes=IS_PLUS?THEME_CHOICES:[['night','الثيم الليلي المجاني',6]];
+ const autoHour=now.getHours();
+ const autoAtlasIndex=autoHour>=5&&autoHour<8?0:autoHour<11?1:autoHour<16?2:autoHour<18?3:autoHour<20?4:autoHour<23?5:6;
+ const atlasIndex=selectedTheme==='auto-time'?autoAtlasIndex:(THEME_CHOICES.find(([id])=>id===selectedTheme)?.[2]??6);
  async function previewAdhan(pack){
   try{
    stopAdhan();
@@ -632,6 +647,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
 
  return <View style={s.background}>
+  {IS_PLUS&&<AtlasThemeBackground index={atlasIndex}/>} 
   <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background}]}/>
   <SafeAreaView style={s.root}>
   <View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>
@@ -748,7 +764,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     </Card>
     <Card title='الثيمات'>
      <Text style={s.sub}>{IS_PLUS?'اختر من جميع ثيمات الأفق بلس، وسيُحفظ اختيارك تلقائيًا.':'الثيم الليلي متاح مجاناً. بقية الثيمات ضمن الأفق بلس.'}</Text>
-     <View style={s.themeChoices}>{availableThemes.map(([id,label])=>{const item=PAID_THEMES[id];return <Pressable key={id} style={[s.themeChoice,{backgroundColor:item.sky,borderColor:item.accent},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}><Text style={s.themeChoiceSymbol}>{item.symbol}</Text><Text style={s.themeChoiceText}>{label}</Text></Pressable>})}</View>
+     <View style={s.themeChoices}>{availableThemes.map(([id,label,index])=>{const item=PAID_THEMES[id]||PAID_THEMES.night;return <Pressable key={id} style={[s.themeChoice,{backgroundColor:item.sky,borderColor:item.accent},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}><Text style={s.themeChoiceSymbol}>{index===null?'◉':item.symbol}</Text><Text style={s.themeChoiceText}>{label}</Text></Pressable>})}</View>
     </Card>
     <Card title='اختيار المدينة يدويًا'><Pressable style={s.secondaryButton} onPress={()=>setShowCityChoices(v=>!v)}><Text style={s.secondaryButtonText}>{showCityChoices?'إغلاق قائمة المدن':'عرض المدن'}</Text></Pressable>{showCityChoices&&cities.map(item=><Pressable key={item.id} style={[s.cityChoice,item.id===city?.id&&s.cityChoiceActive]} onPress={()=>{chooseCity(item.id);setShowCityChoices(false)}}><Text style={item.id===city?.id?s.cityChoiceTextActive:s.cityChoiceText}>{item.name_ar}</Text></Pressable>)}</Card>
     <Card title='طريقة حساب مواقيت الصلاة'><View style={s.wrap}>{PRAYER_METHODS.map(([id,label])=><Pressable key={id} style={[s.choice,method===id&&s.choiceOn]} onPress={async()=>{setMethod(id);try{await AsyncStorage.setItem('alofq_prayer_method',id)}catch(e){console.log('Method save error:',e)}}}><Text style={method===id?s.choiceOnText:s.choiceText}>{label}</Text></Pressable>)}</View><Text style={s.sub}>قد تختلف المواقيت عن الجهة الدينية الرسمية في بلدك؛ راجع الجهة المحلية عند الحاجة.</Text></Card>
