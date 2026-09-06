@@ -687,7 +687,6 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Pressable accessibilityLabel={showMainMenu?'إغلاق القائمة':'فتح القائمة'} style={s.headerIconButton} onPress={()=>setShowMainMenu(v=>!v)}><Text style={s.menuIcon}>{showMainMenu?'×':'☰'}</Text></Pressable>
     </View>
     {showMainMenu&&<View style={s.mainMenu}>
-     <Pressable style={s.mainMenuItem} onPress={()=>changeTab('today')}><Text style={s.mainMenuText}>الرئيسية</Text></Pressable>
      <Pressable style={s.mainMenuItem} onPress={()=>changeTab('settings')}><Text style={s.mainMenuText}>⚙  الإعدادات {updateInfo?'•':''}</Text></Pressable>
     </View>}
    </View>}
