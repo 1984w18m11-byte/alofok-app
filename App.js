@@ -1,5 +1,5 @@
 import React,{useEffect,useMemo,useRef,useState} from 'react';
-import {View,Text,ScrollView,Pressable,StyleSheet,Switch,Alert,Platform,ImageBackground} from 'react-native';
+import {View,Text,ScrollView,Pressable,StyleSheet,Switch,Alert,Platform,ImageBackground,Linking} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {createAudioPlayer} from 'expo-audio';
 import * as Location from 'expo-location';
@@ -23,6 +23,13 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
+const APP_VERSION='0.3.5';
+const UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update.json';
+function isNewerVersion(remote,current){
+ const a=String(remote).split('.').map(Number),b=String(current).split('.').map(Number);
+ for(let i=0;i<Math.max(a.length,b.length);i++){const x=a[i]||0,y=b[i]||0;if(x!==y)return x>y}
+ return false;
+}
 const APP_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
 const ADHAN_ASSETS={
  'commons-beautiful-adhan':require('./assets/adhan/beautiful_adhan.ogg'),
@@ -118,6 +125,9 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [showCityChoices,setShowCityChoices]=useState(false);
  const [selectedTheme,setSelectedTheme]=useState('night');
  const [adhanVolume,setAdhanVolume]=useState(.7);
+ const [updateInfo,setUpdateInfo]=useState(null);
+ const [updateChecking,setUpdateChecking]=useState(false);
+ const [lastUpdateCheck,setLastUpdateCheck]=useState(null);
  const dayKey=civilDayKey(now,city?.tz);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
@@ -186,6 +196,39 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   restoreNotificationSettings();
   return()=>{active=false};
  },[]);
+
+ useEffect(()=>{checkForUpdate(false)},[]);
+
+ async function checkForUpdate(showResult=true){
+  if(updateChecking)return;
+  try{
+   setUpdateChecking(true);
+   const response=await fetch(`${UPDATE_MANIFEST_URL}?t=${Date.now()}`,{headers:{'Cache-Control':'no-cache'}});
+   if(!response.ok)throw new Error(`HTTP ${response.status}`);
+   const info=await response.json();
+   const available=isNewerVersion(info.version,APP_VERSION);
+   setUpdateInfo(available?info:null);
+   setLastUpdateCheck(new Date());
+   if(showResult){
+    if(available)showUpdateDialog(info);
+    else Alert.alert('التحديثات','أنت تستخدم أحدث نسخة من تطبيق الأفق.');
+   }
+  }catch(e){
+   if(showResult)Alert.alert('تعذر البحث عن تحديث','تحقق من اتصال الإنترنت ثم حاول مرة أخرى.');
+  }finally{setUpdateChecking(false)}
+ }
+
+ function showUpdateDialog(info=updateInfo){
+  if(!info)return;
+  Alert.alert('تحديث جديد متوفر',`الإصدار ${info.version}\n\n${info.notes_ar||'يتوفر إصدار أحدث من تطبيق الأفق.'}`,[
+   {text:'لاحقًا',style:'cancel'},
+   {text:'الانتقال إلى التحديث',onPress:async()=>{
+    const url=info.download_url;
+    if(url&&await Linking.canOpenURL(url))await Linking.openURL(url);
+    else Alert.alert('الرابط غير متاح','تعذر فتح رابط التحديث الآن.');
+   }}
+  ]);
+ }
 
  async function setNotificationPreference(kind,value){
   try{
@@ -639,6 +682,17 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <Card title='إعداد الأذان'><View style={s.row}><Text style={s.text}>تشغيل تنبيهات الصلاة</Text><Switch value={adhanEnabled} onValueChange={v=>setNotificationPreference('prayer',v)}/></View><Text style={s.sub}>يُطلب إذن الإشعارات فقط عند التفعيل. يعمل صوت الأذان المختار تلقائيًا عند دخول وقت الصلاة، حتى عندما يكون التطبيق في الخلفية.</Text><Pressable style={s.primary} onPress={()=>{if(showAdhanVoices){stopAdhan();setShowAdhanVoices(false)}else setShowAdhanVoices(true)}}><Text style={s.primaryText}>{showAdhanVoices?'إغلاق قائمة الأصوات ✕':'🔊 اختيار ومعاينة صوت الأذان'}</Text></Pressable>{showAdhanVoices&&packs.map(p=><Pressable key={p.id} style={s.adhanChoice} onPress={async()=>{setSelectedAdhan(p);await AsyncStorage.setItem('alofq_selected_adhan_id',p.id);await AsyncStorage.setItem('alofq_adhan_manual','1');setShowAdhanLicense(false);previewAdhan(p)}}><Text style={s.playIcon}>▶</Text><Text style={s.text}>{p.display_ar}</Text></Pressable>)}{showAdhanVoices&&<Pressable disabled={!adhanSound} style={[s.stopButton,!adhanSound&&s.stopButtonDisabled]} onPress={stopAdhan}><Text style={s.stopButtonText}>■ إيقاف الصوت فورًا</Text></Pressable>}{selectedAdhan&&<><View style={s.row}><Text style={s.text}>{selectedAdhan.display_ar}</Text><Pressable style={s.choice} onPress={()=>setShowAdhanLicense(showAdhanLicense===false)}><Text style={s.choiceText}>الترخيص</Text></Pressable></View>{showAdhanLicense&&<Text style={selectedAdhan.status==='licensed'?s.ok:s.warn}>{selectedAdhan.status==='licensed'?'✓ الترخيص: '+(selectedAdhan.license||'غير محدد')+' • المصدر: '+(selectedAdhan.source||'غير محدد'):(selectedAdhan.note_ar||'هذا التسجيل يحتاج إلى إثبات تصريح قبل إضافته للتطبيق.')}</Text>}</>}</Card>
    </>}
 {tab==='settings'&&<>
+    <Card title='تحديثات الأفق'>
+     <Pressable style={[s.updateButton,updateInfo&&s.updateButtonAvailable]} onPress={()=>updateInfo?showUpdateDialog():checkForUpdate(true)}>
+      <View style={s.updateIconWrap}><Text style={s.updateIcon}>↻</Text>{updateInfo&&<View style={s.redDot}/>}</View>
+      <View style={s.updateTextWrap}>
+       <Text style={s.updateTitle}>{updateInfo?`تحديث جديد — الإصدار ${updateInfo.version}`:'البحث عن تحديث'}</Text>
+       <Text style={s.updateSub}>{updateChecking?'جاري البحث…':updateInfo?'اضغط لعرض التفاصيل والتحديث':`الإصدار الحالي ${APP_VERSION}`}</Text>
+      </View>
+      <Text style={s.chevron}>‹</Text>
+     </Pressable>
+     {lastUpdateCheck&&<Text style={s.lastCheck}>آخر فحص: {lastUpdateCheck.toLocaleTimeString('ar-IQ',{hour:'2-digit',minute:'2-digit'})}</Text>}
+    </Card>
     <Card title='إعدادات التنبيهات'>
      <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>تنبيه الإمساك</Text><Text style={s.sub}>{fasting.imsak}</Text></View><Switch value={imsakAlertEnabled} onValueChange={v=>setNotificationPreference('imsak',v)} trackColor={{true:'#c89232'}}/></View>
      <View style={s.settingRow}><Text style={s.settingIcon}>🔔</Text><View style={s.settingText}><Text style={s.text}>تنبيه الإفطار</Text><Text style={s.sub}>{fasting.iftar}</Text></View><Switch value={iftarAlertEnabled} onValueChange={v=>setNotificationPreference('iftar',v)} trackColor={{true:'#c89232'}}/></View>
@@ -672,7 +726,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     ['adhan','◔','الصلاة'],
     ['settings','⚙','الإعدادات']
   ].map(([id,icon,t])=><Pressable key={id} onPress={()=>changeTab(id)} style={s.navb}>
-    <Text style={tab===id?s.navIconActive:s.navIcon}>{icon}</Text>
+    <View style={s.navIconWrap}><Text style={tab===id?s.navIconActive:s.navIcon}>{icon}</Text>{id==='settings'&&updateInfo&&<View style={s.navRedDot}/>}</View>
     <Text style={tab===id?s.active:s.muted}>{t}</Text>
   </Pressable>)}</View>
   </SafeAreaView>
@@ -685,7 +739,7 @@ const s=StyleSheet.create({
  background:{flex:1,backgroundColor:'#020b12'},backgroundShade:{...StyleSheet.absoluteFillObject,opacity:.76},root:{flex:1,backgroundColor:'transparent'},themeSky:{position:'absolute',top:0,left:0,right:0,height:360,opacity:.18,overflow:'hidden'},themeSymbol:{position:'absolute',top:78,right:34,fontSize:72,fontWeight:'900'},themeOrb:{position:'absolute',width:230,height:230,borderRadius:115,borderWidth:1,top:120,left:-100,opacity:.2},themeLabel:{fontSize:12,fontWeight:'800',textAlign:'center',marginBottom:10},page:{paddingHorizontal:13,paddingTop:5,paddingBottom:98},hero:{paddingTop:8,paddingBottom:12},heroTopRow:{minHeight:82,flexDirection:'row',alignItems:'flex-start',justifyContent:'space-between'},brandBlock:{flex:1,alignItems:'center'},headerIconButton:{width:42,height:42,alignItems:'center',justifyContent:'center'},headerIcon:{color:'#fff',fontSize:25},menuIcon:{color:'#fff',fontSize:27,width:42,textAlign:'center'},appName:{fontSize:29,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#e0c384',fontSize:12,fontWeight:'700',textAlign:'center',marginTop:5},locationPill:{alignSelf:'center',minWidth:'57%',minHeight:54,paddingVertical:8,paddingHorizontal:18,borderRadius:28,borderWidth:1,borderColor:'#d39c3f',backgroundColor:'rgba(3,14,22,.86)',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:10},locationPin:{fontSize:21},locationText:{color:'#fff',fontSize:14,fontWeight:'800',textAlign:'center',maxWidth:180},locationCaption:{color:'#9ea9ae',fontSize:10,textAlign:'center',marginTop:2},
  clockCard:{alignItems:'center',paddingVertical:17,paddingHorizontal:13,marginTop:6,borderRadius:22,borderWidth:1,borderColor:'#53606a',backgroundColor:'rgba(1,11,18,.9)'},clock:{color:'#efb64f',fontSize:27,fontWeight:'900',marginTop:8},week:{color:'#fff',fontSize:21,fontWeight:'900',marginBottom:9},hdate:{textAlign:'center',fontSize:18,fontWeight:'800',color:'#fff'},gdate:{textAlign:'center',fontSize:14,fontWeight:'700',color:'#d9e0e3',marginTop:6},ramadanMini:{marginTop:14,width:'100%',backgroundColor:'rgba(4,15,22,.82)',borderRadius:15,paddingVertical:12,paddingHorizontal:14,alignItems:'center',borderWidth:1,borderColor:'#8c713f'},ramadanMiniTitle:{color:'#efc570',fontSize:21,fontWeight:'900'},ramadanMiniText:{color:'#ddd5c4',fontSize:12,fontWeight:'700',marginTop:4,textAlign:'center'},
  moon:{width:150,height:150,borderRadius:75,backgroundColor:'#e6c578',alignSelf:'center',marginTop:20,overflow:'hidden'},shadow:{position:'absolute',right:0,top:0,bottom:0,backgroundColor:'#0c2638',borderTopLeftRadius:75,borderBottomLeftRadius:75},phase:{color:'#fff',textAlign:'center',marginTop:12,fontWeight:'700'},sub:{color:'#a5b0b6',marginTop:7,textAlign:'right',lineHeight:21},subCenter:{color:'#9ba8ae',marginTop:8,textAlign:'center'},
- card:{backgroundColor:'rgba(1,12,19,.91)',borderRadius:20,padding:14,marginTop:12,borderWidth:1,borderColor:'#46535b',shadowColor:'#000',shadowOpacity:.4,shadowRadius:12,shadowOffset:{width:0,height:6},elevation:6},title:{color:'#fff',fontSize:20,fontWeight:'900',textAlign:'right',marginBottom:12},text:{color:'#f3f4f4',textAlign:'right',lineHeight:24},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:11,borderBottomWidth:1,borderBottomColor:'#26343d'},settingRow:{minHeight:70,flexDirection:'row-reverse',alignItems:'center',gap:12,padding:11,marginBottom:7,borderRadius:15,backgroundColor:'rgba(2,16,24,.92)',borderWidth:1,borderColor:'#273741'},settingIcon:{fontSize:22},settingText:{flex:1},soundSelector:{minHeight:76,flexDirection:'row-reverse',alignItems:'center',gap:12,padding:12,borderRadius:15,backgroundColor:'rgba(2,16,24,.92)',borderWidth:1,borderColor:'#273741'},chevron:{color:'#efb64f',fontSize:36},volumeBox:{padding:14,marginTop:9,borderRadius:15,backgroundColor:'rgba(2,16,24,.92)'},volumeTrack:{flexDirection:'row',gap:6,marginTop:15},volumeStep:{flex:1,height:7,borderRadius:4,backgroundColor:'#46525a'},volumeStepOn:{backgroundColor:'#efaa37'},selectedSound:{backgroundColor:'rgba(221,157,48,.18)'},adhanChoice:{minHeight:58,flexDirection:'row-reverse',justifyContent:'space-between',alignItems:'center',paddingVertical:12,paddingHorizontal:8,borderBottomWidth:1,borderBottomColor:'#26343d'},playIcon:{color:'#efb64f',fontSize:20},stopButton:{backgroundColor:'#542424',borderWidth:1,borderColor:'#c95f5f',padding:13,borderRadius:12,marginTop:10},stopButtonDisabled:{opacity:.4},stopButtonText:{color:'#fff',fontWeight:'900',textAlign:'center'},warn:{color:'#ffcb6b'},ok:{color:'#87d8a4'},
+ card:{backgroundColor:'rgba(1,12,19,.91)',borderRadius:20,padding:14,marginTop:12,borderWidth:1,borderColor:'#46535b',shadowColor:'#000',shadowOpacity:.4,shadowRadius:12,shadowOffset:{width:0,height:6},elevation:6},title:{color:'#fff',fontSize:20,fontWeight:'900',textAlign:'right',marginBottom:12},text:{color:'#f3f4f4',textAlign:'right',lineHeight:24},row:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',paddingVertical:11,borderBottomWidth:1,borderBottomColor:'#26343d'},updateButton:{minHeight:76,flexDirection:'row-reverse',alignItems:'center',gap:12,padding:12,borderRadius:15,backgroundColor:'rgba(2,16,24,.92)',borderWidth:1,borderColor:'#34434c'},updateButtonAvailable:{borderColor:'#efb44d',backgroundColor:'rgba(137,88,18,.18)'},updateIconWrap:{width:42,height:42,borderRadius:21,borderWidth:1,borderColor:'#b98431',alignItems:'center',justifyContent:'center'},updateIcon:{color:'#efb44d',fontSize:28,fontWeight:'900'},redDot:{position:'absolute',top:-3,right:-3,width:11,height:11,borderRadius:6,backgroundColor:'#ef3f3f',borderWidth:2,borderColor:'#07131b'},updateTextWrap:{flex:1},updateTitle:{color:'#fff',fontSize:16,fontWeight:'900',textAlign:'right'},updateSub:{color:'#a5b0b6',fontSize:12,textAlign:'right',marginTop:4},lastCheck:{color:'#82929a',fontSize:11,textAlign:'right',marginTop:8},navIconWrap:{minWidth:28,minHeight:25,alignItems:'center',justifyContent:'center'},navRedDot:{position:'absolute',top:-2,right:-1,width:9,height:9,borderRadius:5,backgroundColor:'#ef3f3f',borderWidth:1,borderColor:'#07131b'},settingRow:{minHeight:70,flexDirection:'row-reverse',alignItems:'center',gap:12,padding:11,marginBottom:7,borderRadius:15,backgroundColor:'rgba(2,16,24,.92)',borderWidth:1,borderColor:'#273741'},settingIcon:{fontSize:22},settingText:{flex:1},soundSelector:{minHeight:76,flexDirection:'row-reverse',alignItems:'center',gap:12,padding:12,borderRadius:15,backgroundColor:'rgba(2,16,24,.92)',borderWidth:1,borderColor:'#273741'},chevron:{color:'#efb64f',fontSize:36},volumeBox:{padding:14,marginTop:9,borderRadius:15,backgroundColor:'rgba(2,16,24,.92)'},volumeTrack:{flexDirection:'row',gap:6,marginTop:15},volumeStep:{flex:1,height:7,borderRadius:4,backgroundColor:'#46525a'},volumeStepOn:{backgroundColor:'#efaa37'},selectedSound:{backgroundColor:'rgba(221,157,48,.18)'},adhanChoice:{minHeight:58,flexDirection:'row-reverse',justifyContent:'space-between',alignItems:'center',paddingVertical:12,paddingHorizontal:8,borderBottomWidth:1,borderBottomColor:'#26343d'},playIcon:{color:'#efb64f',fontSize:20},stopButton:{backgroundColor:'#542424',borderWidth:1,borderColor:'#c95f5f',padding:13,borderRadius:12,marginTop:10},stopButtonDisabled:{opacity:.4},stopButtonText:{color:'#fff',fontWeight:'900',textAlign:'center'},warn:{color:'#ffcb6b'},ok:{color:'#87d8a4'},
  pg:{borderTopWidth:1,borderTopColor:'#25333b'},pi:{flex:1,minWidth:'45%',padding:12,borderRadius:13,alignItems:'center',backgroundColor:'rgba(2,16,24,.9)',borderWidth:1,borderColor:'#26343d'},prayerRow:{minHeight:49,flexDirection:'row',alignItems:'center',borderBottomWidth:1,borderBottomColor:'#25333b',paddingHorizontal:10},prayerRowAccent:{marginVertical:3,borderWidth:1,borderColor:'#9b712d',borderRadius:13,backgroundColor:'rgba(140,95,25,.22)'},prayerTime:{width:82,color:'#fff',fontSize:18,fontWeight:'700',textAlign:'left'},prayerTimeAccent:{color:'#f4bd5b',fontWeight:'900'},prayerName:{flex:1,color:'#f4f5f5',fontSize:15,textAlign:'right'},prayerIcon:{width:35,color:'#f1e6cd',fontSize:23,textAlign:'center'},prayerIconAccent:{color:'#f4bd5b'},gold:{color:'#f4bb52',fontWeight:'900',fontSize:17,marginTop:4},muted:{color:'#9eabb2'},active:{color:'#f4b94f',fontWeight:'900'},primary:{backgroundColor:'#efb44d',padding:14,borderRadius:18,marginTop:12},primaryText:{color:'#10151a',fontWeight:'900',textAlign:'center'},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'flex-end'},choice:{paddingVertical:9,paddingHorizontal:12,borderRadius:10,borderWidth:1,borderColor:'#4b5a63'},choiceOn:{backgroundColor:'#e9aa3d',borderColor:'#e9aa3d'},choiceText:{color:'#eef0f1'},choiceOnText:{color:'#10151a',fontWeight:'900'},
  prayerHint:{color:'#a5b0b6',fontSize:12,fontWeight:'700',textAlign:'right',marginBottom:8},calendarTitle:{color:'#fff',fontSize:21,fontWeight:'900',textAlign:'center',marginBottom:13},researchNotice:{color:'#d9b86e',fontSize:11,textAlign:'center',lineHeight:18,marginBottom:11},calendarControls:{flexDirection:'row-reverse',alignItems:'stretch',gap:7},calendarButton:{flex:1,minHeight:48,borderWidth:1,borderColor:'#4c5961',borderRadius:13,alignItems:'center',justifyContent:'center',paddingHorizontal:5},calendarButtonText:{color:'#f1b84f',fontSize:12,fontWeight:'800',textAlign:'center'},todayButton:{minWidth:72,minHeight:48,backgroundColor:'#efb54d',borderRadius:13,alignItems:'center',justifyContent:'center'},todayButtonText:{color:'#111820',fontWeight:'900'},weekRow:{flexDirection:'row-reverse',marginTop:15,marginBottom:3},weekDay:{width:'14.285%',color:'#d9dee0',fontSize:10,fontWeight:'800',textAlign:'center'},dayGrid:{flexDirection:'row-reverse',flexWrap:'wrap',marginTop:4,borderWidth:1,borderColor:'#24343e',borderRadius:12,overflow:'hidden'},dayCell:{width:'14.285%',height:47,alignItems:'center',justifyContent:'center',borderWidth:.4,borderColor:'#22323b'},dayCellBlank:{width:'14.285%',height:47,borderWidth:.4,borderColor:'#22323b'},eventCell:{backgroundColor:'rgba(200,146,50,.13)'},todayCell:{backgroundColor:'#efb54d',borderRadius:23},dayText:{color:'#eef1f2',fontWeight:'700'},eventDayText:{color:'#f4bb52',fontWeight:'900'},todayDayText:{color:'#101820',fontWeight:'900'},eventDot:{width:5,height:5,borderRadius:3,backgroundColor:'#f4bb52',marginTop:3},eventList:{marginTop:12,padding:12,borderWidth:1,borderColor:'#80632f',borderRadius:14,backgroundColor:'#06131b'},eventTitle:{color:'#f4bb52',fontWeight:'900',fontSize:16,textAlign:'right',marginBottom:8},eventItem:{paddingVertical:7,borderTopWidth:1,borderTopColor:'#26343d'},eventName:{color:'#f4bb52',fontWeight:'900',fontSize:15,textAlign:'right'},eventType:{color:'#a1adb3',fontSize:12,textAlign:'right',marginTop:3},noEvent:{color:'#9daab0',textAlign:'right'},themeChoices:{flexDirection:'row-reverse',flexWrap:'wrap',gap:9,marginTop:13},themeChoice:{width:'47%',minHeight:108,borderRadius:13,borderWidth:1,alignItems:'center',justifyContent:'center'},themeChoiceOn:{borderWidth:3},themeChoiceSymbol:{fontSize:36},themeChoiceText:{color:'#fff',fontWeight:'900',marginTop:7},secondaryButton:{borderWidth:1,borderColor:'#b78131',padding:13,borderRadius:16,marginTop:10},secondaryButtonText:{color:'#f2b84d',fontWeight:'900',textAlign:'center'},cityChoice:{paddingVertical:11,paddingHorizontal:12,borderBottomWidth:1,borderBottomColor:'#26343d'},cityChoiceActive:{backgroundColor:'rgba(200,146,50,.16)'},cityChoiceText:{color:'#e0e5e7',textAlign:'right'},cityChoiceTextActive:{color:'#f4bb52',textAlign:'right',fontWeight:'900'},policyText:{color:'#dbe2e5',textAlign:'right',lineHeight:25,marginTop:14},policyMeta:{color:'#96a5ac',textAlign:'right',lineHeight:21,marginTop:8,fontSize:12},backButton:{alignSelf:'flex-start',borderWidth:0,paddingVertical:10,paddingHorizontal:5,marginTop:5},backButtonText:{color:'#fff',fontSize:17,fontWeight:'900'},dayCellOn:{backgroundColor:'#eaae43',borderColor:'#eaae43'},dayTextOn:{color:'#101820',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:75,backgroundColor:'rgba(2,13,20,.98)',borderTopWidth:1,borderTopColor:'#33424a',flexDirection:'row-reverse',paddingTop:5},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#89969c',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4b94f',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:8,paddingVertical:11,alignItems:'center',borderTopWidth:1,borderTopColor:'#25333b'},prayerLinkText:{color:'#f4bb52',fontSize:13,fontWeight:'800'}
 });
