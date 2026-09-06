@@ -16,6 +16,7 @@ jobs:
     env:
       APP_VARIANT: trial
       EXPO_PUBLIC_APP_VARIANT: trial
+      EXPO_PUBLIC_DISTRIBUTION_CHANNEL: direct
       EXPO_NO_TELEMETRY: "1"
 
     steps:
