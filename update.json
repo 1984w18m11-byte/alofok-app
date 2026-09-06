@@ -1,8 +1,8 @@
 {
-  "version": "0.3.5",
-  "versionCode": 17,
+  "version": "0.3.6",
+  "versionCode": 18,
   "title_ar": "أنت تستخدم أحدث نسخة من الأفق",
-  "notes_ar": "إضافة البحث عن التحديثات وإشعار النقطة الحمراء مع موافقة المستخدم قبل الانتقال إلى التنزيل.",
+  "notes_ar": "اعتماد الوصف الرسمي: التقويم العربي الصحيح ومواقيت الصلاة.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/latest",
   "mandatory": false,
   "published_at": "2026-09-06"
