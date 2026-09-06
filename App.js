@@ -208,13 +208,15 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   let active=true;
   async function restoreLocationAndMethod(){
    try{
-    const [cityId,savedMethod,savedLat,savedLon,savedLabel,savedAccuracy]=await Promise.all([
+    const [cityId,savedMethod,savedLat,savedLon,savedLabel,savedAccuracy,savedCountry,savedTimeZone]=await Promise.all([
      AsyncStorage.getItem('alofq_city_id'),
      AsyncStorage.getItem('alofq_prayer_method'),
      AsyncStorage.getItem('alofq_gps_lat'),
      AsyncStorage.getItem('alofq_gps_lon'),
      AsyncStorage.getItem('alofq_gps_label'),
-     AsyncStorage.getItem('alofq_gps_accuracy')
+     AsyncStorage.getItem('alofq_gps_accuracy'),
+     AsyncStorage.getItem('alofq_gps_country'),
+     AsyncStorage.getItem('alofq_gps_timezone')
     ]);
     if(!active)return;
     const savedCity=cities.find(x=>x.id===cityId);
@@ -222,7 +224,9 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     if(savedCity)setCity(savedCity);
     if(Number.isFinite(lat)&&Number.isFinite(lon)){
      setCoords({lat,lon});
-     setLocState(savedLabel||savedCity?.name_ar||'موقعي المحفوظ');
+     const restoredLabel=savedLabel||savedCity?.name_ar||'موقعي المحفوظ';
+     setLocState(restoredLabel);
+     if(cityId==='gps-current')setCity({...cities[0],id:'gps-current',name_ar:restoredLabel,country:(savedCountry||cities[0].country).toUpperCase(),tz:savedTimeZone||Intl.DateTimeFormat().resolvedOptions().timeZone,lat,lon});
      if(Number.isFinite(accuracy)&&accuracy>0)setLocationAccuracy(accuracy);
     }else if(savedCity){
      setCoords({lat:savedCity.lat,lon:savedCity.lon});
