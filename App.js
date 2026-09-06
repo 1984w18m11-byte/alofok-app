@@ -676,7 +676,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  <ScrollView contentContainerStyle={s.page}>
    {tab==='today'&&<View style={s.hero}>
     <View style={s.heroTopRow}>
-     <Pressable accessibilityLabel='الإعدادات' style={s.headerIconButton} onPress={()=>changeTab('settings')}><Text style={s.headerIcon}>⚙</Text>{updateInfo&&<View style={s.headerUpdateDot}/>}</Pressable>
+     <View style={s.headerIconButton}/>
      <View style={s.brandBlock}>
       <Text style={[s.appName,{color:theme.accent}]}>الأفق</Text>
       <Text style={s.appSub}>التقويم العربي المقترح ومواقيت الصلاة</Text>
@@ -686,7 +686,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     {showMainMenu&&<View style={s.mainMenu}>
      <Pressable style={s.mainMenuItem} onPress={()=>changeTab('today')}><Text style={s.mainMenuText}>الرئيسية</Text></Pressable>
      <Pressable style={s.mainMenuItem} onPress={()=>changeTab('adhan')}><Text style={s.mainMenuText}>مواقيت الصلاة والأذان</Text></Pressable>
-     <Pressable style={s.mainMenuItem} onPress={()=>changeTab('settings')}><Text style={s.mainMenuText}>الإعدادات</Text></Pressable>
+     <Pressable style={s.mainMenuItem} onPress={()=>changeTab('settings')}><Text style={s.mainMenuText}>⚙  الإعدادات {updateInfo?'•':''}</Text></Pressable>
     </View>}
     <Pressable style={s.locationPill} onPress={()=>useGps(true)}>
       <Text style={s.locationPin}>📍</Text>
