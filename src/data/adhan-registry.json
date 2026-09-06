@@ -132,6 +132,21 @@
     "available_in": ["trial", "paid"]
   },
   {
+    "id": "commons-iran-hossein-sobhdell",
+    "country": "IR",
+    "city": "*",
+    "display_ar": "أذان حسين صبحدل — إيران",
+    "performer": "حسين صبحدل",
+    "status": "licensed",
+    "license_required": false,
+    "license": "CC BY-SA 4.0",
+    "source": "Wikimedia Commons — اذان حسین صبحدل.webm",
+    "source_url": "https://commons.wikimedia.org/wiki/File:%D8%A7%D8%B0%D8%A7%D9%86_%D8%AD%D8%B3%DB%8C%D9%86_%D8%B5%D8%A8%D8%AD%D8%AF%D9%84.webm",
+    "modification_ar": "استُخرج المسار الصوتي وحُوّل إلى Ogg Opus ووُحّد مستوى الصوت دون تغيير المحتوى.",
+    "asset": "assets/adhan/adhan-iran-hossein-sobhdell.ogg",
+    "available_in": ["trial", "paid"]
+  },
+  {
     "id": "commons-istanbul-adhan",
     "country": "TR",
     "city": "*",

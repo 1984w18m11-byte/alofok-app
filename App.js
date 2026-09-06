@@ -29,7 +29,8 @@ const ADHAN_ASSETS={
  'commons-syria-sabah-fakhry':require('./assets/adhan/adhan-syria-sabah-fakhry.ogg'),
  'commons-morocco-hassan-ii':require('./assets/adhan/adhan-morocco-hassan-ii.ogg'),
  'commons-kazakhstan-shalqar':require('./assets/adhan/adhan-kazakhstan-shalqar.ogg'),
- 'commons-aaqib-azeez':require('./assets/adhan/adhan-aaqib-azeez.ogg')
+ 'commons-aaqib-azeez':require('./assets/adhan/adhan-aaqib-azeez.ogg'),
+ 'commons-iran-hossein-sobhdell':require('./assets/adhan/adhan-iran-hossein-sobhdell.ogg')
 };
 const PRAYERS=[['الفجر','fajr'],['الشروق','sunrise'],['الظهر','dhuhr'],['العصر','asr'],['المغرب','maghrib'],['العشاء','isha']];
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
