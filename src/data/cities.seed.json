@@ -45,6 +45,15 @@
     "tz": "Asia/Baghdad"
   },
   {
+    "id": "iq-nasr-salam",
+    "country": "IQ",
+    "name_ar": "النصر والسلام",
+    "name_en": "Al Nasr Wal Salam",
+    "lat": 33.30539,
+    "lon": 44.02872,
+    "tz": "Asia/Baghdad"
+  },
+  {
     "id": "iq-baghdad-outskirts",
     "country": "IQ",
     "name_ar": "أطراف بغداد",
