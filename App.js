@@ -31,6 +31,13 @@ const ADHAN_ASSETS={
  'commons-kazakhstan-shalqar':require('./assets/adhan/adhan-kazakhstan-shalqar.ogg'),
  'commons-aaqib-azeez':require('./assets/adhan/adhan-aaqib-azeez.ogg')
 };
+const ADHAN_NOTIFICATION_SOUNDS={
+ 'commons-beautiful-adhan':'beautiful-adhan.ogg',
+ 'commons-syria-sabah-fakhry':'adhan-syria-sabah-fakhry.ogg',
+ 'commons-morocco-hassan-ii':'adhan-morocco-hassan-ii.ogg',
+ 'commons-kazakhstan-shalqar':'adhan-kazakhstan-shalqar.ogg',
+ 'commons-aaqib-azeez':'adhan-aaqib-azeez.ogg'
+};
 const PRAYERS=[['الفجر','fajr'],['الشروق','sunrise'],['الظهر','dhuhr'],['العصر','asr'],['المغرب','maghrib'],['العشاء','isha']];
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
@@ -338,14 +345,29 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   let active=true;
   async function setupPrayerNotifications(){
    try{
+    const soundFile=ADHAN_NOTIFICATION_SOUNDS[selectedAdhan?.id]||'beautiful-adhan.ogg';
+    // Android notification-channel sounds are immutable after creation, so each
+    // bundled adhan gets its own stable channel. The OS can then play it while
+    // the app is backgrounded, closed, or the screen is locked.
+    const channelId=`prayers-adhan-${String(selectedAdhan?.id||'default').replace(/[^a-z0-9-]/gi,'-')}`;
     if(Platform.OS==='android'){
-     await Notifications.setNotificationChannelAsync('prayers',{name:'تنبيهات الصلاة',importance:Notifications.AndroidImportance.HIGH,vibrationPattern:[0,250,200,250],sound:'default'});
+     await Notifications.setNotificationChannelAsync(channelId,{
+      name:`الأذان — ${selectedAdhan?.display_ar||'الصوت المختار'}`,
+      description:'تشغيل صوت الأذان تلقائيًا عند دخول وقت الصلاة',
+      importance:Notifications.AndroidImportance.MAX,
+      vibrationPattern:[0,250,200,250],
+      sound:soundFile,
+      audioAttributes:{
+       contentType:Notifications.AndroidAudioContentType.SONIFICATION,
+       usage:Notifications.AndroidAudioUsage.NOTIFICATION
+      }
+     });
     }
     const scheduled=await Notifications.getAllScheduledNotificationsAsync();
     for(const item of scheduled){
      if(item.content?.data?.kind==='alofq-prayer')await Notifications.cancelScheduledNotificationAsync(item.identifier);
     }
-    if(!adhanEnabled||!active)return;
+    if(!adhanEnabled||!selectedAdhan||!active)return;
     const permission=await Notifications.getPermissionsAsync();
     if(permission.status!=='granted')return;
     const prayerNames={fajr:'الفجر',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء'};
@@ -353,15 +375,25 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      const date=utcDateFromMinutes(prayerCalcDate,prayerData.rawMinutesUtc[key]);
      if(!date||date.getTime()<=Date.now())continue;
      await Notifications.scheduleNotificationAsync({
-      content:{title:`حان وقت صلاة ${title}`,body:'افتح تطبيق الأفق لمشاهدة التفاصيل والاستماع إلى صوت الأذان المختار.',sound:'default',data:{kind:'alofq-prayer',prayer:key}},
-      trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date,channelId:'prayers'}
+      content:{
+       title:`حان وقت صلاة ${title}`,
+       body:`يُرفع الآن الأذان بصوت ${selectedAdhan.display_ar}.`,
+       sound:soundFile,
+       priority:Notifications.AndroidNotificationPriority.MAX,
+       data:{kind:'alofq-prayer',prayer:key,adhanId:selectedAdhan.id}
+      },
+      trigger:{
+       type:Notifications.SchedulableTriggerInputTypes.DATE,
+       date,
+       channelId:Platform.OS==='android'?channelId:undefined
+      }
      });
     }
    }catch(e){console.log('Prayer notifications error:',e)}
   }
   setupPrayerNotifications();
   return()=>{active=false};
- },[adhanEnabled,dayKey,prayerData,prayerCalcDate]);
+ },[adhanEnabled,dayKey,prayerData,prayerCalcDate,selectedAdhan?.id]);
 
  useEffect(()=>{
    let active=true;
