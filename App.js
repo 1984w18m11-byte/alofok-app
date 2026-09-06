@@ -257,33 +257,23 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        const d=distanceKm(c,x);
        if(d<bestDistance){bestDistance=d;nearest=x}
      }
-     // Synthetic labels such as "Baghdad outskirts" must never replace the
-     // well-known city/district name shown to the user.
-     let displayCity=nearest,displayDistance=bestDistance;
-     for(const x of cities.filter(item=>!item.id.endsWith('-outskirts'))){
-       const d=distanceKm(c,x);
-       if(d<displayDistance||displayCity.id.endsWith('-outskirts')){
-         displayDistance=d;
-         displayCity=x;
-       }
-     }
-
-     let label=displayCity.name_ar;
+     let label=nearest.name_ar;
      try{
        const results=await Location.reverseGeocodeAsync(c);
        const g=results?.[0];
-       const administrative=g?.subregion||g?.city||g?.district;
-       // Within 30 km, prefer our recognized city/district (for example
-       // Abu Ghraib) over a small neighborhood returned by the geocoder.
-       label=displayDistance<=30?displayCity.name_ar:(administrative||displayCity.name_ar);
+       // Show the actual nearby locality first (for example Al-Nasr wa
+       // Al-Salam), then its parent district/city when available.
+       const locality=g?.district||g?.name||g?.subregion||g?.city;
+       const parent=[g?.subregion,g?.city].find(value=>value&&value!==locality);
+       label=[locality,parent].filter(Boolean).join(' — ')||nearest.name_ar;
      }catch(e){console.log('Reverse geocode error:',e)}
 
      setCoords(c);
-     setCity(displayCity);
+     setCity(nearest);
      setLocState(label);
      setLocationAccuracy(accuracy);
      await AsyncStorage.multiSet([
-       ['alofq_city_id',displayCity.id],
+       ['alofq_city_id',nearest.id],
        ['alofq_gps_lat',String(c.lat)],
        ['alofq_gps_lon',String(c.lon)],
        ['alofq_gps_label',label],
