@@ -702,9 +702,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   <Text style={s.prayerHint}>مواقيت اليوم حسب موقعك الحالي</Text>
   <PrayerGrid p={prayers} onPress={()=>changeTab('adhan')}/>
 </Card>
-   </>}
-   {tab==='calendar'&&<>
-    <Card title='التقويم القمري–الشمسي'>
+    <Card title='التقويم العربي'>
      <Text style={s.researchNotice}>نسخة بحثية تقديرية وليست تقويمًا شرعيًا أو رسميًا معتمدًا.</Text>
      <View onStartShouldSetResponder={()=>true} onResponderGrant={e=>setSwipeStartX(e.nativeEvent.pageX)} onResponderRelease={e=>{if(swipeStartX===null)return;const dx=e.nativeEvent.pageX-swipeStartX;if(dx>50)setCalendarDate(d=>addLunisolarMonths(d,-1));if(dx<-50)setCalendarDate(d=>addLunisolarMonths(d,1));setSwipeStartX(null)}}>
       <Text style={s.calendarTitle}>{calendarView.monthNameAr} {calendarView.year} هـ</Text>
@@ -808,7 +806,6 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   </ScrollView>
   <View style={s.nav}>{[
     ['today','⌂','الرئيسية'],
-    ['calendar','▦','التقويم'],
     ['adhan','◔','الصلاة'],
     ['settings','⚙','الإعدادات']
   ].map(([id,icon,t])=><Pressable key={id} onPress={()=>changeTab(id)} style={s.navb}>
