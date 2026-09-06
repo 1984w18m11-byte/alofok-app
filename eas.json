@@ -1,23 +1,49 @@
 {
-  "cli": {"version": ">= 16.0.0"},
+  "cli": {
+    "version": ">= 16.0.0"
+  },
   "build": {
     "trial": {
       "distribution": "internal",
-      "env": {"APP_VARIANT": "trial", "EXPO_PUBLIC_APP_VARIANT": "trial"},
-      "android": {"buildType": "apk"}
+      "env": {
+        "APP_VARIANT": "trial",
+        "EXPO_PUBLIC_APP_VARIANT": "trial",
+        "EXPO_PUBLIC_DISTRIBUTION_CHANNEL": "direct"
+      },
+      "android": {
+        "buildType": "apk"
+      }
     },
     "paid": {
       "distribution": "internal",
-      "env": {"APP_VARIANT": "paid", "EXPO_PUBLIC_APP_VARIANT": "paid"},
-      "android": {"buildType": "apk"}
+      "env": {
+        "APP_VARIANT": "paid",
+        "EXPO_PUBLIC_APP_VARIANT": "paid",
+        "EXPO_PUBLIC_DISTRIBUTION_CHANNEL": "direct"
+      },
+      "android": {
+        "buildType": "apk"
+      }
     },
     "production-trial": {
-      "env": {"APP_VARIANT": "trial", "EXPO_PUBLIC_APP_VARIANT": "trial"},
-      "android": {"buildType": "app-bundle"}
+      "env": {
+        "APP_VARIANT": "trial",
+        "EXPO_PUBLIC_APP_VARIANT": "trial",
+        "EXPO_PUBLIC_DISTRIBUTION_CHANNEL": "play"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
     },
     "production-paid": {
-      "env": {"APP_VARIANT": "paid", "EXPO_PUBLIC_APP_VARIANT": "paid"},
-      "android": {"buildType": "app-bundle"}
+      "env": {
+        "APP_VARIANT": "paid",
+        "EXPO_PUBLIC_APP_VARIANT": "paid",
+        "EXPO_PUBLIC_DISTRIBUTION_CHANNEL": "play"
+      },
+      "android": {
+        "buildType": "app-bundle"
+      }
     }
   }
 }
