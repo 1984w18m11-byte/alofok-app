@@ -11,11 +11,15 @@ permissions:
 
 jobs:
   build-apk:
-    name: Validate AlOfoq Android
+    name: Build AlOfoq ${{ matrix.variant }}
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: [trial, paid]
     env:
-      APP_VARIANT: trial
-      EXPO_PUBLIC_APP_VARIANT: trial
+      APP_VARIANT: ${{ matrix.variant }}
+      EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_DISTRIBUTION_CHANNEL: direct
       EXPO_NO_TELEMETRY: "1"
 
@@ -51,7 +55,7 @@ jobs:
       - name: Keep build for internal verification
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-android-verification
+          name: alofok-${{ matrix.variant }}-0.5.0
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
