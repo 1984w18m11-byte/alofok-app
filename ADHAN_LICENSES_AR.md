@@ -1,44 +1,40 @@
+# سجل تراخيص أصوات الأذان — تطبيق الأفق
 
-# سجل تراخيص الأذان — سياسة V2
+**آخر مراجعة:** 6 سبتمبر 2026
 
-طلب صاحب المشروع أمثلة مثل:
-- السعودية: صوت الشيخ عبد الرحمن السديس.
-- مصر: صوت الشيخ عبد الباسط عبد الصمد.
-- الفلوجة: صوت وليد الفلوجي.
-- الأعظمية والنجف: أصوات محلية مشهورة.
+لا تعني أسماء المؤذنين أو القرّاء المقترحة أن التطبيق حصل على إذن لاستعمال تسجيلاتهم. لا يُضمّن أي تسجيل جديد قبل توثيق اسم الملف ومالك حقوق التسجيل ونوع الرخصة وإثباتها.
 
-هذه الأسماء لا تعني أن التطبيق حصل على إذن. V2 يسجلها بحالة `permission_required`.
+## التسجيلات المضمّنة حاليًا
 
-لتحويل أي حزمة إلى `licensed` يجب حفظ:
-1. اسم التسجيل المحدد، وليس اسم الشخص فقط.
-2. مالك حقوق التسجيل/الناشر.
-3. نوع الترخيص: تجاري/غير تجاري، دول النشر، Android/iOS، التنزيل داخل التطبيق.
-4. تاريخ بداية/نهاية الترخيص.
-5. إثبات مكتوب أو عقد/رخصة.
-6. ملف الصوت المسموح باستخدامه بالضبط.
-7. أي نسب/Attribution مطلوبة.
+1. **Beautiful adhan.ogg — Adam-synagda**
+   - المصدر: https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg
+   - الرخصة: CC0 1.0 Universal.
+   - التعديل: إعادة تسمية/تهيئة الملف للتضمين في حزمة التطبيق.
 
-بعد ذلك فقط:
-- يوضع الملف في `assets/audio/`.
-- يتغير `status` إلى `licensed`.
-- يتحدد `asset`.
+2. **Call to prayer by Sabah Fakhry.mp3**
+   - المصدر: https://commons.wikimedia.org/wiki/File:Call_to_prayer_by_Sabah_Fakhry.mp3
+   - الحالة المسجلة في صفحة المصدر: Public domain.
+   - التعديل: تحويل الملف إلى Ogg Vorbis وتهيئته للتطبيق.
+   - تنبيه: يجب إعادة التحقق من صفحة المصدر قبل كل إصدار عام؛ إذا تغيّرت الحالة أو تعذر إثباتها يُزال الصوت من الحزمة.
 
-## التسجيلات المضمّنة في النسختين
+3. **Llamada a oración Mezquita Hassan II.wav — Fraguando**
+   - المصدر: https://commons.wikimedia.org/wiki/File:Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav
+   - الرخصة: CC BY-SA 4.0.
+   - التعديل: تحويل إلى Ogg Vorbis وتهيئة الاسم والحجم للتطبيق.
 
-1. **Adhan.ogg — Aishatu98**
-   - المصدر: Wikimedia Commons.
-   - الترخيص: CC0 1.0 Universal.
-2. **Beautiful adhan.ogg — Adam-synagda**
-   - المصدر: Wikimedia Commons.
-   - الترخيص: CC0 1.0 Universal.
-3. **Azan.ogg — Andrewler**
-   - المصدر: https://commons.wikimedia.org/wiki/File:Azan.ogg
-   - الترخيص: CC BY-SA 4.0.
-   - يجب إبقاء نسبة العمل إلى Andrewler ورابط الترخيص.
-4. **Adhan, Great Mosque of Mecca (2013) — Seyfula Islam**
-   - المصدر: https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm
-   - الترخيص: CC BY 3.0.
-   - التعديل: استخراج المسار الصوتي وتحويله إلى Ogg Vorbis دون تغيير المحتوى.
+4. **Adhan in Shalqar mosque.webm — Esetok**
+   - المصدر: https://commons.wikimedia.org/wiki/File:Adhan_in_Shalqar_mosque.webm
+   - الرخصة: CC BY-SA 4.0.
+   - التعديل: استخراج الصوت وتحويله إلى Ogg Vorbis.
 
-هذه التسجيلات متاحة في النسخة التجريبية والنسخة المدفوعة. لا يُضاف أي تسجيل
-جعفري أو غيره إلى الحزمة قبل وجود رخصة تجارية واضحة للملف الصوتي نفسه.
+5. **The Adhan - Muslim Call to Prayer - Aaqib Azeez.mp3 — Aaqib Azeez**
+   - المصدر: https://commons.wikimedia.org/wiki/File:The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3
+   - الرخصة: CC BY-SA 4.0.
+   - التعديل: تحويل إلى Ogg Vorbis وتهيئته للتطبيق.
+
+## شروط إعادة الاستخدام
+
+الأعمال المرخصة بـ CC BY-SA 4.0 تبقى منسوبة إلى أصحابها، وتخضع النسخ الصوتية المعدّلة للرخصة نفسها:
+https://creativecommons.org/licenses/by-sa/4.0/
+
+لا تعني النسبة أن أصحاب التسجيلات أو Wikimedia Commons يؤيدون تطبيق الأفق. تراخيص الأصوات لا تمنح إذنًا باستخدام أسماء أو شعارات جهات أخرى لأغراض دعائية.
