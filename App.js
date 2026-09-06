@@ -265,7 +265,9 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        // Al-Salam), then its parent district/city when available.
        const locality=g?.district||g?.name||g?.subregion||g?.city;
        const parent=[g?.subregion,g?.city].find(value=>value&&value!==locality);
-       label=[locality,parent].filter(Boolean).join(' — ')||nearest.name_ar;
+       // A verified local entry within 8 km is more reliable and remains
+       // Arabic; otherwise use the device geocoder's precise locality.
+       label=bestDistance<=8?nearest.name_ar:([locality,parent].filter(Boolean).join(' — ')||nearest.name_ar);
      }catch(e){console.log('Reverse geocode error:',e)}
 
      setCoords(c);
