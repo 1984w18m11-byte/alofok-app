@@ -98,6 +98,7 @@ export default function App(){
  const [adhanEnabled,setAdhanEnabled]=useState(false);
  const [now,setNow]=useState(new Date());
  const [locationBusy,setLocationBusy]=useState(false);
+ const [locationAccuracy,setLocationAccuracy]=useState(null);
  const [method,setMethod]=useState('MWL');
  const [calendarDate,setCalendarDate]=useState(new Date());
  const [gregorianDate,setGregorianDate]=useState(new Date());
@@ -129,16 +130,25 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   let active=true;
   async function restoreLocationAndMethod(){
    try{
-    const [cityId,savedMethod]=await Promise.all([
+    const [cityId,savedMethod,savedLat,savedLon,savedLabel,savedAccuracy]=await Promise.all([
      AsyncStorage.getItem('alofq_city_id'),
-     AsyncStorage.getItem('alofq_prayer_method')
+     AsyncStorage.getItem('alofq_prayer_method'),
+     AsyncStorage.getItem('alofq_gps_lat'),
+     AsyncStorage.getItem('alofq_gps_lon'),
+     AsyncStorage.getItem('alofq_gps_label'),
+     AsyncStorage.getItem('alofq_gps_accuracy')
     ]);
     if(!active)return;
     const savedCity=cities.find(x=>x.id===cityId);
-    if(savedCity){
-     setCity(savedCity);
+    const lat=Number(savedLat),lon=Number(savedLon),accuracy=Number(savedAccuracy);
+    if(savedCity)setCity(savedCity);
+    if(Number.isFinite(lat)&&Number.isFinite(lon)){
+     setCoords({lat,lon});
+     setLocState(savedLabel||savedCity?.name_ar||'موقعي المحفوظ');
+     if(Number.isFinite(accuracy)&&accuracy>0)setLocationAccuracy(accuracy);
+    }else if(savedCity){
      setCoords({lat:savedCity.lat,lon:savedCity.lon});
-     setLocState(`${savedCity.name_ar} • محفوظ`);
+     setLocState(`${savedCity.name_ar} • اختيار محفوظ`);
     }
     if(PRAYER_METHODS.some(([id])=>id===savedMethod))setMethod(savedMethod);
    }catch(e){console.log('Saved settings restore error:',e)}
@@ -196,56 +206,94 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  }
 
  async function useGps(showMessage=true){
+   let subscription=null;
    try{
      setLocationBusy(true);
-     const p=await Location.requestForegroundPermissionsAsync();
-
-     if(p.status!=='granted'){
-       setLocState('الموقع غير مسموح');
-       if(showMessage) Alert.alert('الموقع','فعّل إذن الموقع للتطبيق من إعدادات Android.');
+     const servicesOn=await Location.hasServicesEnabledAsync();
+     if(!servicesOn){
+       setLocState('خدمة الموقع متوقفة');
+       Alert.alert('تشغيل الموقع','شغّل خدمة الموقع GPS ثم حاول مرة أخرى.');
        return;
      }
+     const p=await Location.requestForegroundPermissionsAsync();
+     if(p.status!=='granted'){
+       setLocState('الموقع غير مسموح');
+       if(showMessage)Alert.alert('الموقع','اختر السماح بالموقع الدقيق من إعدادات Android.');
+       return;
+     }
+     if(Platform.OS==='android'){
+       try{await Location.enableNetworkProviderAsync()}catch(e){console.log('High accuracy dialog dismissed:',e)}
+     }
 
-     const pos=await Location.getCurrentPositionAsync({accuracy:Location.Accuracy.High});
-     const c={lat:pos.coords.latitude,lon:pos.coords.longitude};
-     setCoords(c);
+     setLocState('جاري تثبيت أدق إشارة GPS…');
+     let bestPosition=await Location.getCurrentPositionAsync({
+       accuracy:Location.Accuracy.Highest,
+       mayShowUserSettingsDialog:true
+     });
 
-     let nearest=cities[0],best=99999;
+     await new Promise(async resolve=>{
+       let finished=false;
+       const finish=()=>{if(finished)return;finished=true;subscription?.remove();resolve()};
+       const timer=setTimeout(finish,8000);
+       try{
+         subscription=await Location.watchPositionAsync({
+           accuracy:Location.Accuracy.BestForNavigation,
+           timeInterval:1000,
+           distanceInterval:0,
+           mayShowUserSettingsDialog:true
+         },position=>{
+           const currentAccuracy=position.coords.accuracy??99999;
+           const bestAccuracy=bestPosition.coords.accuracy??99999;
+           if(currentAccuracy<bestAccuracy)bestPosition=position;
+           if(currentAccuracy<=8){clearTimeout(timer);finish()}
+         });
+       }catch(e){clearTimeout(timer);finish()}
+     });
+
+     const c={lat:bestPosition.coords.latitude,lon:bestPosition.coords.longitude};
+     const accuracy=Math.max(1,Math.round(bestPosition.coords.accuracy||0));
+     let nearest=cities[0],bestDistance=Infinity;
      for(const x of cities){
        const d=distanceKm(c,x);
-       if(d<best){
-         best=d;
-         nearest=x;
-       }
+       if(d<bestDistance){bestDistance=d;nearest=x}
      }
 
      let label='موقعي الحالي';
      try{
-       const r=await Location.reverseGeocodeAsync(c);
-       const g=r?.[0];
-       label=g?.district||g?.subregion||g?.city||g?.name||'موقعي الحالي';
-     }catch(e){
-       label='موقعي الحالي';
-     }
+       const results=await Location.reverseGeocodeAsync(c);
+       const g=results?.[0];
+       const parts=[g?.street,g?.district||g?.subregion,g?.city].filter(Boolean);
+       label=[...new Set(parts)].join('، ')||g?.name||'موقعي الحالي';
+     }catch(e){console.log('Reverse geocode error:',e)}
 
+     setCoords(c);
      setCity(nearest);
      setLocState(label);
-     try{await AsyncStorage.setItem('alofq_city_id',nearest.id)}catch(e){console.log('GPS city save error:',e)}
+     setLocationAccuracy(accuracy);
+     await AsyncStorage.multiSet([
+       ['alofq_city_id',nearest.id],
+       ['alofq_gps_lat',String(c.lat)],
+       ['alofq_gps_lon',String(c.lon)],
+       ['alofq_gps_label',label],
+       ['alofq_gps_accuracy',String(accuracy)]
+     ]);
+     if(showMessage)Alert.alert('تم تحديث الموقع',`${label}\nدقة الإشارة التقريبية: ±${accuracy} متر`);
    }catch(e){
-     setLocState('تعذر قراءة GPS');
-     if(showMessage) Alert.alert('تعذر تحديد الموقع','تأكد من تشغيل GPS ومنح الإذن للتطبيق.');
+     setLocState('تعذر تثبيت موقع دقيق');
+     if(showMessage)Alert.alert('تعذر تحديد الموقع','اخرج إلى مكان مفتوح، فعّل دقة الموقع العالية وWi‑Fi، ثم حاول مرة أخرى.');
    }finally{
+     subscription?.remove();
      setLocationBusy(false);
    }
  }
-
  async function chooseCity(id){
    const c=cities.find(x=>x.id===id);
    if(!c)return;
    setCity(c);
    setCoords({lat:c.lat,lon:c.lon});
    setLocState(`${c.name_ar} • اختيار يدوي`);
-   try{await AsyncStorage.setItem('alofq_city_id',c.id)}catch(e){console.log('City save error:',e)}
+   setLocationAccuracy(null);
+   try{await AsyncStorage.multiSet([['alofq_city_id',c.id],['alofq_gps_lat',''],['alofq_gps_lon',''],['alofq_gps_label',''],['alofq_gps_accuracy','']])}catch(e){console.log('City save error:',e)}
  }
 
  const tzOffsetMin=timeZoneOffsetMinutes(now,city?.tz);
@@ -525,7 +573,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     </View>
     <Pressable style={s.locationPill} onPress={()=>useGps(true)}>
       <Text style={s.locationPin}>📍</Text>
-      <View><Text numberOfLines={1} style={s.locationText}>{locationBusy?'جاري تحديد الموقع...':locState}</Text><Text style={s.locationCaption}>الموقع الحالي</Text></View>
+      <View><Text numberOfLines={1} style={s.locationText}>{locationBusy?'جاري تحديد الموقع...':locState}</Text><Text style={s.locationCaption}>{locationAccuracy?`دقة تقريبية ±${Math.round(locationAccuracy)} متر`:'اضغط لتحديث الموقع الدقيق'}</Text></View>
     </Pressable>
    </View>}
    {tab==='today'&&<>
