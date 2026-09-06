@@ -32,7 +32,6 @@
         {
           "sounds": [
             "./assets/adhan/beautiful_adhan.ogg",
-            "./assets/adhan/adhan_syria_sabah_fakhry.ogg",
             "./assets/adhan/adhan_morocco_hassan_ii.ogg",
             "./assets/adhan/adhan_kazakhstan_shalqar.ogg",
             "./assets/adhan/adhan_aaqib_azeez.ogg"
