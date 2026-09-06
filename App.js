@@ -23,7 +23,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
-const APP_VERSION='0.3.5';
+const APP_VERSION='0.3.6';
 const UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update.json';
 function isNewerVersion(remote,current){
  const a=String(remote).split('.').map(Number),b=String(current).split('.').map(Number);
@@ -614,7 +614,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Pressable style={s.headerIconButton} onPress={()=>changeTab('settings')}><Text style={s.headerIcon}>⚙</Text></Pressable>
      <View style={s.brandBlock}>
       <Text style={[s.appName,{color:theme.accent}]}>التقويم الإسلامي</Text>
-      <Text style={s.appSub}>مواقيت الصلاة والتقويم الهجري والميلادي</Text>
+      <Text style={s.appSub}>التقويم العربي الصحيح ومواقيت الصلاة</Text>
      </View>
      <Text style={s.menuIcon}>☰</Text>
     </View>
