@@ -370,24 +370,30 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        if(d<bestDistance){bestDistance=d;nearest=x}
      }
      let label=nearest.name_ar;
+     let gpsCountry=nearest.country;
+     const deviceTimeZone=Intl.DateTimeFormat().resolvedOptions().timeZone||nearest.tz;
      try{
        const results=await Location.reverseGeocodeAsync(c);
        const g=results?.[0];
-       // Show the actual nearby locality first (for example Al-Nasr wa
-       // Al-Salam), then its parent district/city when available.
-       const locality=g?.district||g?.name||g?.subregion||g?.city;
-       const parent=[g?.subregion,g?.city].find(value=>value&&value!==locality);
-       // A verified local entry within 8 km is more reliable and remains
-       // Arabic; otherwise use the device geocoder's precise locality.
-       label=bestDistance<=8?nearest.name_ar:([locality,parent].filter(Boolean).join(' — ')||nearest.name_ar);
+       // Always prefer the GPS geocoder's smallest named locality. This keeps
+       // Al-Nasr wa Al-Salam, Abu Ghraib, New Jersey, and Chinese districts
+       // instead of replacing them with a distant seed city.
+       const parts=[g?.district,g?.name,g?.subregion,g?.city,g?.region,g?.country]
+         .filter(Boolean)
+         .filter((value,index,array)=>array.indexOf(value)===index);
+       label=parts.slice(0,3).join(' — ')||nearest.name_ar;
+       gpsCountry=(g?.isoCountryCode||nearest.country||'').toUpperCase();
      }catch(e){console.log('Reverse geocode error:',e)}
 
+     const gpsCity={...nearest,id:'gps-current',name_ar:label,country:gpsCountry,tz:deviceTimeZone,lat:c.lat,lon:c.lon};
      setCoords(c);
-     setCity(nearest);
+     setCity(gpsCity);
      setLocState(label);
      setLocationAccuracy(accuracy);
      await AsyncStorage.multiSet([
-       ['alofq_city_id',nearest.id],
+       ['alofq_city_id','gps-current'],
+       ['alofq_gps_country',gpsCountry],
+       ['alofq_gps_timezone',deviceTimeZone],
        ['alofq_gps_lat',String(c.lat)],
        ['alofq_gps_lon',String(c.lon)],
        ['alofq_gps_label',label],
