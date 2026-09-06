@@ -34,14 +34,12 @@ function isNewerVersion(remote,current){
 const APP_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
 const ADHAN_ASSETS={
  'commons-beautiful-adhan':require('./assets/adhan/beautiful_adhan.ogg'),
- 'commons-syria-sabah-fakhry':require('./assets/adhan/adhan_syria_sabah_fakhry.ogg'),
  'commons-morocco-hassan-ii':require('./assets/adhan/adhan_morocco_hassan_ii.ogg'),
  'commons-kazakhstan-shalqar':require('./assets/adhan/adhan_kazakhstan_shalqar.ogg'),
  'commons-aaqib-azeez':require('./assets/adhan/adhan_aaqib_azeez.ogg')
 };
 const ADHAN_NOTIFICATION_SOUNDS={
  'commons-beautiful-adhan':'beautiful_adhan.ogg',
- 'commons-syria-sabah-fakhry':'adhan_syria_sabah_fakhry.ogg',
  'commons-morocco-hassan-ii':'adhan_morocco_hassan_ii.ogg',
  'commons-kazakhstan-shalqar':'adhan_kazakhstan_shalqar.ogg',
  'commons-aaqib-azeez':'adhan_aaqib_azeez.ogg'
