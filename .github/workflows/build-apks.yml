@@ -7,7 +7,7 @@ on:
       - main
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   build-apk:
@@ -63,3 +63,26 @@ jobs:
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
+
+  publish-release:
+    name: Publish APK download links
+    needs: build-apk
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download both APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: alofok-*-0.5.5
+          path: artifacts
+
+      - name: Prepare clear APK filenames
+        run: |
+          cp artifacts/alofok-trial-0.5.5/app-release.apk alofok-trial-0.5.5.apk
+          cp artifacts/alofok-paid-0.5.5/app-release.apk alofok-plus-0.5.5.apk
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v0.5.5 >/dev/null 2>&1 || gh release create v0.5.5 --title "الأفق 0.5.5" --notes "نسختا الأفق التجريبية والأفق بلس لفحصهما على أندرويد."
+          gh release upload v0.5.5 alofok-trial-0.5.5.apk alofok-plus-0.5.5.apk --clobber
