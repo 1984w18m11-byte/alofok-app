@@ -708,6 +708,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     </View>
     {showMainMenu&&<View style={s.mainMenu}>
      <Pressable style={s.mainMenuItem} onPress={()=>changeTab('settings')}><Text style={s.mainMenuText}>⚙  الإعدادات {updateInfo?'•':''}</Text></Pressable>
+     <Pressable style={s.mainMenuItem} onPress={()=>Alert.alert('دعم تطوير الأفق','الدعم اختياري، وسيحدد الداعم المبلغ بنفسه عند ربط وسيلة الدفع.')}><Text style={s.mainMenuText}>$  دعم تطوير الأفق</Text></Pressable>
     </View>}
    </View>}
    {tab==='today'&&<>
@@ -849,6 +850,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Text style={s.text}>© 2026 الأفق — تصميم وفكرة وتطوير: وسام محمد</Text>
      <Pressable style={s.secondaryButton} onPress={()=>setShowCopyright(v=>!v)}><Text style={s.secondaryButtonText}>{showCopyright?'إخفاء السياسة':'قراءة سياسة الطبع والتوزيع'}</Text></Pressable>
      {showCopyright&&<><Text style={s.policyText}>{COPYRIGHT_SUMMARY}</Text><Text style={s.policyMeta}>المكونات الخارجية تبقى خاضعة لتراخيص أصحابها.</Text></>}
+    </SettingsCard>
+    <SettingsCard title='دعم تطوير الأفق'>
+     <Text style={s.settingsSectionText}>مساهمة اختيارية لاستمرار تطوير تطبيق الأفق. الدعم لا يفتح ميزات إضافية ولا يؤثر في استخدام التطبيق.</Text>
+     <Pressable style={s.secondaryButton} onPress={()=>Alert.alert('دعم تطوير الأفق','سيتم ربط وسيلة الدفع لاحقًا. يحدد الداعم المبلغ بنفسه دون مبالغ مقترحة.')}><Text style={[s.secondaryButtonText,{fontSize:24}]}>$</Text></Pressable>
     </SettingsCard>
    </>}
   </ScrollView>
