@@ -1,4 +1,4 @@
-name: Validate and build trial Android APK
+name: Validate and build Android APKs
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [trial]
+        variant: [trial, paid]
     env:
       APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
@@ -59,7 +59,7 @@ jobs:
       - name: Keep build for internal verification
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-${{ matrix.variant }}-0.5.4
+          name: alofok-${{ matrix.variant }}-0.5.5
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
