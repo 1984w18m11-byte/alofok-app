@@ -27,7 +27,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
-const APP_VERSION='0.5.4';
+const APP_VERSION='0.5.5';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
 const UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update.json';
 function isNewerVersion(remote,current){
@@ -715,7 +715,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     </View>
     {showMainMenu&&<View style={s.mainMenu}>
      <Pressable style={s.mainMenuItem} onPress={()=>changeTab('settings')}><Text style={s.mainMenuText}>⚙  الإعدادات {updateInfo?'•':''}</Text></Pressable>
-     {!IS_PLUS&&<Pressable style={s.mainMenuItem} onPress={()=>Alert.alert('دعم تطوير الأفق','رقم الدعم وخيار النسخ موجودان في الصفحة الرئيسية.')}><Text style={s.mainMenuText}>$  دعم تطوير الأفق</Text></Pressable>}
+     <Pressable style={s.mainMenuItem} onPress={()=>Alert.alert('دعم تطوير الأفق','رقم الدعم وخيار النسخ موجودان في الصفحة الرئيسية.')}><Text style={s.mainMenuText}>$  دعم تطوير الأفق</Text></Pressable>
     </View>}
    </View>}
    {tab==='today'&&<>
@@ -735,14 +735,14 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
       {!!weeklyAd.body&&<Text style={s.weeklyAdBody}>{weeklyAd.body}</Text>}
       {!!weeklyAd.action_url&&<Pressable style={s.adAction} onPress={()=>Linking.openURL(weeklyAd.action_url)}><Text style={s.adActionText}>{weeklyAd.action_label||'عرض الإعلان'}</Text></Pressable>}
     </View>}
-    {!IS_PLUS&&<View style={s.supportCard}>
+    <View style={s.supportCard}>
      <View style={s.supportHeading}><Text style={s.supportTitle}>دعم تطوير الأفق</Text><Text style={s.supportDollar}>$</Text></View>
      <Text style={s.supportDescription}>دعم اختياري لاستمرار تطوير التطبيق. حدّد المبلغ من محفظتك دون مبالغ مقترحة.</Text>
      <View style={s.supportAccountRow}>
       <Text selectable style={s.supportAccount}>{SUPPORT_ACCOUNT||'سيُضاف رقم الدعم لاحقًا'}</Text>
       <Pressable accessibilityLabel='نسخ رقم الدعم' style={[s.copyButton,!SUPPORT_ACCOUNT&&s.copyButtonDisabled]} onPress={copySupportAccount}><Text style={s.copyButtonIcon}>▣</Text><Text style={s.copyButtonText}>نسخ</Text></Pressable>
      </View>
-    </View>}
+    </View>
     
 <Card title={t('prayerTimes')}>
   <Text style={s.prayerHint}>{t('prayerHint')}</Text>
