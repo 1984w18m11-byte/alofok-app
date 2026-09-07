@@ -1,0 +1,36 @@
+name: Publish AlOfoq 0.5.5 APK links
+
+on:
+  push:
+    paths:
+      - .github/workflows/publish-release.yml
+  workflow_dispatch:
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download successful APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          run-id: 34078820208
+          github-token: ${{ github.token }}
+          pattern: alofok-*-0.5.5
+          path: artifacts
+
+      - name: Prepare clear filenames
+        run: |
+          cp artifacts/alofok-trial-0.5.5/app-release.apk alofok-trial-0.5.5.apk
+          cp artifacts/alofok-paid-0.5.5/app-release.apk alofok-plus-0.5.5.apk
+
+      - name: Publish direct downloads
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release view v0.5.5 >/dev/null 2>&1 || gh release create v0.5.5 --title "الأفق 0.5.5" --notes "نسختا الأفق التجريبية والأفق بلس لفحصهما على أندرويد."
+          gh release upload v0.5.5 alofok-trial-0.5.5.apk alofok-plus-0.5.5.apk --clobber
