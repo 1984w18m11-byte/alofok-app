@@ -104,7 +104,7 @@ if "export default function App(){" in app:
     raise SystemExit('old default App export still present')
 if "const IS_PLUS=APP_VARIANT==='paid';" in app:
     raise SystemExit('old unlicensed Plus switch still present')
-if "UPDATE_MANIFEST_URL" in app:
+if "const UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update.json';" in app:
     raise SystemExit('old single update manifest still present')
 if "export default AlofoKLicenseGate;" not in app:
     raise SystemExit('license gate was not appended')
