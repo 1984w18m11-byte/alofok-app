@@ -16,6 +16,7 @@ import {jdFromDate,illumination,elongationDeg,findConjunctionNear} from './src/e
 import {proposedLunisolarDate,addLunisolarMonths,addLunisolarYears,lunisolarMonthLength} from './src/engine/lunisolar';
 import {LOCALES,localeTag,isRtlLocale} from './src/i18n/locales';
 import {makeTranslator} from './src/i18n/translations';
+import {verifyEntitlement,activateOfficialInstall,extractActivationToken,getOfficialActivationUrl} from './src/services/license';
 
 Notifications.setNotificationHandler({
   handleNotification:async()=>({
@@ -29,14 +30,15 @@ Notifications.setNotificationHandler({
 const fmtPct=x=>`${Math.round(x*100)}%`;
 const APP_VERSION='0.5.5';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
-const UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update.json';
+const TRIAL_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
+const PLUS_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json';
 function isNewerVersion(remote,current){
  const a=String(remote).split('.').map(Number),b=String(current).split('.').map(Number);
  for(let i=0;i<Math.max(a.length,b.length);i++){const x=a[i]||0,y=b[i]||0;if(x!==y)return x>y}
  return false;
 }
 const APP_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
-const IS_PLUS=APP_VARIANT==='paid';
+const IS_PAID_BUILD=APP_VARIANT==='paid';
 const SUPPORT_ACCOUNT=process.env.EXPO_PUBLIC_SUPPORT_ACCOUNT||'';
 const ADHAN_ASSETS={
  'commons-beautiful-adhan':require('./assets/adhan/beautiful_adhan.ogg'),
@@ -128,7 +130,8 @@ function AtlasThemeBackground({index}){
  return <View pointerEvents='none' style={StyleSheet.absoluteFillObject} overflow='hidden'><Image source={require('./assets/themes/alofok-plus-theme-atlas-v1.jpg')} resizeMode='stretch' style={{position:'absolute',width:SCREEN.width*7,height:SCREEN.height*4,left:-col*SCREEN.width,top:-row*SCREEN.height}}/></View>;
 }
 
-export default function App(){
+function AlofoKApp({licenseTier='trial'}){
+ const IS_PLUS=IS_PAID_BUILD&&licenseTier==='plus';
  const [tab,setTab]=useState('today');
  const [appLanguage,setAppLanguage]=useState('system');
  const [showLanguageChoices,setShowLanguageChoices]=useState(false);
@@ -283,7 +286,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   if(updateChecking)return;
   try{
    setUpdateChecking(true);
-   const response=await fetch(`${UPDATE_MANIFEST_URL}?t=${Date.now()}`,{headers:{'Cache-Control':'no-cache'}});
+   const entitlement=await verifyEntitlement({appVersion:APP_VERSION,appVariant:APP_VARIANT});
+   if(!entitlement.valid)throw new Error(`LICENSE_${entitlement.reason||'REQUIRED'}`);
+   const manifestUrl=entitlement.tier==='plus'?PLUS_UPDATE_MANIFEST_URL:TRIAL_UPDATE_MANIFEST_URL;
+   const response=await fetch(`${manifestUrl}?t=${Date.now()}`,{headers:{'Cache-Control':'no-cache'}});
    if(!response.ok)throw new Error(`HTTP ${response.status}`);
    const info=await response.json();
    const available=isNewerVersion(info.version,APP_VERSION);
@@ -790,8 +796,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <SettingsCard title={IS_PLUS?'عضوية الأفق بلس':'الترقية إلى الأفق بلس'}>
      <View style={s.membershipBadge}><Text style={s.membershipBadgeText}>{IS_PLUS?'PLUS مفعّلة للمعاينة':'النسخة المجانية'}</Text></View>
      <View style={s.compactInfoRow}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>✦</Text></View><View style={s.compactInfoText}><Text style={s.membershipTitle}>{IS_PLUS?'جميع مزايا الأفق بلس مفتوحة':'الأفق بلس — 5 دولارات سنويًا'}</Text><Text style={s.sub}>{IS_PLUS?'كل الثيمات والأصوات المرخصة متاحة، ولا تظهر الإعلانات.':'يفتح جميع الثيمات والأصوات المرخصة ويزيل الإعلان الأسبوعي.'}</Text></View></View>
-     {!IS_PLUS&&<Pressable style={s.compactAction} onPress={()=>Alert.alert('معاينة فقط','سيُفعّل الشراء الحقيقي بعد إنشاء اشتراك الأفق بلس في Google Play وApp Store.')}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>★</Text></View><View style={s.compactInfoText}><Text style={s.compactAction}>الاشتراك السنوي — 5$</Text><Text style={s.compactSub}>فتح مزايا الأفق بلس</Text></View><Text style={s.compactChevron}>‹</Text></Pressable>}
-     <Pressable style={s.compactAction} onPress={()=>Alert.alert('استعادة المشتريات','هذا زر معاينة حالياً. عند ربط المتجر سيستعيد الاشتراك المرتبط بحساب Google أو Apple.')}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>↺</Text></View><View style={s.compactInfoText}><Text style={s.compactTitle}>استعادة المشتريات</Text><Text style={s.compactSub}>استعادة اشتراك Google أو Apple</Text></View><Text style={s.compactChevron}>‹</Text></Pressable>
+     {!IS_PLUS&&<Pressable style={s.compactAction} onPress={()=>Alert.alert('معاينة فقط','يتم الاشتراك في الأفق Plus عبر Zain Cash. بعد تأكيد الدفع اذهب إلى البحث عن تحديث لتنزيل تحديث Plus الخاص بك.')}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>★</Text></View><View style={s.compactInfoText}><Text style={s.compactAction}>الاشتراك السنوي — 5$</Text><Text style={s.compactSub}>فتح مزايا الأفق بلس</Text></View><Text style={s.compactChevron}>‹</Text></Pressable>}
+     <Pressable style={s.compactAction} onPress={()=>Alert.alert('استعادة المشتريات','يعيد النظام التحقق من ترخيص الأفق المرتبط بهذا الجهاز. إذا كان اشتراك Plus فعالاً سيظهر تحديث Plus.')}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>↺</Text></View><View style={s.compactInfoText}><Text style={s.compactTitle}>استعادة المشتريات</Text><Text style={s.compactSub}>إعادة فحص حالة الاشتراك</Text></View><Text style={s.compactChevron}>‹</Text></Pressable>
     </SettingsCard>
     {IS_PLUS&&<SettingsCard title='متجر الإضافات'>
      <Text style={s.text}>مكان مخصص مستقبلاً لشراء ثيمات وأصوات وحزم موسمية بصورة منفردة.</Text>
@@ -875,3 +881,47 @@ const s=StyleSheet.create({
  pg:{borderTopWidth:1,borderTopColor:'#25333b'},pi:{flex:1,minWidth:'45%',padding:12,borderRadius:13,alignItems:'center',backgroundColor:'rgba(2,16,24,.9)',borderWidth:1,borderColor:'#26343d'},prayerRow:{minHeight:49,flexDirection:'row',alignItems:'center',borderBottomWidth:1,borderBottomColor:'#25333b',paddingHorizontal:10},prayerRowAccent:{marginVertical:3,borderWidth:1,borderColor:'#9b712d',borderRadius:13,backgroundColor:'rgba(140,95,25,.22)'},prayerTime:{width:82,color:'#fff',fontSize:18,fontWeight:'700',textAlign:'left'},prayerTimeAccent:{color:'#f4bd5b',fontWeight:'900'},prayerName:{flex:1,color:'#f4f5f5',fontSize:15,textAlign:'right'},prayerIcon:{width:35,color:'#f1e6cd',fontSize:23,textAlign:'center'},prayerIconAccent:{color:'#f4bd5b'},gold:{color:'#f4bb52',fontWeight:'900',fontSize:17,marginTop:4},muted:{color:'#9eabb2'},active:{color:'#f4b94f',fontWeight:'900'},primary:{backgroundColor:'#efb44d',padding:14,borderRadius:18,marginTop:12},primaryText:{color:'#10151a',fontWeight:'900',textAlign:'center'},wrap:{flexDirection:'row',flexWrap:'wrap',gap:8,justifyContent:'flex-end'},choice:{paddingVertical:9,paddingHorizontal:12,borderRadius:10,borderWidth:1,borderColor:'#4b5a63'},choiceOn:{backgroundColor:'#e9aa3d',borderColor:'#e9aa3d'},choiceText:{color:'#eef0f1'},choiceOnText:{color:'#10151a',fontWeight:'900'},
  prayerHint:{color:'#a5b0b6',fontSize:12,fontWeight:'700',textAlign:'right',marginBottom:8},calendarTitle:{color:'#fff',fontSize:21,fontWeight:'900',textAlign:'center',marginBottom:13},researchNotice:{color:'#d9b86e',fontSize:11,textAlign:'center',lineHeight:18,marginBottom:11},calendarControls:{flexDirection:'row-reverse',alignItems:'stretch',gap:7},calendarButton:{flex:1,minHeight:48,borderWidth:1,borderColor:'#4c5961',borderRadius:13,alignItems:'center',justifyContent:'center',paddingHorizontal:5},calendarButtonText:{color:'#f1b84f',fontSize:12,fontWeight:'800',textAlign:'center'},todayButton:{minWidth:72,minHeight:48,backgroundColor:'#efb54d',borderRadius:13,alignItems:'center',justifyContent:'center'},todayButtonText:{color:'#111820',fontWeight:'900'},weekRow:{flexDirection:'row-reverse',marginTop:15,marginBottom:3},weekDay:{width:'14.285%',color:'#d9dee0',fontSize:10,fontWeight:'800',textAlign:'center'},dayGrid:{flexDirection:'row-reverse',flexWrap:'wrap',marginTop:4,borderWidth:1,borderColor:'#24343e',borderRadius:12,overflow:'hidden'},dayCell:{width:'14.285%',height:47,alignItems:'center',justifyContent:'center',borderWidth:.4,borderColor:'#22323b'},dayCellBlank:{width:'14.285%',height:47,borderWidth:.4,borderColor:'#22323b'},eventCell:{backgroundColor:'rgba(200,146,50,.13)'},todayCell:{backgroundColor:'#efb54d',borderRadius:23},dayText:{color:'#eef1f2',fontWeight:'700'},eventDayText:{color:'#f4bb52',fontWeight:'900'},todayDayText:{color:'#101820',fontWeight:'900'},eventDot:{width:5,height:5,borderRadius:3,backgroundColor:'#f4bb52',marginTop:3},eventList:{marginTop:12,padding:12,borderWidth:1,borderColor:'#80632f',borderRadius:14,backgroundColor:'#06131b'},eventTitle:{color:'#f4bb52',fontWeight:'900',fontSize:16,textAlign:'right',marginBottom:8},eventItem:{paddingVertical:7,borderTopWidth:1,borderTopColor:'#26343d'},eventName:{color:'#f4bb52',fontWeight:'900',fontSize:15,textAlign:'right'},eventType:{color:'#a1adb3',fontSize:12,textAlign:'right',marginTop:3},noEvent:{color:'#9daab0',textAlign:'right'},themeChoices:{flexDirection:'row-reverse',flexWrap:'wrap',gap:9,marginTop:13},themeChoice:{width:'47%',minHeight:108,borderRadius:13,borderWidth:1,alignItems:'center',justifyContent:'center'},themeChoiceOn:{borderWidth:3},themeChoiceSymbol:{fontSize:36},themeChoiceText:{color:'#fff',fontWeight:'900',marginTop:7},secondaryButton:{borderWidth:1,borderColor:'#b78131',padding:13,borderRadius:16,marginTop:10},secondaryButtonText:{color:'#f2b84d',fontWeight:'900',textAlign:'center'},cityChoice:{paddingVertical:11,paddingHorizontal:12,borderBottomWidth:1,borderBottomColor:'#26343d'},cityChoiceActive:{backgroundColor:'rgba(200,146,50,.16)'},cityChoiceText:{color:'#e0e5e7',textAlign:'right'},cityChoiceTextActive:{color:'#f4bb52',textAlign:'right',fontWeight:'900'},policyText:{color:'#dbe2e5',textAlign:'right',lineHeight:25,marginTop:14},policyMeta:{color:'#96a5ac',textAlign:'right',lineHeight:21,marginTop:8,fontSize:12},referenceLink:{borderWidth:1,borderColor:'#7f6638',padding:12,borderRadius:13,marginTop:9,backgroundColor:'rgba(105,76,25,.16)'},referenceLinkText:{color:'#f4bb52',fontWeight:'800',textAlign:'right',lineHeight:22},backButton:{alignSelf:'flex-start',borderWidth:0,paddingVertical:10,paddingHorizontal:5,marginTop:5},backButtonText:{color:'#fff',fontSize:17,fontWeight:'900'},dayCellOn:{backgroundColor:'#eaae43',borderColor:'#eaae43'},dayTextOn:{color:'#101820',fontWeight:'900'},nav:{position:'absolute',bottom:0,left:0,right:0,height:75,backgroundColor:'rgba(2,13,20,.98)',borderTopWidth:1,borderTopColor:'#33424a',flexDirection:'row-reverse',paddingTop:5},navb:{flex:1,alignItems:'center',justifyContent:'center',gap:2},navIcon:{color:'#89969c',fontSize:20,fontWeight:'700'},navIconActive:{color:'#f4b94f',fontSize:22,fontWeight:'900'},prayerLink:{marginTop:8,paddingVertical:11,alignItems:'center',borderTopWidth:1,borderTopColor:'#25333b'},prayerLinkText:{color:'#f4bb52',fontSize:13,fontWeight:'800'},membershipBadge:{alignSelf:'flex-end',paddingVertical:5,paddingHorizontal:10,borderRadius:10,backgroundColor:'rgba(239,180,77,.18)',borderWidth:1,borderColor:'#b98532'},membershipBadgeText:{color:'#f4bb52',fontSize:11,fontWeight:'900'},membershipTitle:{color:'#fff',fontSize:17,fontWeight:'900',textAlign:'right',marginTop:12},shopRow:{flexDirection:'row-reverse',gap:8,marginTop:12},shopItem:{flex:1,minHeight:86,alignItems:'center',justifyContent:'center',borderRadius:13,borderWidth:1,borderColor:'#59636a',backgroundColor:'rgba(2,16,24,.9)'},shopIcon:{color:'#efb44d',fontSize:28},shopText:{color:'#fff',fontWeight:'800',marginTop:5},weeklyAd:{marginTop:12,padding:14,borderRadius:18,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(54,35,8,.94)'},weeklyAdHeader:{flexDirection:'row-reverse',alignItems:'center',justifyContent:'space-between'},adLabel:{color:'#101820',backgroundColor:'#efb44d',fontSize:11,fontWeight:'900',paddingVertical:4,paddingHorizontal:9,borderRadius:9},adClose:{width:34,height:34,borderRadius:17,borderWidth:1,borderColor:'#8d7448',alignItems:'center',justifyContent:'center'},adCloseText:{color:'#fff',fontSize:24,lineHeight:28},weeklyAdTitle:{color:'#f5c66c',fontSize:18,fontWeight:'900',textAlign:'right',marginTop:10},weeklyAdBody:{color:'#f2eee5',fontSize:13,lineHeight:21,textAlign:'right',marginTop:7},adAction:{marginTop:11,backgroundColor:'#efb44d',padding:11,borderRadius:13},adActionText:{color:'#111820',fontWeight:'900',textAlign:'center'}
 });
+
+function AlofoKLicenseGate(){
+ const [licenseState,setLicenseState]=useState({status:'checking',tier:'trial',reason:null});
+ useEffect(()=>{
+  let mounted=true;
+  async function applyResult(result){
+   if(!mounted)return;
+   if(!result?.valid){setLicenseState({status:'blocked',tier:'trial',reason:result?.reason||'official_activation_required'});return}
+   if(IS_PAID_BUILD&&result.tier!=='plus'){setLicenseState({status:'plus_required',tier:'trial',reason:'plus_subscription_required'});return}
+   setLicenseState({status:'ready',tier:result.tier==='plus'?'plus':'trial',reason:null});
+  }
+  async function activateFromUrl(url){
+   const token=extractActivationToken(url);
+   if(!token)return false;
+   if(mounted)setLicenseState({status:'checking',tier:'trial',reason:null});
+   const result=await activateOfficialInstall({activationToken:token,appVersion:APP_VERSION,appVariant:APP_VARIANT});
+   await applyResult(result);
+   return true;
+  }
+  (async()=>{
+   try{
+    const initialUrl=await Linking.getInitialURL();
+    if(await activateFromUrl(initialUrl))return;
+    await applyResult(await verifyEntitlement({appVersion:APP_VERSION,appVariant:APP_VARIANT}));
+   }catch(e){if(mounted)setLicenseState({status:'blocked',tier:'trial',reason:'license_check_failed'})}
+  })();
+  const subscription=Linking.addEventListener('url',({url})=>{activateFromUrl(url).catch(()=>{if(mounted)setLicenseState({status:'blocked',tier:'trial',reason:'activation_failed'})})});
+  return()=>{mounted=false;subscription?.remove?.()};
+ },[]);
+
+ async function openOfficialActivation(){
+  try{
+   const url=await getOfficialActivationUrl();
+   if(url&&await Linking.canOpenURL(url)){await Linking.openURL(url);return}
+   Alert.alert('التفعيل الرسمي','لم يتم ضبط رابط التفعيل الرسمي بعد. فعّل EXPO_PUBLIC_OFFICIAL_PORTAL_URL قبل إصدار النسخة العامة.');
+  }catch(e){Alert.alert('تعذر فتح التفعيل','حاول مرة أخرى بعد التأكد من اتصال الإنترنت.')}
+ }
+
+ if(licenseState.status==='checking')return <View style={{flex:1,backgroundColor:'#020b12',alignItems:'center',justifyContent:'center',padding:28}}><Text style={{color:'#f4bb52',fontSize:20,fontWeight:'900',textAlign:'center'}}>الأفق</Text><Text style={{color:'#c8d3da',fontSize:13,marginTop:10,textAlign:'center'}}>جاري التحقق من النسخة الرسمية…</Text></View>;
+ if(licenseState.status!=='ready')return <View style={{flex:1,backgroundColor:'#020b12',alignItems:'center',justifyContent:'center',padding:28}}><Text style={{color:'#f4bb52',fontSize:20,fontWeight:'900',textAlign:'center'}}>{licenseState.status==='plus_required'?'الأفق Plus غير مفعّل':'هذه النسخة تحتاج تفعيلًا رسميًا'}</Text><Text style={{color:'#c8d3da',fontSize:13,lineHeight:22,marginTop:12,textAlign:'center'}}>{licenseState.status==='plus_required'?'هذه نسخة Plus ولا تعمل على هذا الجهاز إلا إذا كان اشتراك Plus فعالًا ومؤكدًا.':'نسخ ملف APK إلى هاتف آخر لا ينقل ترخيص الاستخدام. فعّل هذا الجهاز من قناة الأفق الرسمية.'}</Text><Pressable onPress={openOfficialActivation} style={{marginTop:20,minHeight:46,paddingHorizontal:18,borderRadius:12,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'}}><Text style={{color:'#111820',fontWeight:'900'}}>التفعيل من المصدر الرسمي</Text></Pressable></View>;
+ return <AlofoKApp licenseTier={licenseState.tier}/>;
+}
+
+export default AlofoKLicenseGate;
