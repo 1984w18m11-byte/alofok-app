@@ -1,1 +1,1 @@
-Apply the requested AlofoK source update: leap-year/Nasi naming, fixed prayer calculation method, AlofoK calendar identity, and compact support button.
+Apply AlofoK protected distribution update: one native package for trial/Plus, device-bound official activation, copied-APK blocking, Zain Cash Plus upgrade flow, and separate trial/Plus update channels. 2026-09-10
