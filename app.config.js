@@ -9,15 +9,15 @@ module.exports = () => {
     ...base,
     name: isPaid ? 'الأفق بلس' : 'الأفق',
     slug: `alofok-${variant}`,
-    scheme: `alofok-${variant}`,
+    scheme: 'alofok',
     icon,
     ios: {
       ...base.ios,
-      bundleIdentifier: `com.alofok.${variant}`
+      bundleIdentifier: 'com.alofok.trial'
     },
     android: {
       ...base.android,
-      package: `com.alofok.${variant}`,
+      package: 'com.alofok.trial',
       versionCode: base.android.versionCode,
       blockedPermissions: ['android.permission.RECORD_AUDIO'],
       adaptiveIcon: {
