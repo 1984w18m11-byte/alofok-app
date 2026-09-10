@@ -1,0 +1,10 @@
+{
+  "channel": "plus",
+  "version": "0.5.5",
+  "versionCode": 26,
+  "title_ar": "تحديث الأفق Plus",
+  "notes_ar": "قناة تحديث الأفق Plus. لا تُفعَّل مزايا Plus إلا بترخيص صالح مرتبط بالجهاز.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/latest",
+  "mandatory": false,
+  "published_at": "2026-09-10"
+}
