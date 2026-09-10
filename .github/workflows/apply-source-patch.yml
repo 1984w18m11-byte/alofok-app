@@ -1,0 +1,28 @@
+name: Apply AlofoK source patch
+
+on:
+  push:
+    paths:
+      - '.github/alofok-source-update.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+      - name: Apply patch
+        run: python3 scripts/apply_requested_alofok_update.py
+      - name: Commit changes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.js src/i18n/translations.js src/engine/lunisolar.js
+          git commit -m "feat: apply requested AlofoK calendar and support updates"
+          git push origin main
