@@ -1,0 +1,10 @@
+{
+  "channel": "trial",
+  "version": "0.5.5",
+  "versionCode": 26,
+  "title_ar": "تحديث الأفق التجريبي",
+  "notes_ar": "قناة تحديث الأفق التجريبي. يحصل غير المشتركين على تحديثات التجريبي فقط.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/latest",
+  "mandatory": false,
+  "published_at": "2026-09-10"
+}
