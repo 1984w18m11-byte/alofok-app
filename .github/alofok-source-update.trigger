@@ -1,1 +1,1 @@
-Apply AlofoK protected distribution update: one native package for trial/Plus, device-bound official activation, copied-APK blocking, Zain Cash Plus upgrade flow, and separate trial/Plus update channels. 2026-09-10
+Apply AlofoK protected distribution update: one native package for trial/Plus, device-bound official activation, copied-APK blocking, Zain Cash Plus upgrade flow, and separate trial/Plus update channels. Retry 2026-09-10.
