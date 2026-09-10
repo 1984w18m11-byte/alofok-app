@@ -257,9 +257,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   AsyncStorage.getItem('alofq_adhan_volume').then(value=>{
    const parsed=Number(value);
    if(Number.isFinite(parsed)&&parsed>=0&&parsed<=1)setAdhanVolume(parsed);
-  }).catch(e=>console.log('Volume restore error:',e));
+  }).catch(e=>console.log('Volume save error:',e));
  },[]);
-
 
  useEffect(()=>{
   let active=true;
@@ -297,7 +296,6 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    if(showResult)Alert.alert('تعذر البحث عن تحديث','تحقق من اتصال الإنترنت ثم حاول مرة أخرى.');
   }finally{setUpdateChecking(false)}
  }
-
  function showUpdateDialog(info=updateInfo){
   if(!info)return;
   Alert.alert('تحديث جديد متوفر',`الإصدار ${info.version}\n\n${info.notes_ar||'يتوفر إصدار أحدث من تطبيق الأفق.'}`,[
@@ -694,7 +692,6 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   setTab(nextTab);
  }
 
-
  return <View style={s.background}>
   {IS_PLUS&&<AtlasThemeBackground index={atlasIndex}/>} 
   <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background,opacity:IS_PLUS?.2:.76}]}/>
@@ -709,7 +706,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      </View>
      <View style={s.brandBlock}>
       <Text style={[s.appName,{color:theme.accent}]}>الأفق</Text>
-      <Text style={s.appSub}>التقويم العربي المقترح ومواقيت الصلاة</Text>
+      <Text style={s.appSub}>تقويم عربي ثابت ومواقيت الصلاة</Text>
      </View>
      <Pressable accessibilityLabel={showMainMenu?'إغلاق القائمة':'فتح القائمة'} style={s.headerIconButton} onPress={()=>setShowMainMenu(v=>!v)}><Text style={s.menuIcon}>{showMainMenu?'×':'☰'}</Text></Pressable>
     </View>
@@ -723,7 +720,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   <Text style={s.week}>{weekday(now)}</Text>
   <Text style={s.hdate}>{lunar.day} {lunar.monthNameAr} {lunar.year} هـ</Text>
   <Text style={s.gdate}>{formatGregorian(now)}</Text>
-  <Text style={s.researchIdentity}>تقويم بحثي علمي مقترح — ليس تطبيقًا دينيًا ولا تقويمًا شرعيًا رسميًا</Text>
+  <Text style={s.researchIdentity}>تقويم عربي ثابت — بحث علمي مقترح، وليس تقويمًا شرعيًا رسميًا</Text>
   {isRamadan&&<View style={s.ramadanMini}>
     <Text style={s.ramadanMiniTitle}>رَمَضَانُ مُبَارَك</Text>
     <Text style={s.ramadanMiniText}>تقبل الله منا ومنكم صالح الأعمال</Text>
@@ -873,7 +870,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 }
 function Card({title,children}){return <View style={s.card}><Text style={s.title}>{title}</Text>{children}</View>}
 function SettingsCard({title,children}){return <View style={s.settingsCard}><Text style={s.settingsCardTitle}>{title}</Text>{children}</View>}
-function PrayerGrid({p}){return <View style={s.pg}>{PRAYERS.map(([a,k,icon])=><View style={[s.prayerRow,k==='maghrib'&&s.prayerRowAccent]} key={k}><Text style={[s.prayerTime,k==='maghrib'&&s.prayerTimeAccent]}>{p[k]}</Text><Text style={s.prayerName}>{a}</Text><Text style={[s.prayerIcon,k==='maghrib'&&s.prayerIconAccent]}>{icon}</Text></View>)}</View>}
+function PrayerGrid({p}){return <View style={s.pg}>{PRAYERS.map(([a,k,icon])=><View style={s.prayerRow} key={k}><Text style={s.prayerTime}>{p[k]}</Text><Text style={s.prayerName}>{a}</Text><Text style={s.prayerIcon}>{icon}</Text></View>)}</View>}
 function EventDetails({title,events}){return <View style={s.eventList}><Text style={s.eventTitle}>{title}</Text>{events.length?events.map((e,i)=><View key={`${e.type}-${e.name}-${i}`} style={s.eventItem}><Text style={s.eventName}>● {e.name}</Text><Text style={s.eventType}>{e.type}</Text>{Boolean(e.details)&&<Text style={s.sub}>{e.details}</Text>}</View>):<Text style={s.noEvent}>لا توجد مناسبة مسجلة في هذا اليوم.</Text>}</View>}
 const s=StyleSheet.create({
  background:{flex:1,backgroundColor:'#020b12'},supportCard:{marginTop:12,padding:14,borderRadius:18,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(28,20,8,.94)'},supportHeading:{flexDirection:'row-reverse',alignItems:'center',justifyContent:'space-between'},supportTitle:{color:'#fff',fontSize:18,fontWeight:'900',textAlign:'right'},supportDollar:{color:'#f4bb52',fontSize:34,fontWeight:'900'},supportDescription:{color:'#d8d4c9',fontSize:12,lineHeight:20,textAlign:'right',marginTop:6},supportAccountRow:{flexDirection:'row-reverse',alignItems:'stretch',gap:8,marginTop:12},supportAccount:{flex:1,minHeight:52,color:'#fff',backgroundColor:'rgba(2,16,24,.9)',borderWidth:1,borderColor:'#4d5960',borderRadius:13,padding:14,textAlign:'center',fontSize:14,fontWeight:'800'},copyButton:{width:67,minHeight:52,borderRadius:13,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'},copyButtonDisabled:{opacity:.55},copyButtonIcon:{color:'#111820',fontSize:17,fontWeight:'900'},copyButtonText:{color:'#111820',fontSize:11,fontWeight:'900'},backgroundShade:{...StyleSheet.absoluteFillObject},root:{flex:1,backgroundColor:'transparent'},themeSky:{position:'absolute',top:0,left:0,right:0,height:360,opacity:.18,overflow:'hidden'},themeSymbol:{position:'absolute',top:78,right:34,fontSize:72,fontWeight:'900'},themeOrb:{position:'absolute',width:230,height:230,borderRadius:115,borderWidth:1,top:120,left:-100,opacity:.2},themeLabel:{fontSize:12,fontWeight:'800',textAlign:'center',marginBottom:10},page:{paddingHorizontal:13,paddingTop:5,paddingBottom:28},hero:{paddingTop:8,paddingBottom:12},heroTopRow:{minHeight:82,flexDirection:'row-reverse',alignItems:'flex-start',justifyContent:'space-between'},brandBlock:{flex:1,alignItems:'center'},headerIconButton:{width:42,height:42,alignItems:'center',justifyContent:'center'},headerLocationWrap:{width:82,alignItems:'center'},headerGpsButton:{width:42,height:42,borderRadius:21,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(2,16,24,.55)',alignItems:'center',justifyContent:'center'},headerGpsIcon:{fontSize:21,color:'#f4bb52',fontWeight:'900'},headerLocationText:{color:'#f1d28e',fontSize:9,fontWeight:'800',textAlign:'center',lineHeight:12,marginTop:3,maxWidth:82},headerIcon:{color:'#fff',fontSize:25},headerUpdateDot:{position:'absolute',top:3,right:2,width:10,height:10,borderRadius:5,backgroundColor:'#ef3f3f',borderWidth:1,borderColor:'#07131b'},menuIcon:{color:'#fff',fontSize:27,width:42,textAlign:'center'},mainMenu:{marginBottom:12,borderRadius:16,borderWidth:1,borderColor:'#80632f',backgroundColor:'rgba(2,14,22,.94)',overflow:'hidden'},mainMenuItem:{minHeight:49,justifyContent:'center',paddingHorizontal:16,borderBottomWidth:1,borderBottomColor:'#26343d'},mainMenuText:{color:'#f4bb52',fontSize:15,fontWeight:'900',textAlign:'right'},appName:{fontSize:29,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#e0c384',fontSize:12,fontWeight:'700',textAlign:'center',marginTop:5},locationPill:{alignSelf:'center',minWidth:'57%',minHeight:54,paddingVertical:8,paddingHorizontal:18,borderRadius:28,borderWidth:1,borderColor:'#d39c3f',backgroundColor:'rgba(3,14,22,.86)',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:10},locationPin:{fontSize:21},locationText:{color:'#fff',fontSize:14,fontWeight:'800',textAlign:'center',maxWidth:180},locationCaption:{color:'#9ea9ae',fontSize:10,textAlign:'center',marginTop:2},
