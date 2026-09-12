@@ -1,1 +1,1 @@
-Run only the idempotent final AlofoK QA patches after device review. English fallback pass, GPS/update/support dialogs, themes, variants, Cave 25 study and Adhan visibility. Trigger 2026-09-13 pass 3.
+Apply AlofoK final QA pass 4: update dialog and license gate now respect English mode; keep all prior fixes for Cave 25, support, themes, separate variants, GPS and licensed Adhan voices. Trigger 2026-09-13.
