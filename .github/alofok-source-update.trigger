@@ -1,1 +1,1 @@
-Apply AlofoK final device QA patch: exact Cave 25 calculation, complete English visible UI cleanup, remove home support card, correct Plus/trial package separation, fix theme previews/aspect ratio, and enable three newer licensed Adhan voices in both variants. Trigger 2026-09-13.
+Apply AlofoK final QA second pass: eliminate remaining Arabic fallbacks in English mode, translate GPS/update/support/notification dialogs, use English Adhan performer names, and keep the final device fixes. Trigger 2026-09-13 pass 2.
