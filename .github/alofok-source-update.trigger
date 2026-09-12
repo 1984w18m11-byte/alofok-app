@@ -1,1 +1,1 @@
-Apply AlofoK final QA second pass: eliminate remaining Arabic fallbacks in English mode, translate GPS/update/support/notification dialogs, use English Adhan performer names, and keep the final device fixes. Trigger 2026-09-13 pass 2.
+Run only the idempotent final AlofoK QA patches after device review. English fallback pass, GPS/update/support dialogs, themes, variants, Cave 25 study and Adhan visibility. Trigger 2026-09-13 pass 3.
