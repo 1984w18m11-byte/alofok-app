@@ -1,1 +1,1 @@
-Apply AlofoK English UI completion and calendar study update: remove remaining Arabic hard-coded settings text when English is selected; add lunar/solar year calculations, 19-year intercalation explanation, and Al-Kahf 18:25 with the 300-solar / 309-lunar comparison. Trigger 2026-09-12.
+Apply AlofoK English settings completion after study fix: translate remaining adhan, Ramadan, theme and wallpaper labels when English is selected. Trigger 2026-09-12 second pass.
