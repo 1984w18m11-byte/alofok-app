@@ -1,1 +1,1 @@
-Apply AlofoK English settings completion after study fix: translate remaining adhan, Ramadan, theme and wallpaper labels when English is selected. Trigger 2026-09-12 second pass.
+Apply AlofoK final device QA patch: exact Cave 25 calculation, complete English visible UI cleanup, remove home support card, correct Plus/trial package separation, fix theme previews/aspect ratio, and enable three newer licensed Adhan voices in both variants. Trigger 2026-09-13.
