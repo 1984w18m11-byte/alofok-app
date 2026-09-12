@@ -342,7 +342,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   Alert.alert(ui('تحديث جديد متوفر','New update available'),`${ui('الإصدار','Version')} ${info.version}\n\n${useArabicUi?(info.notes_ar||'يتوفر إصدار أحدث من تطبيق الأفق.'):(info.notes_en||'A newer AlofoK version is available.')}`,[
    {text:ui('لاحقًا','Later'),style:'cancel'},
    {text:ui('الانتقال إلى التحديث','Open update'),onPress:async()=>{
-    const storePackage=APP_VARIANT==='paid'?'com.alofok.plus':'com.alofok.trial';\n    const url=DISTRIBUTION_CHANNEL==='play'?(info.play_url||`market://details?id=${storePackage}`):(DISTRIBUTION_CHANNEL==='appstore'?(info.app_store_url||info.download_url):info.download_url);
+    const storePackage=APP_VARIANT==='paid'?'com.alofok.plus':'com.alofok.trial';
+    const url=DISTRIBUTION_CHANNEL==='play'?(info.play_url||`market://details?id=${storePackage}`):(DISTRIBUTION_CHANNEL==='appstore'?(info.app_store_url||info.download_url):info.download_url);
     if(url&&await Linking.canOpenURL(url))await Linking.openURL(url);
     else Alert.alert(ui('الرابط غير متاح','Link unavailable'),ui('تعذر فتح رابط التحديث الآن.','The update link could not be opened right now.'));
    }}

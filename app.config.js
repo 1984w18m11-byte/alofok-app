@@ -7,6 +7,7 @@ module.exports = () => {
   const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
   const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
   const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
+  const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
 
   return {
     ...base,
