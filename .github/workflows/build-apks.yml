@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   build-apk:
-    name: Build AlOfoq ${{ matrix.variant }}
+    name: Build AlofoK ${{ matrix.variant }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -42,8 +42,42 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Report translation completeness for preview
-        continue-on-error: true
+      - name: Refresh and validate licensed Adhan audio
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          mkdir -p assets/adhan /tmp/alofok-adhan
+
+          download_convert() {
+            local url="$1"
+            local output="$2"
+            local input="/tmp/alofok-adhan/$(basename "$output").source"
+            echo "Refreshing $output"
+            curl -fL --retry 3 --retry-delay 2 -A "AlofoK-build/0.5.6" "$url" -o "$input"
+            ffmpeg -hide_banner -loglevel error -y -i "$input" -vn -ac 1 -ar 44100 -c:a libvorbis -q:a 5 "$output"
+            ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 "$output"
+          }
+
+          download_convert "https://commons.wikimedia.org/wiki/Special:Redirect/file/Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav" "assets/adhan/adhan_morocco_hassan_ii.ogg"
+          download_convert "https://commons.wikimedia.org/wiki/Special:Redirect/file/Adhan_in_Shalqar_mosque.webm" "assets/adhan/adhan_kazakhstan_shalqar.ogg"
+          download_convert "https://commons.wikimedia.org/wiki/Special:Redirect/file/The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3" "assets/adhan/adhan_aaqib_azeez.ogg"
+
+          cp assets/adhan/adhan_morocco_hassan_ii.ogg assets/adhan/adhan-morocco-hassan-ii.ogg
+          cp assets/adhan/adhan_kazakhstan_shalqar.ogg assets/adhan/adhan-kazakhstan-shalqar.ogg
+          cp assets/adhan/adhan_aaqib_azeez.ogg assets/adhan/adhan-aaqib-azeez.ogg
+
+          for f in \
+            assets/adhan/beautiful_adhan.ogg \
+            assets/adhan/adhan_morocco_hassan_ii.ogg \
+            assets/adhan/adhan_kazakhstan_shalqar.ogg \
+            assets/adhan/adhan_aaqib_azeez.ogg; do
+            test -s "$f"
+            ffprobe -v error "$f" >/dev/null
+          done
+
+      - name: Validate translation completeness
         run: npm run check:translations
 
       - name: Validate Expo configuration
@@ -59,7 +93,7 @@ jobs:
       - name: Keep build for internal verification
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-${{ matrix.variant }}-0.5.5
+          name: alofok-${{ matrix.variant }}-0.5.6
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 7
@@ -72,17 +106,17 @@ jobs:
       - name: Download both APK artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: alofok-*-0.5.5
+          pattern: alofok-*-0.5.6
           path: artifacts
 
       - name: Prepare clear APK filenames
         run: |
-          cp artifacts/alofok-trial-0.5.5/app-release.apk alofok-trial-0.5.5.apk
-          cp artifacts/alofok-paid-0.5.5/app-release.apk alofok-plus-0.5.5.apk
+          cp artifacts/alofok-trial-0.5.6/app-release.apk alofok-trial-0.5.6.apk
+          cp artifacts/alofok-paid-0.5.6/app-release.apk alofok-plus-0.5.6.apk
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v0.5.5 >/dev/null 2>&1 || gh release create v0.5.5 --title "الأفق 0.5.5" --notes "نسختا الأفق التجريبية والأفق بلس لفحصهما على أندرويد."
-          gh release upload v0.5.5 alofok-trial-0.5.5.apk alofok-plus-0.5.5.apk --clobber
+          gh release view v0.5.6 >/dev/null 2>&1 || gh release create v0.5.6 --title "الأفق 0.5.6" --notes "نسخة فحص بعد إصلاح اللغات، فصل التجريبية عن Plus، الثيمات، شرح أصحاب الكهف، وأصوات الأذان المرخصة."
+          gh release upload v0.5.6 alofok-trial-0.5.6.apk alofok-plus-0.5.6.apk --clobber
