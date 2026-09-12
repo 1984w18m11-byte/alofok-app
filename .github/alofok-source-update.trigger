@@ -1,1 +1,1 @@
-Apply AlofoK final QA pass 4: update dialog and license gate now respect English mode; keep all prior fixes for Cave 25, support, themes, separate variants, GPS and licensed Adhan voices. Trigger 2026-09-13.
+Apply AlofoK final QA pass 5: preserve all prior fixes and clean the update-dialog source newline before any build. Trigger 2026-09-13.
