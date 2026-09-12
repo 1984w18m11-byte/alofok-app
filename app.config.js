@@ -4,20 +4,21 @@ module.exports = () => {
   const isPaid = process.env.APP_VARIANT === 'paid';
   const variant = isPaid ? 'paid' : 'trial';
   const icon = isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png';
+  const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
 
   return {
     ...base,
     name: isPaid ? 'الأفق بلس' : 'الأفق',
     slug: `alofok-${variant}`,
-    scheme: 'alofok',
+    scheme: isPaid ? 'alofok-plus' : 'alofok',
     icon,
     ios: {
       ...base.ios,
-      bundleIdentifier: 'com.alofok.trial'
+      bundleIdentifier: packageId
     },
     android: {
       ...base.android,
-      package: 'com.alofok.trial',
+      package: packageId,
       versionCode: base.android.versionCode,
       blockedPermissions: ['android.permission.RECORD_AUDIO'],
       adaptiveIcon: {

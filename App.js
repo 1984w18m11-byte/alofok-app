@@ -28,7 +28,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
-const APP_VERSION='0.5.5';
+const APP_VERSION='0.5.6';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
 const TRIAL_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
 const PLUS_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json';
@@ -53,7 +53,10 @@ const ADHAN_NOTIFICATION_SOUNDS={
  'commons-aaqib-azeez':'adhan_aaqib_azeez.ogg'
 };
 const PRAYERS=[['الفجر','fajr','♜'],['الشروق','sunrise','☼'],['الظهر','dhuhr','☀'],['العصر','asr','☀'],['المغرب','maghrib','◒'],['العشاء','isha','☾']];
+const PRAYER_LABELS_EN={fajr:'Fajr',sunrise:'Sunrise',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};
 const WEEKDAYS=['أحد','اثنين','ثلاثاء','أربعاء','خميس','جمعة','سبت'];
+const WEEKDAYS_EN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+const LUNAR_MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada II','Rajab',"Sha'ban",'Ramadan','Shawwal','Dhu al-Qidah','Dhu al-Hijjah','Nasi’'];
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
 const RAMADAN_VERSE_EN='Eat and drink until the white thread of dawn becomes distinct from the black thread, then complete the fast until night.';
 const THEME_LABELS_EN={
@@ -82,9 +85,9 @@ function weeklyKey(date=new Date()){
  return `${d.getUTCFullYear()}-W${String(week).padStart(2,'0')}`;
 }
 function formatArabicClock(d){return new Intl.DateTimeFormat('ar-IQ',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:true}).format(d)}
-function formatGregorian(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d)}
-function weekday(d){return new Intl.DateTimeFormat('ar-IQ',{weekday:'long'}).format(d)}
-function gregorianMonthTitle(d){return new Intl.DateTimeFormat('ar-IQ',{month:'long',year:'numeric'}).format(d)}
+function formatGregorian(d,locale='ar-IQ'){return new Intl.DateTimeFormat(locale,{weekday:'long',day:'numeric',month:'long',year:'numeric'}).format(d)}
+function weekday(d,locale='ar-IQ'){return new Intl.DateTimeFormat(locale,{weekday:'long'}).format(d)}
+function gregorianMonthTitle(d,locale='ar-IQ'){return new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(d)}
 function shiftGregorianMonth(date,amount){const d=new Date(date);d.setDate(1);d.setMonth(d.getMonth()+amount);return d}
 function civilDateForTimeZone(date,timeZone){
  try{
@@ -132,10 +135,27 @@ const THEME_CHOICES=[
  ['new-year','رأس السنة',23],['earth-sun','الانقلاب والاعتدال',24],['solar-eclipse','الكسوف الشمسي',25],['lunar-eclipse','الخسوف القمري',26],['galaxy','المجرة والنجوم',27]
 ];
 const SCREEN=Dimensions.get('window');
+const THEME_ATLAS=require('./assets/themes/alofok-plus-theme-atlas-v1.jpg');
+const THEME_ATLAS_META=Image.resolveAssetSource(THEME_ATLAS)||{};
+const THEME_TILE_ASPECT=(THEME_ATLAS_META.width&&THEME_ATLAS_META.height)?((THEME_ATLAS_META.width/7)/(THEME_ATLAS_META.height/4)):(4/7);
+function atlasCoverMetrics(frameWidth,frameHeight){
+ const widthFromHeight=frameHeight*THEME_TILE_ASPECT;
+ const tileWidth=Math.max(frameWidth,widthFromHeight);
+ const tileHeight=tileWidth/THEME_TILE_ASPECT;
+ return {tileWidth,tileHeight,cropX:Math.max(0,(tileWidth-frameWidth)/2),cropY:Math.max(0,(tileHeight-frameHeight)/2)};
+}
 function AtlasThemeBackground({index}){
  const safe=Math.max(0,Math.min(27,Number(index)||0));
  const col=safe%7,row=Math.floor(safe/7);
- return <View pointerEvents='none' style={StyleSheet.absoluteFillObject} overflow='hidden'><Image source={require('./assets/themes/alofok-plus-theme-atlas-v1.jpg')} resizeMode='stretch' style={{position:'absolute',width:SCREEN.width*7,height:SCREEN.height*4,left:-col*SCREEN.width,top:-row*SCREEN.height}}/></View>;
+ const {tileWidth,tileHeight,cropX,cropY}=atlasCoverMetrics(SCREEN.width,SCREEN.height);
+ return <View pointerEvents='none' style={StyleSheet.absoluteFillObject} overflow='hidden'><Image source={THEME_ATLAS} resizeMode='stretch' style={{position:'absolute',width:tileWidth*7,height:tileHeight*4,left:-(col*tileWidth+cropX),top:-(row*tileHeight+cropY)}}/></View>;
+}
+function AtlasThemePreview({index}){
+ const [frame,setFrame]=useState({width:160,height:108});
+ const safe=Math.max(0,Math.min(27,Number(index)||0));
+ const col=safe%7,row=Math.floor(safe/7);
+ const {tileWidth,tileHeight,cropX,cropY}=atlasCoverMetrics(frame.width,frame.height);
+ return <View pointerEvents='none' onLayout={e=>{const {width,height}=e.nativeEvent.layout;if(width>0&&height>0&&(Math.abs(width-frame.width)>1||Math.abs(height-frame.height)>1))setFrame({width,height})}} style={StyleSheet.absoluteFillObject} overflow='hidden'><Image source={THEME_ATLAS} resizeMode='stretch' style={{position:'absolute',width:tileWidth*7,height:tileHeight*4,left:-(col*tileWidth+cropX),top:-(row*tileHeight+cropY)}}/></View>;
 }
 
 function AlofoKApp({licenseTier='trial'}){
@@ -149,6 +169,9 @@ function AlofoKApp({licenseTier='trial'}){
  const systemLocale=Intl.DateTimeFormat().resolvedOptions().locale||'ar';
  const useArabicUi=appLanguage==='ar'||(appLanguage==='system'&&String(systemLocale).toLowerCase().startsWith('ar'));
  const ui=(ar,en)=>useArabicUi?ar:en;
+ const displayLocale=useArabicUi?'ar-IQ':(activeLocale||'en-US');
+ const weekdayLabels=useArabicUi?WEEKDAYS:WEEKDAYS_EN;
+ const lunarMonthLabel=m=>useArabicUi?(m?.monthNameAr||''):(LUNAR_MONTHS_EN[(m?.month||1)-1]||m?.monthNameAr||'');
  const [coords,setCoords]=useState({lat:33.3152,lon:44.3661});
  const [city,setCity]=useState(cities.find(x=>x.id==='iq-baghdad'));
  const [locState,setLocState]=useState('بغداد • افتراضي');
@@ -194,7 +217,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
  useEffect(()=>{AsyncStorage.getItem('alofq_app_language').then(value=>{if(value&&LANGUAGE_CHOICES.some(([id])=>id===value))setAppLanguage(value)}).catch(e=>console.log('Language restore error:',e))},[]);
- async function chooseAppLanguage(id){setAppLanguage(id);setShowLanguageChoices(false);try{await AsyncStorage.setItem('alofq_app_language',id)}catch(e){console.log('Language save error:',e)}Alert.alert('لغة التطبيق','تم حفظ اللغة. سيُطبّق اتجاه النص والترجمة الكاملة بعد إعادة تشغيل التطبيق في النسخة النهائية.')}
+ async function chooseAppLanguage(id){setAppLanguage(id);setShowLanguageChoices(false);try{await AsyncStorage.setItem('alofq_app_language',id)}catch(e){console.log('Language save error:',e)}const isEnglish=String(id).startsWith('en');Alert.alert(isEnglish?'App language':'لغة التطبيق',isEnglish?'Language saved. The interface changes immediately.':'تم حفظ اللغة، وستتغير الواجهة مباشرة.')} 
  useEffect(()=>{AsyncStorage.getItem('alofq_dismissed_ad_week').then(setDismissedAdWeek).catch(e=>console.log('Ad preference restore error:',e))},[]);
  useEffect(()=>{Promise.all([AsyncStorage.getItem('alofq_mobile_themes'),AsyncStorage.getItem('alofq_wallpaper_mode'),AsyncStorage.getItem('alofq_wallpaper_target'),AsyncStorage.getItem('alofq_wallpaper_fallback')]).then(([enabled,mode,target,fallback])=>{setMobileThemesEnabled(IS_PLUS&&enabled==='1');if(['time','lunar','season','fixed'].includes(mode))setWallpaperMode(mode);if(['home','lock','both'].includes(target))setWallpaperTarget(target);setWallpaperFallback(fallback==='1')}).catch(e=>console.log('Wallpaper settings restore error:',e))},[]);
  async function setWallpaperPreference(key,value){try{await AsyncStorage.setItem(key,value)}catch(e){console.log('Wallpaper preference save error:',e)}}
@@ -308,10 +331,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    setLastUpdateCheck(new Date());
    if(showResult){
     if(available)showUpdateDialog(info);
-    else Alert.alert('التحديثات','أنت تستخدم أحدث نسخة من تطبيق الأفق.');
+    else Alert.alert(ui('التحديثات','Updates'),ui('أنت تستخدم أحدث نسخة من تطبيق الأفق.','You are using the latest version of AlofoK.'));
    }
   }catch(e){
-   if(showResult)Alert.alert('تعذر البحث عن تحديث','تحقق من اتصال الإنترنت ثم حاول مرة أخرى.');
+   if(showResult)Alert.alert(ui('تعذر البحث عن تحديث','Unable to check for updates'),ui('تحقق من اتصال الإنترنت ثم حاول مرة أخرى.','Check your internet connection and try again.'));
   }finally{setUpdateChecking(false)}
  }
  function showUpdateDialog(info=updateInfo){
@@ -332,7 +355,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     const current=await Notifications.getPermissionsAsync();
     const result=current.status==='granted'?current:await Notifications.requestPermissionsAsync();
     if(result.status!=='granted'){
-     Alert.alert('الإشعارات غير مسموحة','يمكنك منح إذن الإشعارات من إعدادات الهاتف.');
+     Alert.alert(ui('الإشعارات غير مسموحة','Notifications are not allowed'),ui('يمكنك منح إذن الإشعارات من إعدادات الهاتف.','You can grant notification permission in your phone settings.'));
      return;
     }
    }
@@ -340,7 +363,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    setters[kind](value);
    await AsyncStorage.setItem(`alofq_${kind}_alerts`,value?'1':'0');
   }catch(e){
-   Alert.alert('تعذر حفظ الإعداد','حاول مرة أخرى.');
+   Alert.alert(ui('تعذر حفظ الإعداد','Could not save setting'),ui('حاول مرة أخرى.','Please try again.'));
   }
  }
 
@@ -719,75 +742,72 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    {tab==='today'&&<View style={s.hero}>
     <View style={s.heroTopRow}>
      <View style={s.headerLocationWrap}>
-      <Pressable accessibilityLabel='تحديث الموقع عبر GPS' accessibilityHint={locState} style={s.headerGpsButton} onPress={()=>useGps(true)} disabled={locationBusy}><Text style={s.headerGpsIcon}>{locationBusy?'…':'📍'}</Text></Pressable>
-      <Text numberOfLines={2} style={s.headerLocationText}>{locationBusy?'جاري التحديد…':locState}</Text>
+      <Pressable accessibilityLabel={ui('تحديث الموقع عبر GPS','Update location with GPS')} accessibilityHint={locState} style={s.headerGpsButton} onPress={()=>useGps(true)} disabled={locationBusy}><Text style={s.headerGpsIcon}>{locationBusy?'…':'📍'}</Text></Pressable>
+      <Text numberOfLines={2} style={s.headerLocationText}>{locationBusy?ui('جاري التحديد…','Locating…'):locState}</Text>
      </View>
      <View style={s.brandBlock}>
-      <Text style={[s.appName,{color:theme.accent}]}>الأفق</Text>
-      <Text style={s.appSub}>تقويم الأفق — التقويم العربي الثابت</Text>
+      <Text style={[s.appName,{color:theme.accent}]}>{ui('الأفق','AlofoK')}</Text>
+      <Text style={s.appSub}>{ui('تقويم الأفق — التقويم العربي الثابت','AlofoK — fixed Arabic calendar research')}</Text>
      </View>
-     <Pressable accessibilityLabel={showMainMenu?'إغلاق القائمة':'فتح القائمة'} style={s.headerIconButton} onPress={()=>setShowMainMenu(v=>!v)}><Text style={s.menuIcon}>{showMainMenu?'×':'☰'}</Text></Pressable>
+     <Pressable accessibilityLabel={showMainMenu?ui('إغلاق القائمة','Close menu'):ui('فتح القائمة','Open menu')} style={s.headerIconButton} onPress={()=>setShowMainMenu(v=>!v)}><Text style={s.menuIcon}>{showMainMenu?'×':'☰'}</Text></Pressable>
     </View>
     {showMainMenu&&<View style={s.mainMenu}>
-     <Pressable style={s.mainMenuItem} onPress={()=>changeTab('settings')}><Text style={s.mainMenuText}>⚙  الإعدادات {updateInfo?'•':''}</Text></Pressable>
-     <Pressable style={s.mainMenuItem} onPress={()=>{setShowSupportAccount(v=>!v);setShowMainMenu(false)}}><Text style={s.mainMenuText}>$  دعمكم لتطوير برنامج الأفق</Text></Pressable>
+     <Pressable style={s.mainMenuItem} onPress={()=>changeTab('settings')}><Text style={s.mainMenuText}>⚙  {t('settings')} {updateInfo?'•':''}</Text></Pressable>
+     <Pressable style={s.mainMenuItem} onPress={()=>setShowSupportAccount(v=>!v)}><Text style={s.mainMenuText}>$  {ui('دعم تطوير الأفق','Support AlofoK development')}</Text></Pressable>
+     {showSupportAccount&&<View style={s.supportMiniPanel}><Text selectable style={s.supportMiniAccount}>{SUPPORT_ACCOUNT||ui('سيُضاف رقم الدعم لاحقًا','Support number will be added later')}</Text><Pressable accessibilityLabel={ui('نسخ رقم الدعم','Copy support number')} style={[s.supportMiniCopy,!SUPPORT_ACCOUNT&&s.copyButtonDisabled]} onPress={copySupportAccount}><Text style={s.supportMiniCopyText}>{ui('نسخ','Copy')}</Text></Pressable></View>}
     </View>}
-    <View style={s.supportQuickWrap}>
-     <Pressable accessibilityLabel='دعمكم لتطوير برنامج الأفق' style={s.supportButton} onPress={()=>setShowSupportAccount(v=>!v)}><Text style={s.supportButtonText}>$  دعمكم لتطوير برنامج الأفق</Text></Pressable>
-     {showSupportAccount&&<View style={s.supportMiniPanel}><Text selectable style={s.supportMiniAccount}>{SUPPORT_ACCOUNT||'سيُضاف رقم الدعم لاحقًا'}</Text><Pressable accessibilityLabel='نسخ رقم الدعم' style={[s.supportMiniCopy,!SUPPORT_ACCOUNT&&s.copyButtonDisabled]} onPress={copySupportAccount}><Text style={s.supportMiniCopyText}>نسخ</Text></Pressable></View>}
-    </View>
    </View>}
    {tab==='today'&&<>
     <View style={[s.clockCard,IS_PLUS&&s.plusClockStage]}>
-  <Text style={s.week}>{weekday(now)}</Text>
-  <Text style={s.hdate}>{lunar.day} {lunar.monthNameAr} {lunar.year} هـ</Text>
-  <Text style={s.gdate}>{formatGregorian(now)}</Text>
-  <Text style={s.researchIdentity}>تقويم الأفق — التقويم العربي الثابت • بحث علمي، وليس تقويمًا شرعيًا رسميًا</Text>
+  <Text style={s.week}>{weekday(now,displayLocale)}</Text>
+  <Text style={s.hdate}>{lunar.day} {lunarMonthLabel(lunar)} {lunar.year} {ui('هـ','AH')}</Text>
+  <Text style={s.gdate}>{formatGregorian(now,displayLocale)}</Text>
+  <Text style={s.researchIdentity}>{ui('تقويم الأفق — التقويم العربي الثابت • بحث علمي، وليس تقويمًا شرعيًا رسميًا','AlofoK fixed Arabic calendar • research model, not an official religious calendar')}</Text>
   {isRamadan&&<View style={s.ramadanMini}>
-    <Text style={s.ramadanMiniTitle}>رَمَضَانُ مُبَارَك</Text>
-    <Text style={s.ramadanMiniText}>تقبل الله منا ومنكم صالح الأعمال</Text>
+    <Text style={s.ramadanMiniTitle}>{ui('رَمَضَانُ مُبَارَك','Ramadan Mubarak')}</Text>
+    <Text style={s.ramadanMiniText}>{ui('تقبل الله منا ومنكم صالح الأعمال','May your good deeds be accepted')}</Text>
   </View>}
 </View>
     {weeklyAdActive&&<View style={s.weeklyAd}>
-      <View style={s.weeklyAdHeader}><Text style={s.adLabel}>إعلان</Text><Pressable accessibilityLabel='إغلاق الإعلان' onPress={closeWeeklyAd} style={s.adClose}><Text style={s.adCloseText}>×</Text></Pressable></View>
+      <View style={s.weeklyAdHeader}><Text style={s.adLabel}>{ui('إعلان','Ad')}</Text><Pressable accessibilityLabel='إغلاق الإعلان' onPress={closeWeeklyAd} style={s.adClose}><Text style={s.adCloseText}>×</Text></Pressable></View>
       <Text style={s.weeklyAdTitle}>{weeklyAd.title}</Text>
       {!!weeklyAd.body&&<Text style={s.weeklyAdBody}>{weeklyAd.body}</Text>}
-      {!!weeklyAd.action_url&&<Pressable style={s.adAction} onPress={()=>Linking.openURL(weeklyAd.action_url)}><Text style={s.adActionText}>{weeklyAd.action_label||'عرض الإعلان'}</Text></Pressable>}
+      {!!weeklyAd.action_url&&<Pressable style={s.adAction} onPress={()=>Linking.openURL(weeklyAd.action_url)}><Text style={s.adActionText}>{weeklyAd.action_label||ui('عرض الإعلان','View ad')}</Text></Pressable>}
     </View>}
 <Card title={t('prayerTimes')}>
   <Text style={s.prayerHint}>{t('prayerHint')}</Text>
-  <PrayerGrid p={prayers}/>
+  <PrayerGrid p={prayers} useArabicUi={useArabicUi}/>
 </Card>
     <Card title={t('arabicCalendar')}>
-     <Text style={s.researchNotice}>{calendarView.isLeapYear?'السنة الكبيسة: 13 شهرًا، والشهر الثالث عشر هو شهر النسيء.':'السنة العادية: 12 شهرًا.'}</Text>
+     <Text style={s.researchNotice}>{calendarView.isLeapYear?ui('السنة الكبيسة: 13 شهرًا، والشهر الثالث عشر هو شهر النسيء.','Leap year: 13 months; the thirteenth month is Nasi’.'):ui('السنة العادية: 12 شهرًا.','Common year: 12 months.')}</Text>
      <View onStartShouldSetResponder={()=>true} onResponderGrant={e=>setSwipeStartX(e.nativeEvent.pageX)} onResponderRelease={e=>{if(swipeStartX===null)return;const dx=e.nativeEvent.pageX-swipeStartX;if(dx>50)setCalendarDate(d=>addLunisolarMonths(d,-1));if(dx<-50)setCalendarDate(d=>addLunisolarMonths(d,1));setSwipeStartX(null)}}>
-      <Text style={s.calendarTitle}>{calendarView.monthNameAr} {calendarView.year} هـ</Text>
+      <Text style={s.calendarTitle}>{lunarMonthLabel(calendarView)} {calendarView.year} {ui('هـ','AH')}</Text>
       <View style={s.calendarControls}>
        <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,-1))}><Text style={s.calendarButtonText}>{t('previousMonth')}</Text></Pressable>
        <Pressable style={s.todayButton} onPress={()=>setCalendarDate(new Date())}><Text style={s.todayButtonText}>{t('today')}</Text></Pressable>
        <Pressable style={s.calendarButton} onPress={()=>setCalendarDate(d=>addLunisolarMonths(d,1))}><Text style={s.calendarButtonText}>{t('nextMonth')}</Text></Pressable>
       </View>
-      <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
+      <View style={s.weekRow}>{weekdayLabels.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
       <View style={s.dayGrid}>
        {Array.from({length:calendarStartWeekday},(_,i)=><View key={`lunar-blank-${i}`} style={s.dayCellBlank}/>)}
-       {calendarDays.map(day=>{const date=new Date(calendarDate);date.setUTCDate(date.getUTCDate()+(day-calendarView.day));const ld=proposedLunisolarDate(date);const ev=lunarEventsForDay(ld);const isToday=ld.year===lunar.year&&ld.month===lunar.month&&ld.day===lunar.day;return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>{setCalendarDate(date);setSelectedEventCalendar('lunar');setSelectedEventTitle(`${day} ${ld.monthNameAr} ${ld.year} هـ`);setSelectedCalendarEvent(ev)}}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
+       {calendarDays.map(day=>{const date=new Date(calendarDate);date.setUTCDate(date.getUTCDate()+(day-calendarView.day));const ld=proposedLunisolarDate(date);const ev=lunarEventsForDay(ld);const isToday=ld.year===lunar.year&&ld.month===lunar.month&&ld.day===lunar.day;return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>{setCalendarDate(date);setSelectedEventCalendar('lunar');setSelectedEventTitle(`${day} ${lunarMonthLabel(ld)} ${ld.year} ${ui('هـ','AH')}`);setSelectedCalendarEvent(ev)}}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
       </View>
-      {selectedEventCalendar==='lunar'&&selectedCalendarEvent&&<EventDetails title={selectedEventTitle} events={selectedCalendarEvent}/>}
+      {selectedEventCalendar==='lunar'&&selectedCalendarEvent&&<EventDetails title={selectedEventTitle} events={selectedCalendarEvent} useArabicUi={useArabicUi}/>}
      </View>
     </Card>
     <Card title={t('gregorianCalendar')}>
-     <Text style={s.calendarTitle}>{gregorianMonthTitle(gregorianDate)}</Text>
+     <Text style={s.calendarTitle}>{gregorianMonthTitle(gregorianDate,displayLocale)}</Text>
      <View style={s.calendarControls}>
       <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,-1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>{t('previousMonth')}</Text></Pressable>
       <Pressable style={s.todayButton} onPress={()=>{setGregorianDate(new Date());setSelectedCalendarEvent(null)}}><Text style={s.todayButtonText}>{t('today')}</Text></Pressable>
       <Pressable style={s.calendarButton} onPress={()=>{setGregorianDate(d=>shiftGregorianMonth(d,1));setSelectedCalendarEvent(null)}}><Text style={s.calendarButtonText}>{t('nextMonth')}</Text></Pressable>
      </View>
-     <View style={s.weekRow}>{WEEKDAYS.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
+     <View style={s.weekRow}>{weekdayLabels.map(w=><Text key={w} style={s.weekDay}>{w}</Text>)}</View>
      <View style={s.dayGrid}>
       {Array.from({length:gregorianStartWeekday},(_,i)=><View key={`gregorian-blank-${i}`} style={s.dayCellBlank}/>)}
-      {gregorianDays.map(day=>{const date=new Date(gregorianDate.getFullYear(),gregorianDate.getMonth(),day);const ev=gregorianEventsForDay(city.country,date);const isToday=date.toDateString()===now.toDateString();return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>{setSelectedEventCalendar('gregorian');setSelectedEventTitle(new Intl.DateTimeFormat('ar-IQ',{day:'numeric',month:'long',year:'numeric'}).format(date));setSelectedCalendarEvent(ev)}}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
+      {gregorianDays.map(day=>{const date=new Date(gregorianDate.getFullYear(),gregorianDate.getMonth(),day);const ev=gregorianEventsForDay(city.country,date);const isToday=date.toDateString()===now.toDateString();return <Pressable key={day} style={[s.dayCell,ev.length>0&&s.eventCell,isToday&&s.todayCell]} onPress={()=>{setSelectedEventCalendar('gregorian');setSelectedEventTitle(new Intl.DateTimeFormat(displayLocale,{day:'numeric',month:'long',year:'numeric'}).format(date));setSelectedCalendarEvent(ev)}}><Text style={[s.dayText,ev.length>0&&s.eventDayText,isToday&&s.todayDayText]}>{day}</Text>{ev.length>0&&<View style={s.eventDot}/>}</Pressable>})}
      </View>
-     {selectedEventCalendar==='gregorian'&&selectedCalendarEvent&&<EventDetails title={selectedEventTitle} events={selectedCalendarEvent}/>}
+     {selectedEventCalendar==='gregorian'&&selectedCalendarEvent&&<EventDetails title={selectedEventTitle} events={selectedCalendarEvent} useArabicUi={useArabicUi}/>}
     </Card>
    </>}
 {tab==='settings'&&<>
@@ -847,14 +867,19 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
       <Text style={s.policyText}>{ui('الفارق بين السنة الشمسية والسنة القمرية بلا نسيء: نحو 10 أيام و21 ساعة و10 ثوانٍ كل سنة.','Difference between the solar and 12-month lunar year without intercalation: about 10 days, 21 hours and 10 seconds per year.')}</Text>
       <Text style={s.policyText}>{ui('في دورة 19 سنة: 19 سنة شمسية ≈ 235 شهرًا قمريًا. لذلك يضيف النموذج 7 أشهر نسيء خلال الدورة؛ فتكون 7 سنوات كبيسة من 13 شهرًا، والباقي 12 شهرًا. وباستخدام المتوسطات أعلاه يكون الفرق النظري بين 19 سنة شمسية و235 شهرًا قمريًا نحو ساعتين و5 دقائق فقط.','Over a 19-year cycle: 19 solar years ≈ 235 lunar months. The model therefore inserts 7 Nasi’ intercalary months in the cycle, producing 7 leap years of 13 months while the remaining years have 12 months. Using the averages above, the theoretical difference between 19 solar years and 235 lunar months is only about 2 hours and 5 minutes.')}</Text>
       <Text style={[s.policyText,{color:'#e0bd70'}]}>{ui('﴿وَلَبِثُوا فِي كَهْفِهِمْ ثَلَاثَ مِائَةٍ سِنِينَ وَازْدَادُوا تِسْعًا﴾ — الكهف: 25','“And they remained in their cave for three hundred years and exceeded by nine.” — Al-Kahf 18:25')}</Text>
-      <Text style={s.policyText}>{ui('ملاحظة حسابية: 300 سنة شمسية وفق المتوسط أعلاه تعادل نحو 309.21 سنة قمرية. لذلك يظهر فرق يقارب تسع سنوات عند المقارنة التقريبية بين العدّ الشمسي والقمري. هذا تقارب عددي ضمن الدراسة، وليس وحده دليلًا على صحة النموذج المقترح.','Calculation note: 300 solar years using the mean above equal about 309.21 lunar years. This produces a difference of roughly nine years when solar and lunar counting are compared approximately. This numerical correspondence is part of the research discussion and is not, by itself, proof of the proposed model.')}</Text>
+      <Text style={s.policyText}>{ui('مقارنة حسابية مبسطة لآية أصحاب الكهف:','Simplified numerical comparison for the Cave verse:')}</Text>
+      <Text style={s.policyText}>{ui('300 سنة شمسية × 365 يومًا = 109,500 يوم.','300 solar years × 365 days = 109,500 days.')}</Text>
+      <Text style={s.policyText}>{ui('309 سنوات قمرية من دون أيام الكبس: 309 × 354 = 109,386 يومًا؛ الفرق عن الحساب الشمسي = 114 يومًا.','309 lunar years without leap days: 309 × 354 = 109,386 days; difference from the solar count = 114 days.')}</Text>
+      <Text style={s.policyText}>{ui('في التقويم الهجري الحسابي، وبإضافة نحو 113 يوم كبيس خلال 309 سنوات: 109,386 + 113 = 109,499 يومًا.','In the arithmetic Hijri calendar, adding about 113 leap days across 309 years gives 109,386 + 113 = 109,499 days.')}</Text>
+      <Text style={s.policyText}>{ui('النتيجة في هذا الحساب المبسط: الفرق بين 300 سنة شمسية و309 سنوات قمرية مع الكبس يقارب يومًا واحدًا فقط.','Result in this simplified calculation: the difference between 300 solar years and 309 lunar years with leap days is about one day.')}</Text>
+      <Text style={s.policyMeta}>{ui('هذه مقارنة حسابية ضمن منهج البحث في الأفق، وليست تفسيرًا قرآنيًا قطعيًا ولا دليلًا حاسمًا على أن الآية تقرر نظامًا تقويميًا بعينه.','This is a numerical comparison within AlofoK’s research method, not a definitive Quranic interpretation and not conclusive proof that the verse establishes a particular calendar system.')}</Text>
       <Text style={s.policyMeta}>{ui('هذه فرضية بحثية مقترحة وليست تقويمًا شرعيًا أو رسميًا معتمدًا. الروابط الآتية تفتح نتائج الحلقات المتخصصة، وتُحدّث النتائج عند نشر مواد جديدة.','This is a proposed research hypothesis, not an officially or religiously adopted calendar. The links below open relevant specialist material and search results can change as new material is published.')}</Text>
       {CALENDAR_REFERENCE_LINKS.map(([label,url],index)=><Pressable key={url} style={s.referenceLink} onPress={()=>Linking.openURL(url).catch(()=>Alert.alert(ui('تعذر فتح الرابط','Unable to open link')))}><Text style={s.referenceLinkText}>↗ {useArabicUi?label:['Mohammad Shahrour episodes on the Hijri calendar and Arabic months','Mohammad Shahrour episodes on the sacred months and Hajj','Mohammad Shahrour episodes on Ramadan and the ninth month'][index]}</Text></Pressable>)}
      </>}
     </SettingsCard>
     <SettingsCard title={ui('الثيمات','Themes')}>
      <Text style={s.sub}>{IS_PLUS?ui('اختر من جميع ثيمات الأفق بلس، وسيُحفظ اختيارك تلقائيًا.','Choose from all AlofoK Plus themes. Your selection is saved automatically.'):ui('الثيم الليلي متاح مجاناً. بقية الثيمات ضمن الأفق بلس.','The night theme is available for free. Other themes are included with AlofoK Plus.')}</Text>
-     <View style={s.themeChoices}>{availableThemes.map(([id,label,index])=>{const item=PAID_THEMES[id]||PAID_THEMES.night;return <Pressable key={id} style={[s.themeChoice,{backgroundColor:item.sky,borderColor:item.accent},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}><Text style={s.themeChoiceSymbol}>{index===null?'◉':item.symbol}</Text><Text style={s.themeChoiceText}>{useArabicUi?label:(THEME_LABELS_EN[id]||label)}</Text></Pressable>})}</View>
+     <View style={s.themeChoices}>{availableThemes.map(([id,label,index])=>{return <Pressable key={id} style={[s.themeChoice,{backgroundColor:'#06121f',borderColor:'#b98532'},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}>{index===null?<Text style={s.themeChoiceSymbol}>◉</Text>:<AtlasThemePreview index={index}/>}<View pointerEvents='none' style={{position:'absolute',left:0,right:0,bottom:0,backgroundColor:'rgba(0,0,0,.58)',paddingVertical:7,paddingHorizontal:4}}><Text style={[s.themeChoiceText,{marginTop:0,textAlign:'center'}]}>{useArabicUi?label:(THEME_LABELS_EN[id]||label)}</Text></View></Pressable>})}</View>
     </SettingsCard>
     {IS_PLUS&&<SettingsCard title={ui('ثيمات خلفية الجهاز','Device Wallpaper Themes')}>
      <View style={s.settingRow}><Text style={s.settingIcon}>▣</Text><View style={s.settingText}><Text style={s.text}>{ui('تفعيل ثيمات الموبايل','Enable phone themes')}</Text><Text style={s.sub}>{ui('لا يتم التفعيل إلا بعد موافقتك من نظام الجهاز.','The feature is enabled only after you approve it in the device system.')}</Text></View><Switch value={mobileThemesEnabled} onValueChange={toggleMobileThemes} trackColor={{true:'#c89232'}}/></View>
@@ -889,8 +914,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 }
 function Card({title,children}){return <View style={s.card}><Text style={s.title}>{title}</Text>{children}</View>}
 function SettingsCard({title,children}){return <View style={s.settingsCard}><Text style={s.settingsCardTitle}>{title}</Text>{children}</View>}
-function PrayerGrid({p}){return <View style={s.pg}>{PRAYERS.map(([a,k,icon])=><View style={s.prayerRow} key={k}><Text style={s.prayerTime}>{p[k]}</Text><Text style={s.prayerName}>{a}</Text><Text style={s.prayerIcon}>{icon}</Text></View>)}</View>}
-function EventDetails({title,events}){return <View style={s.eventList}><Text style={s.eventTitle}>{title}</Text>{events.length?events.map((e,i)=><View key={`${e.type}-${e.name}-${i}`} style={s.eventItem}><Text style={s.eventName}>● {e.name}</Text><Text style={s.eventType}>{e.type}</Text>{Boolean(e.details)&&<Text style={s.sub}>{e.details}</Text>}</View>):<Text style={s.noEvent}>لا توجد مناسبة مسجلة في هذا اليوم.</Text>}</View>}
+function PrayerGrid({p,useArabicUi=true}){return <View style={s.pg}>{PRAYERS.map(([a,k,icon])=><View style={s.prayerRow} key={k}><Text style={s.prayerTime}>{p[k]}</Text><Text style={s.prayerName}>{useArabicUi?a:(PRAYER_LABELS_EN[k]||a)}</Text><Text style={s.prayerIcon}>{icon}</Text></View>)}</View>}
+function EventDetails({title,events,useArabicUi=true}){return <View style={s.eventList}><Text style={s.eventTitle}>{title}</Text>{events.length?events.map((e,i)=><View key={`${e.type}-${e.name}-${i}`} style={s.eventItem}><Text style={s.eventName}>● {e.name}</Text><Text style={s.eventType}>{useArabicUi?e.type:(e.type==='مناسبة دينية'?'Religious event':e.type==='مناسبة وطنية'?'National event':e.type)}</Text>{Boolean(e.details)&&<Text style={s.sub}>{e.details}</Text>}</View>):<Text style={s.noEvent}>{useArabicUi?'لا توجد مناسبة مسجلة في هذا اليوم.':'No event is recorded for this day.'}</Text>}</View>}
 const s=StyleSheet.create({
  background:{flex:1,backgroundColor:'#020b12'},supportQuickWrap:{alignItems:'flex-end',marginTop:2,marginBottom:3},supportButton:{alignSelf:'flex-end',minHeight:32,paddingVertical:6,paddingHorizontal:9,borderRadius:9,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(28,20,8,.88)'},supportButtonText:{color:'#f4bb52',fontSize:10,fontWeight:'900',textAlign:'center'},supportMiniPanel:{alignSelf:'flex-end',flexDirection:'row-reverse',alignItems:'center',gap:6,marginTop:5,padding:5,borderRadius:9,borderWidth:1,borderColor:'#4b5961',backgroundColor:'rgba(2,16,24,.94)'},supportMiniAccount:{minWidth:120,maxWidth:205,color:'#fff',fontSize:11,fontWeight:'800',textAlign:'center',paddingHorizontal:6},supportMiniCopy:{minWidth:48,minHeight:31,paddingHorizontal:8,borderRadius:8,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'},supportMiniCopyText:{color:'#111820',fontSize:11,fontWeight:'900'},supportCard:{marginTop:12,padding:14,borderRadius:18,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(28,20,8,.94)'},supportHeading:{flexDirection:'row-reverse',alignItems:'center',justifyContent:'space-between'},supportTitle:{color:'#fff',fontSize:18,fontWeight:'900',textAlign:'right'},supportDollar:{color:'#f4bb52',fontSize:34,fontWeight:'900'},supportDescription:{color:'#d8d4c9',fontSize:12,lineHeight:20,textAlign:'right',marginTop:6},supportAccountRow:{flexDirection:'row-reverse',alignItems:'stretch',gap:8,marginTop:12},supportAccount:{flex:1,minHeight:52,color:'#fff',backgroundColor:'rgba(2,16,24,.9)',borderWidth:1,borderColor:'#4d5960',borderRadius:13,padding:14,textAlign:'center',fontSize:14,fontWeight:'800'},copyButton:{width:67,minHeight:52,borderRadius:13,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'},copyButtonDisabled:{opacity:.55},copyButtonIcon:{color:'#111820',fontSize:17,fontWeight:'900'},copyButtonText:{color:'#111820',fontSize:11,fontWeight:'900'},backgroundShade:{...StyleSheet.absoluteFillObject},root:{flex:1,backgroundColor:'transparent'},themeSky:{position:'absolute',top:0,left:0,right:0,height:360,opacity:.18,overflow:'hidden'},themeSymbol:{position:'absolute',top:78,right:34,fontSize:72,fontWeight:'900'},themeOrb:{position:'absolute',width:230,height:230,borderRadius:115,borderWidth:1,top:120,left:-100,opacity:.2},themeLabel:{fontSize:12,fontWeight:'800',textAlign:'center',marginBottom:10},page:{paddingHorizontal:13,paddingTop:5,paddingBottom:28},hero:{paddingTop:8,paddingBottom:12},heroTopRow:{minHeight:82,flexDirection:'row-reverse',alignItems:'flex-start',justifyContent:'space-between'},brandBlock:{flex:1,alignItems:'center'},headerIconButton:{width:42,height:42,alignItems:'center',justifyContent:'center'},headerLocationWrap:{width:82,alignItems:'center'},headerGpsButton:{width:42,height:42,borderRadius:21,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(2,16,24,.55)',alignItems:'center',justifyContent:'center'},headerGpsIcon:{fontSize:21,color:'#f4bb52',fontWeight:'900'},headerLocationText:{color:'#f1d28e',fontSize:9,fontWeight:'800',textAlign:'center',lineHeight:12,marginTop:3,maxWidth:82},headerIcon:{color:'#fff',fontSize:25},headerUpdateDot:{position:'absolute',top:3,right:2,width:10,height:10,borderRadius:5,backgroundColor:'#ef3f3f',borderWidth:1,borderColor:'#07131b'},menuIcon:{color:'#fff',fontSize:27,width:42,textAlign:'center'},mainMenu:{marginBottom:12,borderRadius:16,borderWidth:1,borderColor:'#80632f',backgroundColor:'rgba(2,14,22,.94)',overflow:'hidden'},mainMenuItem:{minHeight:49,justifyContent:'center',paddingHorizontal:16,borderBottomWidth:1,borderBottomColor:'#26343d'},mainMenuText:{color:'#f4bb52',fontSize:15,fontWeight:'900',textAlign:'right'},appName:{fontSize:29,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#e0c384',fontSize:12,fontWeight:'700',textAlign:'center',marginTop:5},locationPill:{alignSelf:'center',minWidth:'57%',minHeight:54,paddingVertical:8,paddingHorizontal:18,borderRadius:28,borderWidth:1,borderColor:'#d39c3f',backgroundColor:'rgba(3,14,22,.86)',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:10},locationPin:{fontSize:21},locationText:{color:'#fff',fontSize:14,fontWeight:'800',textAlign:'center',maxWidth:180},locationCaption:{color:'#9ea9ae',fontSize:10,textAlign:'center',marginTop:2},
  plusClockStage:{minHeight:Math.max(520,SCREEN.height-155),justifyContent:'center',paddingBottom:115},clockCard:{alignItems:'center',paddingVertical:18,paddingHorizontal:13,marginTop:6,borderRadius:22,borderWidth:0,borderColor:'transparent',backgroundColor:'transparent'},clock:{color:'#efb64f',fontSize:27,fontWeight:'900',marginTop:8},week:{color:'#fff',fontSize:22,fontWeight:'900',marginBottom:9,textShadowColor:'#000',textShadowRadius:5},hdate:{textAlign:'center',fontSize:20,fontWeight:'900',color:'#fff',textShadowColor:'#000',textShadowRadius:5},gdate:{textAlign:'center',fontSize:15,fontWeight:'800',color:'#fff',marginTop:6,textShadowColor:'#000',textShadowRadius:5},researchIdentity:{color:'#f3cf82',fontSize:12,fontWeight:'900',textAlign:'center',lineHeight:20,marginTop:12,textShadowColor:'#000',textShadowRadius:4},ramadanMini:{marginTop:14,width:'100%',backgroundColor:'rgba(4,15,22,.55)',borderRadius:15,paddingVertical:12,paddingHorizontal:14,alignItems:'center',borderWidth:1,borderColor:'#8c713f'},ramadanMiniTitle:{color:'#efc570',fontSize:21,fontWeight:'900'},ramadanMiniText:{color:'#ddd5c4',fontSize:12,fontWeight:'700',marginTop:4,textAlign:'center'},
