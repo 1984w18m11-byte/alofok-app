@@ -1,1 +1,1 @@
-Apply AlofoK protected distribution update: one native package for trial/Plus, device-bound official activation, copied-APK blocking, Zain Cash Plus upgrade flow, and separate trial/Plus update channels. Retry 2026-09-10.
+Apply AlofoK English UI completion and calendar study update: remove remaining Arabic hard-coded settings text when English is selected; add lunar/solar year calculations, 19-year intercalation explanation, and Al-Kahf 18:25 with the 300-solar / 309-lunar comparison. Trigger 2026-09-12.
