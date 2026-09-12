@@ -60,7 +60,7 @@ const LUNAR_MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada 
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
 const RAMADAN_VERSE_EN='Eat and drink until the white thread of dawn becomes distinct from the black thread, then complete the fast until night.';
 const THEME_LABELS_EN={
- 'auto-time':'Automatic by time of day','dawn':'Dawn and early morning','morning':'Morning','midday':'Daytime','sunset':'Sunset','evening':'Evening','starry-night':'Night and stars','moon-night':'Night and moon',
+ 'night':'Free night theme','auto-time':'Automatic by time of day','dawn':'Dawn and early morning','morning':'Morning','midday':'Daytime','sunset':'Sunset','evening':'Evening','starry-night':'Night and stars','moon-night':'Night and moon',
  'muharram':'Muharram','safar':'Safar','rabi1':'Rabi I','rabi2':'Rabi II','jumada1':'Jumada I','jumada2':'Jumada II','rajab':'Rajab','shaban':"Sha'ban",'ramadan':'Ramadan','shawwal':'Shawwal','dhulqida':'Dhu al-Qidah','dhulhijja':'Dhu al-Hijjah',
  'spring':'Spring','summer':'Summer','autumn':'Autumn','winter':'Winter','new-year':'New Year','earth-sun':'Solstice and equinox','solar-eclipse':'Solar eclipse','lunar-eclipse':'Lunar eclipse','galaxy':'Galaxy and stars'
 };
@@ -222,27 +222,27 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  useEffect(()=>{Promise.all([AsyncStorage.getItem('alofq_mobile_themes'),AsyncStorage.getItem('alofq_wallpaper_mode'),AsyncStorage.getItem('alofq_wallpaper_target'),AsyncStorage.getItem('alofq_wallpaper_fallback')]).then(([enabled,mode,target,fallback])=>{setMobileThemesEnabled(IS_PLUS&&enabled==='1');if(['time','lunar','season','fixed'].includes(mode))setWallpaperMode(mode);if(['home','lock','both'].includes(target))setWallpaperTarget(target);setWallpaperFallback(fallback==='1')}).catch(e=>console.log('Wallpaper settings restore error:',e))},[]);
  async function setWallpaperPreference(key,value){try{await AsyncStorage.setItem(key,value)}catch(e){console.log('Wallpaper preference save error:',e)}}
  async function toggleMobileThemes(value){
-  if(!IS_PLUS){Alert.alert('ميزة الأفق بلس','ثيمات خلفية الجهاز متاحة لمشتركي الأفق بلس فقط.');return}
+  if(!IS_PLUS){Alert.alert(ui('ميزة الأفق بلس','AlofoK Plus feature'),ui('ثيمات خلفية الجهاز متاحة لمشتركي الأفق بلس فقط.','Device wallpaper themes are available only in AlofoK Plus.'));return}
   if(!value){setMobileThemesEnabled(false);await setWallpaperPreference('alofq_mobile_themes','0');return}
-  if(Platform.OS!=='android'){setWallpaperFallback(true);setWallpaperMode('fixed');Alert.alert('الخلفيات الثابتة','على الآيفون احفظ الخلفية المختارة ثم طبّقها من إعدادات الجهاز أو الاختصارات.');return}
+  if(Platform.OS!=='android'){setWallpaperFallback(true);setWallpaperMode('fixed');Alert.alert(ui('الخلفيات الثابتة','Fixed wallpapers'),ui('على الآيفون احفظ الخلفية المختارة ثم طبّقها من إعدادات الجهاز أو الاختصارات.','On iPhone, save the selected wallpaper and apply it from system settings or Shortcuts.'));return}
   setMobileThemesEnabled(true);await setWallpaperPreference('alofq_mobile_themes','1');
   try{await Linking.sendIntent('android.settings.WALLPAPER_SETTINGS')}
-  catch(e){setWallpaperFallback(true);setWallpaperMode('fixed');await Promise.all([setWallpaperPreference('alofq_wallpaper_fallback','1'),setWallpaperPreference('alofq_wallpaper_mode','fixed')]);Alert.alert('الوضع الثابت','لم يسمح الجهاز بالتغيير التلقائي. اختر خلفية ثابتة ثم طبّقها من نافذة أندرويد الرسمية.')}
+  catch(e){setWallpaperFallback(true);setWallpaperMode('fixed');await Promise.all([setWallpaperPreference('alofq_wallpaper_fallback','1'),setWallpaperPreference('alofq_wallpaper_mode','fixed')]);Alert.alert(ui('الوضع الثابت','Fixed mode'),ui('لم يسمح الجهاز بالتغيير التلقائي. اختر خلفية ثابتة ثم طبّقها من نافذة أندرويد الرسمية.','The device did not allow automatic changes. Choose a fixed wallpaper and apply it from the Android system screen.'))}
  }
  async function closeWeeklyAd(){
   setDismissedAdWeek(currentAdWeek);
   try{await AsyncStorage.setItem('alofq_dismissed_ad_week',currentAdWeek)}catch(e){console.log('Ad close save error:',e)}
  }
  async function copySupportAccount(){
-  if(!SUPPORT_ACCOUNT){Alert.alert('دعم تطوير الأفق','سيُضاف رقم المحفظة أو البطاقة لاحقًا.');return}
+  if(!SUPPORT_ACCOUNT){Alert.alert(ui('دعم تطوير الأفق','Support AlofoK development'),ui('سيُضاف رقم المحفظة أو البطاقة لاحقًا.','The support wallet or card number will be added later.'));return}
   await Clipboard.setStringAsync(SUPPORT_ACCOUNT);
-  Alert.alert('تم النسخ','تم نسخ رقم الدعم.');
+  Alert.alert(ui('تم النسخ','Copied'),ui('تم نسخ رقم الدعم.','Support number copied.'));
  }
  function contactForAdvertising(){
   const phone=String(weeklyAd.contact_phone||'').replace(/[^0-9]/g,'');
-  if(!phone){Alert.alert('أعلن في تطبيق الأفق','سيتم تفعيل التواصل عبر واتساب أو الاتصال بعد إضافة رقم الإعلانات.');return}
+  if(!phone){Alert.alert(ui('أعلن في تطبيق الأفق','Advertise in AlofoK'),ui('سيتم تفعيل التواصل عبر واتساب أو الاتصال بعد إضافة رقم الإعلانات.','WhatsApp or phone contact will be enabled after an advertising number is added.'));return}
   const url=weeklyAd.contact_method==='call'?`tel:+${phone}`:`https://wa.me/${phone}?text=${encodeURIComponent('مرحباً، أريد الإعلان في تطبيق الأفق')}`;
-  Linking.openURL(url).catch(()=>Alert.alert('تعذر فتح وسيلة التواصل'));
+  Linking.openURL(url).catch(()=>Alert.alert(ui('تعذر فتح وسيلة التواصل','Unable to open contact method')));
  }
  useEffect(()=>()=>{
   try{adhanPlayerRef.current?.pause();adhanPlayerRef.current?.release()}catch(e){}
@@ -275,7 +275,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      if(Number.isFinite(accuracy)&&accuracy>0)setLocationAccuracy(accuracy);
     }else if(savedCity){
      setCoords({lat:savedCity.lat,lon:savedCity.lon});
-     setLocState(`${savedCity.name_ar} • اختيار محفوظ`);
+     setLocState(`${useArabicUi?savedCity.name_ar:(savedCity.name_en||savedCity.name_ar)} • ${ui('اختيار محفوظ','saved selection')}`);
     }
     // AlofoK uses one fixed prayer-time calculation method; old saved method choices are ignored.
    }catch(e){console.log('Saved settings restore error:',e)}
@@ -373,21 +373,21 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      setLocationBusy(true);
      const servicesOn=await Location.hasServicesEnabledAsync();
      if(!servicesOn){
-       setLocState('خدمة الموقع متوقفة');
-       Alert.alert('تشغيل الموقع','شغّل خدمة الموقع GPS ثم حاول مرة أخرى.');
+       setLocState(ui('خدمة الموقع متوقفة','Location service is off'));
+       Alert.alert(ui('تشغيل الموقع','Turn on location'),ui('شغّل خدمة الموقع GPS ثم حاول مرة أخرى.','Turn on GPS location services and try again.'));
        return;
      }
      const p=await Location.requestForegroundPermissionsAsync();
      if(p.status!=='granted'){
-       setLocState('الموقع غير مسموح');
-       if(showMessage)Alert.alert('الموقع','اختر السماح بالموقع الدقيق من إعدادات Android.');
+       setLocState(ui('الموقع غير مسموح','Location permission denied'));
+       if(showMessage)Alert.alert(ui('الموقع','Location'),ui('اختر السماح بالموقع الدقيق من إعدادات Android.','Allow precise location in Android settings.'));
        return;
      }
      if(Platform.OS==='android'){
        try{await Location.enableNetworkProviderAsync()}catch(e){console.log('High accuracy dialog dismissed:',e)}
      }
 
-     setLocState('جاري تثبيت أدق إشارة GPS…');
+     setLocState(ui('جاري تثبيت أدق إشارة GPS…','Locking the most accurate GPS signal…'));
      let bestPosition=await Location.getCurrentPositionAsync({
        accuracy:Location.Accuracy.Highest,
        mayShowUserSettingsDialog:true
@@ -449,10 +449,10 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        ['alofq_gps_label',label],
        ['alofq_gps_accuracy',String(accuracy)]
      ]);
-     if(showMessage)Alert.alert('تم تحديث الموقع',`${label}\nدقة الإشارة التقريبية: ±${accuracy} متر`);
+     if(showMessage)Alert.alert(ui('تم تحديث الموقع','Location updated'),`${label}\n${ui('دقة الإشارة التقريبية','Approximate accuracy')}: ±${accuracy} ${ui('متر','m')}`);
    }catch(e){
-     setLocState('تعذر تثبيت موقع دقيق');
-     if(showMessage)Alert.alert('تعذر تحديد الموقع','اخرج إلى مكان مفتوح، فعّل دقة الموقع العالية وWi‑Fi، ثم حاول مرة أخرى.');
+     setLocState(ui('تعذر تثبيت موقع دقيق','Could not lock an accurate location'));
+     if(showMessage)Alert.alert(ui('تعذر تحديد الموقع','Unable to determine location'),ui('اخرج إلى مكان مفتوح، فعّل دقة الموقع العالية وWi‑Fi، ثم حاول مرة أخرى.','Move to an open area, enable high-accuracy location and Wi‑Fi, then try again.'));
    }finally{
      subscription?.remove();
      setLocationBusy(false);
@@ -463,7 +463,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    if(!c)return;
    setCity(c);
    setCoords({lat:c.lat,lon:c.lon});
-   setLocState(`${c.name_ar} • اختيار يدوي`);
+   setLocState(`${useArabicUi?c.name_ar:(c.name_en||c.name_ar)} • ${ui('اختيار يدوي','manual selection')}`);
    setLocationAccuracy(null);
    try{await AsyncStorage.multiSet([['alofq_city_id',c.id],['alofq_gps_lat',''],['alofq_gps_lon',''],['alofq_gps_label',''],['alofq_gps_accuracy','']])}catch(e){console.log('City save error:',e)}
  }
@@ -572,8 +572,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     const channelId=`prayers-adhan-${String(selectedAdhan?.id||'default').replace(/[^a-z0-9-]/gi,'-')}`;
     if(Platform.OS==='android'){
      await Notifications.setNotificationChannelAsync(channelId,{
-      name:`الأذان — ${selectedAdhan?.display_ar||'الصوت المختار'}`,
-      description:'تشغيل صوت الأذان تلقائيًا عند دخول وقت الصلاة',
+      name:useArabicUi?`الأذان — ${selectedAdhan?.display_ar||'الصوت المختار'}`:`Adhan — ${selectedAdhan?.performer||'selected sound'}`,
+      description:ui('تشغيل صوت الأذان تلقائيًا عند دخول وقت الصلاة','Play the selected Adhan automatically at prayer time'),
       importance:Notifications.AndroidImportance.MAX,
       vibrationPattern:[0,250,200,250],
       sound:soundFile,
@@ -590,14 +590,14 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     if(!adhanEnabled||!selectedAdhan||!active)return;
     const permission=await Notifications.getPermissionsAsync();
     if(permission.status!=='granted')return;
-    const prayerNames={fajr:'الفجر',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء'};
+    const prayerNames=useArabicUi?{fajr:'الفجر',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء'}:{fajr:'Fajr',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};
     for(const [key,title] of Object.entries(prayerNames)){
      const date=utcDateFromMinutes(prayerCalcDate,prayerData.rawMinutesUtc[key]);
      if(!date||date.getTime()<=Date.now())continue;
      await Notifications.scheduleNotificationAsync({
       content:{
-       title:`حان وقت صلاة ${title}`,
-       body:`يُرفع الآن الأذان بصوت ${selectedAdhan.display_ar}.`,
+       title:useArabicUi?`حان وقت صلاة ${title}`:`It is time for ${title}`,
+       body:useArabicUi?`يُرفع الآن الأذان بصوت ${selectedAdhan.display_ar}.`:`Adhan is now playing with ${selectedAdhan.performer||'the selected sound'}.`,
        sound:soundFile,
        priority:Notifications.AndroidNotificationPriority.MAX,
        data:{kind:'alofq-prayer',prayer:key,adhanId:selectedAdhan.id}
@@ -622,7 +622,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      try{
        if(Platform.OS==='android'){
          await Notifications.setNotificationChannelAsync('fasting',{
-           name:'تنبيهات الإمساك والإفطار',
+           name:ui('تنبيهات الإمساك والإفطار','Imsak and Iftar alerts'),
            importance:Notifications.AndroidImportance.HIGH,
            vibrationPattern:[0,300,250,300]
          });
@@ -650,8 +650,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        if(imsakAlertEnabled&&imsakDate&&imsakDate>Date.now()){
          await Notifications.scheduleNotificationAsync({
            content:{
-             title:'موعد الإمساك',
-             body:'حان الآن موعد الإمساك بحسب المعيار الفلكي المعتمد في الأفق.',
+             title:ui('موعد الإمساك','Imsak time'),
+             body:ui('حان الآن موعد الإمساك بحسب المعيار الفلكي المعتمد في الأفق.','It is now Imsak time according to AlofoK’s astronomical research criterion.'),
              sound:'default',
              data:{kind:'alofq-imsak'}
            },
@@ -666,8 +666,8 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
        if(iftarAlertEnabled&&iftarDate&&iftarDate>Date.now()){
          await Notifications.scheduleNotificationAsync({
            content:{
-             title:'موعد الإفطار',
-             body:RAMADAN_VERSE+' — سورة البقرة، الآية 187',
+             title:ui('موعد الإفطار','Iftar time'),
+             body:useArabicUi?(RAMADAN_VERSE+' — سورة البقرة، الآية 187'):(RAMADAN_VERSE_EN+' — Al-Baqarah 2:187'),
              sound:'default',
              data:{kind:'alofq-iftar'}
            },
@@ -704,13 +704,13 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   try{
    stopAdhan();
    const asset=ADHAN_ASSETS[pack.id];
-   if(!asset){Alert.alert("الصوت غير متوفر","ملف هذا الأذان غير موجود داخل التطبيق.");return}
+   if(!asset){Alert.alert(ui('الصوت غير متوفر','Sound unavailable'),ui('ملف هذا الأذان غير موجود داخل التطبيق.','This Adhan audio file is not included in the app.'));return}
    const sound=createAudioPlayer(asset);
    sound.volume=adhanVolume;
    adhanPlayerRef.current=sound;
    setAdhanSound(sound);
    sound.play();
-  }catch(e){Alert.alert("خطأ","تعذر تشغيل صوت الأذان.")}
+  }catch(e){Alert.alert(ui('خطأ','Error'),ui('تعذر تشغيل صوت الأذان.','Unable to play the Adhan sound.'))}
  }
 
  async function changeAdhanVolume(value){
@@ -743,7 +743,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     <View style={s.heroTopRow}>
      <View style={s.headerLocationWrap}>
       <Pressable accessibilityLabel={ui('تحديث الموقع عبر GPS','Update location with GPS')} accessibilityHint={locState} style={s.headerGpsButton} onPress={()=>useGps(true)} disabled={locationBusy}><Text style={s.headerGpsIcon}>{locationBusy?'…':'📍'}</Text></Pressable>
-      <Text numberOfLines={2} style={s.headerLocationText}>{locationBusy?ui('جاري التحديد…','Locating…'):locState}</Text>
+      <Text numberOfLines={2} style={s.headerLocationText}>{locationBusy?ui('جاري التحديد…','Locating…'):(locState==='بغداد • افتراضي'?ui('بغداد • افتراضي','Baghdad • default'):locState)}</Text>
      </View>
      <View style={s.brandBlock}>
       <Text style={[s.appName,{color:theme.accent}]}>{ui('الأفق','AlofoK')}</Text>
@@ -769,7 +769,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   </View>}
 </View>
     {weeklyAdActive&&<View style={s.weeklyAd}>
-      <View style={s.weeklyAdHeader}><Text style={s.adLabel}>{ui('إعلان','Ad')}</Text><Pressable accessibilityLabel='إغلاق الإعلان' onPress={closeWeeklyAd} style={s.adClose}><Text style={s.adCloseText}>×</Text></Pressable></View>
+      <View style={s.weeklyAdHeader}><Text style={s.adLabel}>{ui('إعلان','Ad')}</Text><Pressable accessibilityLabel={ui('إغلاق الإعلان','Close ad')} onPress={closeWeeklyAd} style={s.adClose}><Text style={s.adCloseText}>×</Text></Pressable></View>
       <Text style={s.weeklyAdTitle}>{weeklyAd.title}</Text>
       {!!weeklyAd.body&&<Text style={s.weeklyAdBody}>{weeklyAd.body}</Text>}
       {!!weeklyAd.action_url&&<Pressable style={s.adAction} onPress={()=>Linking.openURL(weeklyAd.action_url)}><Text style={s.adActionText}>{weeklyAd.action_label||ui('عرض الإعلان','View ad')}</Text></Pressable>}
