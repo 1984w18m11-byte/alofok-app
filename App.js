@@ -269,7 +269,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     if(savedCity)setCity(savedCity);
     if(Number.isFinite(lat)&&Number.isFinite(lon)){
      setCoords({lat,lon});
-     const restoredLabel=savedLabel||savedCity?.name_ar||'موقعي المحفوظ';
+     const restoredLabel=savedLabel||(useArabicUi?savedCity?.name_ar:savedCity?.name_en)||ui('موقعي المحفوظ','Saved location');
      setLocState(restoredLabel);
      if(cityId==='gps-current')setCity({...cities[0],id:'gps-current',name_ar:restoredLabel,country:(savedCountry||cities[0].country).toUpperCase(),tz:savedTimeZone||Intl.DateTimeFormat().resolvedOptions().timeZone,lat,lon});
      if(Number.isFinite(accuracy)&&accuracy>0)setLocationAccuracy(accuracy);
@@ -339,12 +339,12 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  }
  function showUpdateDialog(info=updateInfo){
   if(!info)return;
-  Alert.alert('تحديث جديد متوفر',`الإصدار ${info.version}\n\n${info.notes_ar||'يتوفر إصدار أحدث من تطبيق الأفق.'}`,[
-   {text:'لاحقًا',style:'cancel'},
-   {text:'الانتقال إلى التحديث',onPress:async()=>{
-    const url=DISTRIBUTION_CHANNEL==='play'?(info.play_url||'market://details?id=com.alofok.trial'):(DISTRIBUTION_CHANNEL==='appstore'?(info.app_store_url||info.download_url):info.download_url);
+  Alert.alert(ui('تحديث جديد متوفر','New update available'),`${ui('الإصدار','Version')} ${info.version}\n\n${useArabicUi?(info.notes_ar||'يتوفر إصدار أحدث من تطبيق الأفق.'):(info.notes_en||'A newer AlofoK version is available.')}`,[
+   {text:ui('لاحقًا','Later'),style:'cancel'},
+   {text:ui('الانتقال إلى التحديث','Open update'),onPress:async()=>{
+    const storePackage=APP_VARIANT==='paid'?'com.alofok.plus':'com.alofok.trial';\n    const url=DISTRIBUTION_CHANNEL==='play'?(info.play_url||`market://details?id=${storePackage}`):(DISTRIBUTION_CHANNEL==='appstore'?(info.app_store_url||info.download_url):info.download_url);
     if(url&&await Linking.canOpenURL(url))await Linking.openURL(url);
-    else Alert.alert('الرابط غير متاح','تعذر فتح رابط التحديث الآن.');
+    else Alert.alert(ui('الرابط غير متاح','Link unavailable'),ui('تعذر فتح رابط التحديث الآن.','The update link could not be opened right now.'));
    }}
   ]);
  }
@@ -926,7 +926,12 @@ const s=StyleSheet.create({
 });
 
 function AlofoKLicenseGate(){
+ const [gateLanguage,setGateLanguage]=useState('system');
+ const gateSystemLocale=Intl.DateTimeFormat().resolvedOptions().locale||'ar';
+ const gateUseArabic=gateLanguage==='ar'||(gateLanguage==='system'&&String(gateSystemLocale).toLowerCase().startsWith('ar'));
+ const gateUi=(ar,en)=>gateUseArabic?ar:en;
  const [licenseState,setLicenseState]=useState({status:'checking',tier:'trial',reason:null});
+ useEffect(()=>{AsyncStorage.getItem('alofq_app_language').then(v=>{if(v)setGateLanguage(v)}).catch(()=>{})},[]);
  useEffect(()=>{
   let mounted=true;
   async function applyResult(result){
@@ -958,12 +963,12 @@ function AlofoKLicenseGate(){
   try{
    const url=await getOfficialActivationUrl();
    if(url&&await Linking.canOpenURL(url)){await Linking.openURL(url);return}
-   Alert.alert('التفعيل الرسمي','لم يتم ضبط رابط التفعيل الرسمي بعد. فعّل EXPO_PUBLIC_OFFICIAL_PORTAL_URL قبل إصدار النسخة العامة.');
-  }catch(e){Alert.alert('تعذر فتح التفعيل','حاول مرة أخرى بعد التأكد من اتصال الإنترنت.')}
+   Alert.alert(gateUi('التفعيل الرسمي','Official activation'),gateUi('لم يتم ضبط رابط التفعيل الرسمي بعد. فعّل EXPO_PUBLIC_OFFICIAL_PORTAL_URL قبل إصدار النسخة العامة.','The official activation portal has not been configured yet.'));
+  }catch(e){Alert.alert(gateUi('تعذر فتح التفعيل','Unable to open activation'),gateUi('حاول مرة أخرى بعد التأكد من اتصال الإنترنت.','Check your internet connection and try again.'))}
  }
 
- if(licenseState.status==='checking')return <View style={{flex:1,backgroundColor:'#020b12',alignItems:'center',justifyContent:'center',padding:28}}><Text style={{color:'#f4bb52',fontSize:20,fontWeight:'900',textAlign:'center'}}>الأفق</Text><Text style={{color:'#c8d3da',fontSize:13,marginTop:10,textAlign:'center'}}>جاري التحقق من النسخة الرسمية…</Text></View>;
- if(licenseState.status!=='ready')return <View style={{flex:1,backgroundColor:'#020b12',alignItems:'center',justifyContent:'center',padding:28}}><Text style={{color:'#f4bb52',fontSize:20,fontWeight:'900',textAlign:'center'}}>{licenseState.status==='plus_required'?'الأفق Plus غير مفعّل':'هذه النسخة تحتاج تفعيلًا رسميًا'}</Text><Text style={{color:'#c8d3da',fontSize:13,lineHeight:22,marginTop:12,textAlign:'center'}}>{licenseState.status==='plus_required'?'هذه نسخة Plus ولا تعمل على هذا الجهاز إلا إذا كان اشتراك Plus فعالًا ومؤكدًا.':'نسخ ملف APK إلى هاتف آخر لا ينقل ترخيص الاستخدام. فعّل هذا الجهاز من قناة الأفق الرسمية.'}</Text><Pressable onPress={openOfficialActivation} style={{marginTop:20,minHeight:46,paddingHorizontal:18,borderRadius:12,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'}}><Text style={{color:'#111820',fontWeight:'900'}}>التفعيل من المصدر الرسمي</Text></Pressable></View>;
+ if(licenseState.status==='checking')return <View style={{flex:1,backgroundColor:'#020b12',alignItems:'center',justifyContent:'center',padding:28}}><Text style={{color:'#f4bb52',fontSize:20,fontWeight:'900',textAlign:'center'}}>{gateUi('الأفق','AlofoK')}</Text><Text style={{color:'#c8d3da',fontSize:13,marginTop:10,textAlign:'center'}}>{gateUi('جاري التحقق من النسخة الرسمية…','Checking the official installation…')}</Text></View>;
+ if(licenseState.status!=='ready')return <View style={{flex:1,backgroundColor:'#020b12',alignItems:'center',justifyContent:'center',padding:28}}><Text style={{color:'#f4bb52',fontSize:20,fontWeight:'900',textAlign:'center'}}>{licenseState.status==='plus_required'?gateUi('الأفق Plus غير مفعّل','AlofoK Plus is not activated'):gateUi('هذه النسخة تحتاج تفعيلًا رسميًا','This copy requires official activation')}</Text><Text style={{color:'#c8d3da',fontSize:13,lineHeight:22,marginTop:12,textAlign:'center'}}>{licenseState.status==='plus_required'?gateUi('هذه نسخة Plus ولا تعمل على هذا الجهاز إلا إذا كان اشتراك Plus فعالًا ومؤكدًا.','This Plus build works only when an active Plus subscription is confirmed on this device.'):gateUi('نسخ ملف APK إلى هاتف آخر لا ينقل ترخيص الاستخدام. فعّل هذا الجهاز من قناة الأفق الرسمية.','Copying the APK to another phone does not transfer the license. Activate this device through the official AlofoK channel.')}</Text><Pressable onPress={openOfficialActivation} style={{marginTop:20,minHeight:46,paddingHorizontal:18,borderRadius:12,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'}}><Text style={{color:'#111820',fontWeight:'900'}}>{gateUi('التفعيل من المصدر الرسمي','Activate from official source')}</Text></Pressable></View>;
  return <AlofoKApp licenseTier={licenseState.tier}/>;
 }
 

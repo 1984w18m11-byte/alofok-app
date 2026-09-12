@@ -6,6 +6,7 @@ module.exports = () => {
   const icon = isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png';
   const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
   const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
+  const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
 
   return {
     ...base,
