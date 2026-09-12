@@ -23,10 +23,13 @@ jobs:
         run: python3 scripts/apply_english_study_fix.py
       - name: Clean remaining English settings text
         run: python3 scripts/apply_english_remaining_fix.py
+      - name: Apply final device QA patch
+        run: python3 scripts/apply_final_qa_fix.py
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add App.js src/i18n/translations.js src/engine/lunisolar.js
-          git commit -m "fix: complete English UI and calendar study"
+          git add App.js app.json app.config.js src/i18n/translations.js src/engine/lunisolar.js src/services/license.js src/data/adhan-registry.json
+          git diff --cached --quiet && exit 0
+          git commit -m "fix: final device QA for language variants themes and adhan"
           git push origin main
