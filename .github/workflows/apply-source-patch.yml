@@ -17,12 +17,6 @@ jobs:
         with:
           ref: main
           fetch-depth: 0
-      - name: Apply existing source patch
-        run: python3 scripts/apply_requested_alofok_update.py
-      - name: Apply English UI and calendar study patch
-        run: python3 scripts/apply_english_study_fix.py
-      - name: Clean remaining English settings text
-        run: python3 scripts/apply_english_remaining_fix.py
       - name: Apply final device QA patch
         run: python3 scripts/apply_final_qa_fix.py
       - name: Apply second English QA pass
