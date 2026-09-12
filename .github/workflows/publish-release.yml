@@ -17,7 +17,7 @@ jobs:
       - name: Download successful APK artifacts
         uses: actions/download-artifact@v4
         with:
-          run-id: 34078820208
+          run-id: 34715757178
           github-token: ${{ github.token }}
           pattern: alofok-*-0.5.5
           path: artifacts
