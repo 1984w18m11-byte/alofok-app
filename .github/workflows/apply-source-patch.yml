@@ -25,6 +25,8 @@ jobs:
         run: python3 scripts/apply_english_remaining_fix.py
       - name: Apply final device QA patch
         run: python3 scripts/apply_final_qa_fix.py
+      - name: Apply second English QA pass
+        run: python3 scripts/apply_final_qa_fix_2.py
       - name: Commit changes
         run: |
           git config user.name "github-actions[bot]"
