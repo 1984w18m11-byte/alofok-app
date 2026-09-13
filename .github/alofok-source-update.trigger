@@ -1,1 +1,1 @@
-Apply AlofoK 0.5.8 update: stable trial/Plus identities, new icons with «الأفق — تقويم عربي ثابت», existing standalone themes, curated ten licensed Adhan recordings, and release QA. Trigger 2026-09-13 final.
+Apply AlofoK 0.5.8 update: stable trial/Plus identities, new icons with «الأفق — تقويم عربي ثابت», existing standalone themes, curated ten licensed Adhan recordings, and release QA. Trigger 2026-09-13 retry after Arabic font-path repair.
