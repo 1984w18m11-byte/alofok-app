@@ -1,6 +1,5 @@
-const base = require('./app.json').expo;
-
-module.exports = () => {
+module.exports = ({ config }) => {
+  const base = config;
   const isPaid = process.env.APP_VARIANT === 'paid';
   const variant = isPaid ? 'paid' : 'trial';
   const icon = isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png';
