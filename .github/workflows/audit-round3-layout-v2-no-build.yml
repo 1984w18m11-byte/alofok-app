@@ -1,0 +1,35 @@
+name: AlofoK layout alignment v2 — NO BUILD
+
+on:
+  push:
+    branches:
+      - audit-no-build-2026-09-13
+    paths:
+      - .github/audit-round3-layout-v2.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  align-layout:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit-no-build-2026-09-13
+          fetch-depth: 0
+      - name: Apply shared Trial and Plus main layout
+        run: python3 scripts/apply_audit_round3_no_build_20260913.py
+      - name: Static QA only
+        run: node scripts/release-qa.js
+      - name: Commit source repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.js scripts/release-qa.js
+          git diff --cached --quiet && exit 0
+          git commit -m "audit: align Trial and Plus main layout"
+          git pull --rebase origin audit-no-build-2026-09-13
+          git push origin audit-no-build-2026-09-13
+      - name: Confirm no build
+        run: echo "Layout source only. No Expo prebuild, Gradle, EAS, APK or AAB build ran."
