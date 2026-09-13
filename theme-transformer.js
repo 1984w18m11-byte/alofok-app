@@ -1,4 +1,16 @@
-const upstreamTransformer = require('@expo/metro-config/babel-transformer');
+const path = require('path');
+
+let upstreamTransformer;
+try {
+  upstreamTransformer = require('@expo/metro-config/babel-transformer');
+} catch (error) {
+  // Expo 54 may keep @expo/metro-config nested under the expo package.
+  // Load that exact bundled transformer by absolute path so Metro works in
+  // clean Android release builds without adding a duplicate dependency.
+  upstreamTransformer = require(
+    path.join(__dirname, 'node_modules', 'expo', 'node_modules', '@expo', 'metro-config', 'babel-transformer')
+  );
+}
 
 const APP_FILE = /(?:^|[\\/])App\.js$/;
 
