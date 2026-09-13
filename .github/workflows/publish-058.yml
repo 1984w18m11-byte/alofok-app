@@ -1,0 +1,36 @@
+name: Publish AlofoK 0.5.8 APKs
+
+on:
+  push:
+    paths:
+      - .github/publish-058.trigger
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download trial artifact from successful build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 34772837891 --repo 1984w18m11-byte/alofok-app --name alofok-trial-0.5.8 --dir artifacts/trial
+
+      - name: Download Plus artifact from successful build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh run download 34772837891 --repo 1984w18m11-byte/alofok-app --name alofok-paid-0.5.8 --dir artifacts/plus
+
+      - name: Prepare APK files
+        run: |
+          cp artifacts/trial/app-release.apk alofok-trial-0.5.8.apk
+          cp artifacts/plus/app-release.apk alofok-plus-0.5.8.apk
+
+      - name: Publish release and APK links
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view v0.5.8 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v0.5.8 --repo 1984w18m11-byte/alofok-app --title "الأفق 0.5.8" --notes "أيقونة أوضح بنص الأفق — تقويم عربي ثابت، تثبيت هويتي التجريبية وPlus، ثيمات Plus المستقلة، و10 أصوات أذان مرخصة مع حذف الأصوات الثلاثة السابقة."
+          gh release upload v0.5.8 alofok-trial-0.5.8.apk alofok-plus-0.5.8.apk --repo 1984w18m11-byte/alofok-app --clobber
