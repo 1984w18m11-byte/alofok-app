@@ -1,0 +1,58 @@
+name: AlofoK isolated Expo diagnostics — NO BUILD
+
+on:
+  push:
+    branches:
+      - audit-expo-diagnostics-2026-09-13
+    paths:
+      - .github/expo-diagnostics-isolated.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit-expo-diagnostics-2026-09-13
+          fetch-depth: 0
+      - name: Install JS dependencies only
+        run: npm ci --ignore-scripts
+      - name: Capture Expo Doctor
+        shell: bash
+        run: |
+          set +e
+          npx expo-doctor@latest > AUDIT_EXPO_DOCTOR_2026-09-13.txt 2>&1
+          code=$?
+          echo "EXIT_CODE=$code" >> AUDIT_EXPO_DOCTOR_2026-09-13.txt
+          exit 0
+      - name: Capture Expo dependency check
+        shell: bash
+        run: |
+          set +e
+          npx expo install --check > AUDIT_EXPO_INSTALL_CHECK_2026-09-13.txt 2>&1
+          code=$?
+          echo "EXIT_CODE=$code" >> AUDIT_EXPO_INSTALL_CHECK_2026-09-13.txt
+          exit 0
+      - name: Resolve Trial config
+        env:
+          APP_VARIANT: trial
+          EXPO_PUBLIC_APP_VARIANT: trial
+        run: npx expo config --type public > AUDIT_EXPO_CONFIG_TRIAL_2026-09-13.txt
+      - name: Resolve Plus config
+        env:
+          APP_VARIANT: paid
+          EXPO_PUBLIC_APP_VARIANT: paid
+          EXPO_PUBLIC_LICENSE_DEV_BYPASS: '1'
+        run: npx expo config --type public > AUDIT_EXPO_CONFIG_PLUS_2026-09-13.txt
+      - name: Commit diagnostic reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add AUDIT_EXPO_DOCTOR_2026-09-13.txt AUDIT_EXPO_INSTALL_CHECK_2026-09-13.txt AUDIT_EXPO_CONFIG_TRIAL_2026-09-13.txt AUDIT_EXPO_CONFIG_PLUS_2026-09-13.txt
+          git commit -m "audit: record isolated Expo diagnostics"
+          git push origin audit-expo-diagnostics-2026-09-13
+      - name: Confirm no build
+        run: echo "Diagnostics only. No Expo prebuild, Gradle, EAS, APK or AAB build ran."
