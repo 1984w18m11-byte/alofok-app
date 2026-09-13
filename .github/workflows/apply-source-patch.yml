@@ -23,6 +23,32 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq python3-pil fonts-noto-core libraqm0
 
+      - name: Normalize Arabic icon font path
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/apply_release_058.py')
+          s=p.read_text(encoding='utf-8')
+          old="""    font_title=ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoKufiArabic-ExtraBold.ttf',118)
+              font_sub=ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoKufiArabic-Medium.ttf',51)"""
+          # Match the actual indentation from the source script.
+          old=old.replace('              font_sub','    font_sub')
+          new="""    font_file = next(iter(Path('/usr/share/fonts').rglob('NotoKufiArabic-Regular.ttf')), None)
+              if font_file is None:
+                  font_file = next(iter(Path('/usr/share/fonts').rglob('NotoSansArabic-Regular.ttf')), None)
+              if font_file is None:
+                  font_file = next(iter(Path('/usr/share/fonts').rglob('DejaVuSans.ttf')), None)
+              if font_file is None:
+                  raise SystemExit('No Arabic-capable font found for launcher icon generation')
+              font_title=ImageFont.truetype(str(font_file),118)
+              font_sub=ImageFont.truetype(str(font_file),51)"""
+          new=new.replace('              if','    if').replace('                  font_file','        font_file').replace('                  raise','        raise').replace('              font_title','    font_title').replace('              font_sub','    font_sub')
+          if old not in s:
+              raise SystemExit('Expected hard-coded icon font lines were not found')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+
       - name: Apply AlofoK 0.5.8 update
         run: python3 scripts/apply_release_058.py
 
