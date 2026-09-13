@@ -43,37 +43,47 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Validate licensed Adhan audio and prepare reliable WAV notification copies
+      - name: Refresh and validate licensed Adhan audio
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg
-          mkdir -p assets/adhan
+          mkdir -p assets/adhan /tmp/alofok-adhan
 
-          sources=(
-            "assets/adhan/beautiful_adhan.ogg"
-            "assets/adhan/adhan_morocco_hassan_ii.ogg"
-            "assets/adhan/adhan_kazakhstan_shalqar.ogg"
-            "assets/adhan/adhan_aaqib_azeez.ogg"
-          )
+          convert_source() {
+            local url="$1"
+            local stem="$2"
+            local input="/tmp/alofok-adhan/${stem}.source"
+            echo "Downloading licensed source for ${stem}"
+            curl -fL --retry 3 --retry-delay 2 -A "AlofoK-build/0.5.7" "$url" -o "$input"
+            test -s "$input"
+            ffprobe -v error "$input" >/dev/null
+            ffmpeg -hide_banner -loglevel error -xerror -y -i "$input" -vn -ac 1 -ar 44100 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
+            ffmpeg -hide_banner -loglevel error -xerror -y -i "$input" -vn -ac 1 -ar 44100 -c:a pcm_s16le "assets/adhan/${stem}.wav"
+          }
 
-          for f in "${sources[@]}"; do
+          # Beautiful adhan is already the original CC0 OGG bundled in the repo.
+          test -s assets/adhan/beautiful_adhan.ogg
+          ffprobe -v error assets/adhan/beautiful_adhan.ogg >/dev/null
+          ffmpeg -hide_banner -loglevel error -xerror -y -i assets/adhan/beautiful_adhan.ogg -vn -ac 1 -ar 44100 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
+
+          convert_source "https://commons.wikimedia.org/wiki/Special:Redirect/file/Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav" "adhan_morocco_hassan_ii"
+          convert_source "https://commons.wikimedia.org/wiki/Special:Redirect/file/Adhan_in_Shalqar_mosque.webm" "adhan_kazakhstan_shalqar"
+          convert_source "https://commons.wikimedia.org/wiki/Special:Redirect/file/The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3" "adhan_aaqib_azeez"
+
+          for f in \
+            assets/adhan/beautiful_adhan.ogg \
+            assets/adhan/adhan_morocco_hassan_ii.ogg \
+            assets/adhan/adhan_kazakhstan_shalqar.ogg \
+            assets/adhan/adhan_aaqib_azeez.ogg \
+            assets/adhan/beautiful_adhan.wav \
+            assets/adhan/adhan_morocco_hassan_ii.wav \
+            assets/adhan/adhan_kazakhstan_shalqar.wav \
+            assets/adhan/adhan_aaqib_azeez.wav; do
             test -s "$f"
-            echo "Checking $f"
             ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration -of default=noprint_wrappers=1 "$f"
-          done
-
-          # Expo recommends WAV for custom notification sounds. Keep OGG for
-          # in-app preview and generate mono PCM WAV for native Android channels.
-          ffmpeg -hide_banner -loglevel error -y -i assets/adhan/beautiful_adhan.ogg -vn -ac 1 -ar 44100 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
-          ffmpeg -hide_banner -loglevel error -y -i assets/adhan/adhan_morocco_hassan_ii.ogg -vn -ac 1 -ar 44100 -c:a pcm_s16le assets/adhan/adhan_morocco_hassan_ii.wav
-          ffmpeg -hide_banner -loglevel error -y -i assets/adhan/adhan_kazakhstan_shalqar.ogg -vn -ac 1 -ar 44100 -c:a pcm_s16le assets/adhan/adhan_kazakhstan_shalqar.wav
-          ffmpeg -hide_banner -loglevel error -y -i assets/adhan/adhan_aaqib_azeez.ogg -vn -ac 1 -ar 44100 -c:a pcm_s16le assets/adhan/adhan_aaqib_azeez.wav
-
-          for f in assets/adhan/*.wav; do
-            test -s "$f"
-            ffprobe -v error "$f" >/dev/null
+            ffmpeg -hide_banner -loglevel error -xerror -i "$f" -f null -
           done
 
       - name: Validate translation completeness
@@ -120,5 +130,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v0.5.7 >/dev/null 2>&1 || gh release create v0.5.7 --title "الأفق 0.5.7" --notes "إصدار فحص نهائي: فصل التجريبية عن Plus، تدوير الثيمات حسب الوقت والأسبوع والشهر والفصل، إصلاح بقايا العربية في الواجهة الإنجليزية، إضافة دراسة أصحاب الكهف، وتثبيت أصوات أذان مرخصة مع فحص ملفات الصوت قبل البناء."
+          gh release view v0.5.7 >/dev/null 2>&1 || gh release create v0.5.7 --title "الأفق 0.5.7" --notes "إصدار فحص نهائي: فصل التجريبية عن Plus، تدوير الثيمات حسب الوقت والأسبوع والشهر والفصل، إصلاح بقايا العربية في الواجهة الإنجليزية، إضافة دراسة أصحاب الكهف، وتثبيت أصوات أذان مرخصة مع إعادة جلب المصدر وفحص ملف الصوت كاملًا قبل كل بناء."
           gh release upload v0.5.7 alofok-trial-0.5.7.apk alofok-plus-0.5.7.apk --clobber
