@@ -1,1 +1,1 @@
-Apply consolidated AlofoK 0.5.7 release repair after full code audit: theme rotation, bilingual UI fixes, licensed Adhan audio, package separation, version alignment, and release QA. Trigger 2026-09-13.
+Apply AlofoK 0.5.8 update: stable trial/Plus identities, new icons with «الأفق — تقويم عربي ثابت», existing standalone themes, curated ten licensed Adhan recordings, and release QA. Trigger 2026-09-13 final.
