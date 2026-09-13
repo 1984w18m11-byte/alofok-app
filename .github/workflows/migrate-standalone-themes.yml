@@ -32,6 +32,9 @@ jobs:
           from pathlib import Path
           p=Path('scripts/migrate_standalone_themes.py')
           s=p.read_text(encoding='utf-8')
+          s=s.replace("'time-dawn.jpg':'dawn landscape sunrise mosque photograph'","'time-dawn.jpg':'sunrise landscape photograph'")
+          s=s.replace("'time-night.jpg':'night mosque moon stars photograph'","'time-night.jpg':'night sky stars landscape photograph'")
+          s=s.replace("'month-muharram.jpg':'Islamic architecture night peaceful photograph'","'month-muharram.jpg':'mosque architecture night photograph'")
           start=s.index('def http_json(url):')
           end=s.index('\ndef download(url):',start)
           robust="""def http_json(url):
@@ -50,7 +53,7 @@ jobs:
               raise last
           """
           s=s[:start]+robust+s[end:]
-          s=s.replace('time.sleep(0.2)','time.sleep(2.5)')
+          s=s.replace('time.sleep(0.2)','time.sleep(1.8)')
           lines=[]
           for line in s.splitlines():
               if line.strip().startswith('qa,n=re.subn(') and "replacement+'const configuredSounds='" in line:
