@@ -1,1 +1,1 @@
-Build AlofoK 0.5.8 after icon, identity, theme and licensed Adhan refresh. Manual trigger from ChatGPT after source QA passed.
+Build AlofoK 0.5.8 after icon, identity, theme and licensed Adhan refresh. Retry after Expo 54 Metro transformer compatibility fix.
