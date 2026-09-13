@@ -1,1 +1,1 @@
-Build AlofoK 0.5.8 after icon, identity, theme and licensed Adhan refresh. Retry after Expo 54 Metro transformer compatibility fix.
+Build AlofoK 0.5.8 after removing obsolete theme transformer. Final retry for trial and Plus APKs.
