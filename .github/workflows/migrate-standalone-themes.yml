@@ -1,0 +1,52 @@
+name: Migrate AlofoK standalone themes
+
+on:
+  push:
+    paths:
+      - '.github/alofok-standalone-themes.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install image tools
+        run: python -m pip install --disable-pip-version-check pillow
+
+      - name: Download licensed standalone images and migrate source
+        run: python scripts/migrate_standalone_themes.py
+
+      - name: Run release QA
+        run: node scripts/release-qa.js
+
+      - name: Clean staging markers
+        run: |
+          rm -f .github/test.txt
+          rm -f .github/STOP_BUILD_UNTIL_THEME_MIGRATION_COMPLETE
+          rm -f .github/theme-migration-status.json
+          rm -f .github/alofok-theme-migration-note.txt
+          rm -f scripts/theme_migration_placeholder.py
+          rm -f scripts/THEME_MIGRATION_PLAN.md
+          rm -f assets/themes/.placeholder
+
+      - name: Commit standalone themes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A App.js scripts/release-qa.js assets/themes .github scripts
+          git diff --cached --quiet && exit 0
+          git commit -m "themes: replace atlas with 34 standalone Plus themes"
+          git push origin main
