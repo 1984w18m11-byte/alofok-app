@@ -22,7 +22,7 @@ jobs:
       EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_DISTRIBUTION_CHANNEL: direct
       EXPO_NO_TELEMETRY: "1"
-      RELEASE_VERSION: "0.5.7"
+      RELEASE_VERSION: "0.5.8"
 
     steps:
       - name: Checkout
@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Refresh and validate licensed Adhan audio
+      - name: Fetch, convert, and validate the ten licensed Adhan recordings
         shell: bash
         run: |
           set -euo pipefail
@@ -52,40 +52,41 @@ jobs:
           mkdir -p assets/adhan /tmp/alofok-adhan
 
           convert_source() {
-            local url="$1"
+            local file_title="$1"
             local stem="$2"
+            local encoded
+            encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$file_title")
+            local url="https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}"
             local input="/tmp/alofok-adhan/${stem}.source"
-            echo "Downloading licensed source for ${stem}"
-            curl -fL --retry 3 --retry-delay 2 -A "AlofoK-build/0.5.7" "$url" -o "$input"
+            echo "Downloading licensed source: ${file_title}"
+            curl -fL --retry 4 --retry-delay 2 -A "AlofoK-build/0.5.8" "$url" -o "$input"
             test -s "$input"
             ffprobe -v error "$input" >/dev/null
-            # Some WebM sources contain discontinuous container timestamps. Rebuild
-            # audio timestamps from the decoded samples so both OGG and WAV are clean.
-            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 44100 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
-            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 44100 -c:a pcm_s16le "assets/adhan/${stem}.wav"
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a pcm_s16le "assets/adhan/${stem}.wav"
           }
 
-          # Beautiful adhan is already the original CC0 OGG bundled in the repo.
           test -s assets/adhan/beautiful_adhan.ogg
           ffprobe -v error assets/adhan/beautiful_adhan.ogg >/dev/null
-          ffmpeg -hide_banner -loglevel error -xerror -y -i assets/adhan/beautiful_adhan.ogg -vn -ac 1 -ar 44100 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
+          ffmpeg -hide_banner -loglevel error -xerror -y -i assets/adhan/beautiful_adhan.ogg -vn -ac 1 -ar 32000 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
 
-          convert_source "https://commons.wikimedia.org/wiki/Special:Redirect/file/Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav" "adhan_morocco_hassan_ii"
-          convert_source "https://commons.wikimedia.org/wiki/Special:Redirect/file/Adhan_in_Shalqar_mosque.webm" "adhan_kazakhstan_shalqar"
-          convert_source "https://commons.wikimedia.org/wiki/Special:Redirect/file/The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3" "adhan_aaqib_azeez"
+          convert_source "Azan.ogg" "adhan_andrewler"
+          convert_source "Adhan.ogg" "adhan_aishatu98"
+          convert_source "Call to prayer.ogg" "adhan_nigeria_isaac"
+          convert_source "33937 ejaz215 call-to-prayer-from-the-prophet-s-mo.ogg" "adhan_medina_ejaz215"
+          convert_source "Adhan, Great Mosque of Mecca - Jan 21, 2013.webm" "adhan_mecca_2013"
+          convert_source "Maghrib Adhan at the Masjid al Haram, Mecca - 25 Feb, 2012.webm" "adhan_mecca_maghrib_2012"
+          convert_source "Hminsec150 Konya.webm" "adhan_konya_2012"
+          convert_source "Adhan During the Lebanese Protests in Tripoli 2019.webm" "adhan_tripoli_2019"
+          convert_source "Tour guide recite Adhan in the Shah mosque in Isfahan, Iran.webm" "adhan_isfahan_shah"
 
-          for f in \
-            assets/adhan/beautiful_adhan.ogg \
-            assets/adhan/adhan_morocco_hassan_ii.ogg \
-            assets/adhan/adhan_kazakhstan_shalqar.ogg \
-            assets/adhan/adhan_aaqib_azeez.ogg \
-            assets/adhan/beautiful_adhan.wav \
-            assets/adhan/adhan_morocco_hassan_ii.wav \
-            assets/adhan/adhan_kazakhstan_shalqar.wav \
-            assets/adhan/adhan_aaqib_azeez.wav; do
-            test -s "$f"
-            ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration -of default=noprint_wrappers=1 "$f"
-            ffmpeg -hide_banner -loglevel error -xerror -i "$f" -f null -
+          for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013 adhan_mecca_maghrib_2012 adhan_konya_2012 adhan_tripoli_2019 adhan_isfahan_shah; do
+            for ext in ogg wav; do
+              f="assets/adhan/${stem}.${ext}"
+              test -s "$f"
+              ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration -of default=noprint_wrappers=1 "$f"
+              ffmpeg -hide_banner -loglevel error -xerror -i "$f" -f null -
+            done
           done
 
       - name: Validate translation completeness
@@ -107,7 +108,7 @@ jobs:
       - name: Keep build for internal verification
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-${{ matrix.variant }}-0.5.7
+          name: alofok-${{ matrix.variant }}-0.5.8
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
@@ -120,17 +121,17 @@ jobs:
       - name: Download both APK artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: alofok-*-0.5.7
+          pattern: alofok-*-0.5.8
           path: artifacts
 
       - name: Prepare clear APK filenames
         run: |
-          cp artifacts/alofok-trial-0.5.7/app-release.apk alofok-trial-0.5.7.apk
-          cp artifacts/alofok-paid-0.5.7/app-release.apk alofok-plus-0.5.7.apk
+          cp artifacts/alofok-trial-0.5.8/app-release.apk alofok-trial-0.5.8.apk
+          cp artifacts/alofok-paid-0.5.8/app-release.apk alofok-plus-0.5.8.apk
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v0.5.7 >/dev/null 2>&1 || gh release create v0.5.7 --title "الأفق 0.5.7" --notes "إصدار فحص نهائي: فصل التجريبية عن Plus، تدوير الثيمات حسب الوقت والأسبوع والشهر والفصل، إصلاح بقايا العربية في الواجهة الإنجليزية، إضافة دراسة أصحاب الكهف، وتثبيت أصوات أذان مرخصة مع إعادة جلب المصدر وفحص ملف الصوت كاملًا قبل كل بناء."
-          gh release upload v0.5.7 alofok-trial-0.5.7.apk alofok-plus-0.5.7.apk --clobber
+          gh release view v0.5.8 >/dev/null 2>&1 || gh release create v0.5.8 --title "الأفق 0.5.8" --notes "أيقونة أوضح بنص الأفق — تقويم عربي ثابت، تثبيت هويتي التجريبية وPlus، ثيمات Plus المستقلة، و10 أصوات أذان مرخصة مع حذف الأصوات الثلاثة السابقة."
+          gh release upload v0.5.8 alofok-trial-0.5.8.apk alofok-plus-0.5.8.apk --clobber
