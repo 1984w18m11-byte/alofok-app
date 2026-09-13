@@ -1,0 +1,50 @@
+name: AlofoK Expo config repair — NO BUILD
+
+on:
+  push:
+    branches:
+      - audit-no-build-2026-09-13
+    paths:
+      - .github/audit-fix-expo-config.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  repair-config:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit-no-build-2026-09-13
+          fetch-depth: 0
+      - name: Apply Expo config inheritance repair
+        run: python3 scripts/fix_expo_config_doctor_20260913.py
+      - name: Install JS dependencies only
+        run: npm ci --ignore-scripts
+      - name: Static QA
+        run: node scripts/release-qa.js
+      - name: Expo Doctor
+        run: npx expo-doctor@latest
+      - name: Resolve Trial config
+        env:
+          APP_VARIANT: trial
+          EXPO_PUBLIC_APP_VARIANT: trial
+        run: npx expo config --type public >/tmp/trial-config.txt
+      - name: Resolve Plus config
+        env:
+          APP_VARIANT: paid
+          EXPO_PUBLIC_APP_VARIANT: paid
+          EXPO_PUBLIC_LICENSE_DEV_BYPASS: '1'
+        run: npx expo config --type public >/tmp/plus-config.txt
+      - name: Commit config repair
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app.config.js
+          git diff --cached --quiet && exit 0
+          git commit -m "audit: fix Expo dynamic config inheritance"
+          git pull --rebase origin audit-no-build-2026-09-13
+          git push origin audit-no-build-2026-09-13
+      - name: Confirm no build
+        run: echo "Config verification only. No Expo prebuild, Gradle, EAS, APK or AAB build ran."
