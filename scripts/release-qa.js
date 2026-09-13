@@ -32,6 +32,7 @@ assert(!app.includes('SCREEN.height')||app.includes("const SCREEN=Dimensions.get
 assert(app.includes('const hasStoredGps=Boolean(savedLat&&savedLon)'), 'saved GPS must reject empty values instead of restoring 0,0');
 assert(app.includes("'trial-fixed':require('./assets/themes/month-ramadan.jpg')"),'trial must use one fixed Ramadan theme');
 assert(app.includes("const availableThemes=IS_PLUS?THEME_CHOICES:[['trial-fixed','ثيم رمضان الثابت']]"),'trial must expose exactly one fixed theme');
+assert(app.includes('<View style={[s.clockCard,s.plusClockStage]}>'),'trial and Plus must use the same main-page stage/layout');
 assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must be deleted');
 const themeMatch=app.match(/const THEME_CHOICES=\[([\s\S]*?)\];/);
 assert(themeMatch,'THEME_CHOICES missing');

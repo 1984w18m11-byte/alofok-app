@@ -755,7 +755,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     </View>}
    </View>}
    {tab==='today'&&<>
-    <View style={[s.clockCard,IS_PLUS&&s.plusClockStage]}>
+    <View style={[s.clockCard,s.plusClockStage]}>
   <Text style={s.week}>{weekday(now,displayLocale)}</Text>
   <Text style={s.hdate}>{lunar.day} {lunarMonthLabel(lunar)} {lunar.year} {ui('هـ','AH')}</Text>
   <Text style={s.gdate}>{formatGregorian(now,displayLocale)}</Text>
@@ -822,7 +822,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      <Text style={s.policyMeta}>{ui('يشمل خيار لغة الجهاز اللغات والمناطق التي يدعمها نظام الهاتف، مع خيارات مستقلة للإنجليزية الأمريكية والأسترالية والبريطانية.','Device language follows the languages and regions supported by your phone, with separate options for US, Australian and British English.')}</Text>
     </SettingsCard>
     <SettingsCard title={IS_PLUS?ui('عضوية الأفق بلس','AlofoK Plus Membership'):ui('الترقية إلى الأفق بلس','Upgrade to AlofoK Plus')}>
-     <View style={s.membershipBadge}><Text style={s.membershipBadgeText}>{IS_PLUS?ui('PLUS مفعّلة للمعاينة','PLUS active'):ui('النسخة المجانية','Free edition')}</Text></View>
+     <View style={s.membershipBadge}><Text style={s.membershipBadgeText}>{IS_PLUS?ui('PLUS مفعّلة','PLUS active'):ui('النسخة التجريبية','Trial edition')}</Text></View>
      <View style={s.compactInfoRow}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>✦</Text></View><View style={s.compactInfoText}><Text style={s.membershipTitle}>{IS_PLUS?ui('جميع مزايا الأفق بلس مفتوحة','All AlofoK Plus features are unlocked'):ui('الأفق بلس — 5 دولارات سنويًا','AlofoK Plus — $5 per year')}</Text><Text style={s.sub}>{IS_PLUS?ui('كل الثيمات والأصوات المرخصة متاحة، ولا تظهر الإعلانات.','All themes and licensed sounds are available and ads are removed.'):ui('يفتح جميع الثيمات والأصوات المرخصة ويزيل الإعلان الأسبوعي.','Unlocks all themes and licensed sounds and removes the weekly ad.')}</Text></View></View>
      {!IS_PLUS&&<Pressable style={s.compactAction} onPress={()=>Alert.alert(ui('معاينة فقط','Preview only'),ui('يتم الاشتراك في الأفق Plus عبر Zain Cash. بعد تأكيد الدفع اذهب إلى البحث عن تحديث لتنزيل تحديث Plus الخاص بك.','AlofoK Plus is activated through Zain Cash. After payment is confirmed, open Check for Updates to receive your Plus update.'))}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>★</Text></View><View style={s.compactInfoText}><Text style={s.compactAction}>{ui('الاشتراك السنوي — 5$','Annual subscription — $5')}</Text><Text style={s.compactSub}>{ui('فتح مزايا الأفق بلس','Unlock AlofoK Plus features')}</Text></View><Text style={s.compactChevron}>‹</Text></Pressable>}
      <Pressable style={s.compactAction} onPress={()=>Alert.alert(ui('استعادة المشتريات','Restore purchases'),ui('يعيد النظام التحقق من ترخيص الأفق المرتبط بهذا الجهاز. إذا كان اشتراك Plus فعالاً سيظهر تحديث Plus.','The system rechecks the AlofoK license linked to this device. If Plus is active, the Plus update will become available.'))}><View style={s.compactSquare}><Text style={s.compactSquareIcon}>↺</Text></View><View style={s.compactInfoText}><Text style={s.compactTitle}>{ui('استعادة المشتريات','Restore purchases')}</Text><Text style={s.compactSub}>{ui('إعادة فحص حالة الاشتراك','Recheck subscription status')}</Text></View><Text style={s.compactChevron}>‹</Text></Pressable>
