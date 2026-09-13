@@ -97,7 +97,7 @@ def download(url):
     with urllib.request.urlopen(req,timeout=60) as r:
         return r.read()
 
-def search_commons(query):
+def search_commons(query,used_pages=None):
     params={
       'action':'query','format':'json','formatversion':'2','generator':'search','gsrnamespace':'6','gsrlimit':'20','gsrsearch':query,
       'prop':'imageinfo','iiprop':'url|extmetadata|mime|size','iiurlwidth':'1400'
@@ -118,6 +118,10 @@ def search_commons(query):
         artist=((ext.get('Artist') or {}).get('value') or '').strip()
         credit=((ext.get('Credit') or {}).get('value') or '').strip()
         pageurl='https://commons.wikimedia.org/wiki/'+urllib.parse.quote(p.get('title','').replace(' ','_'),safe=':/()_-')
+        if used_pages is not None and pageurl in used_pages:
+            continue
+        if used_pages is not None:
+            used_pages.add(pageurl)
         return {
           'title':p.get('title'),'url':ii.get('thumburl') or ii.get('url'),'original_url':ii.get('url'),
           'page_url':pageurl,'license':lic,'artist':re.sub('<[^>]+>','',artist),'credit':re.sub('<[^>]+>','',credit),
@@ -125,11 +129,11 @@ def search_commons(query):
         }
     return None
 
-def save_theme(filename,query,previous=None):
+def save_theme(filename,query,previous=None,used_pages=None):
     from PIL import Image,ImageOps,ImageEnhance
     meta=None
     try:
-        meta=search_commons(query)
+        meta=search_commons(query,used_pages)
     except Exception as e:
         print('search failed',filename,e)
     if meta:
@@ -155,10 +159,11 @@ def save_theme(filename,query,previous=None):
     return {'title':'generated fallback','url':'','original_url':'','page_url':'','license':'project generated','artist':'AlofoK','credit':'','width':1080,'height':1920}
 
 sources={}
+used_pages=set()
 last=None
 for filename,query in THEMES.items():
     print('theme',filename,query)
-    meta=save_theme(filename,query,last)
+    meta=save_theme(filename,query,last,used_pages)
     sources[filename]={'query':query,**meta}
     last=THEME_DIR/filename
     time.sleep(1.8)
@@ -172,62 +177,7 @@ for old in ['alofok-plus-theme-atlas-v1.jpg','jumada2-early-summer.jpg']:
     p=THEME_DIR/old
     if p.exists(): p.unlink()
 
-app_path=ROOT/'App.js'
-app=app_path.read_text(encoding='utf-8')
-labels='const THEME_LABELS_EN='+json.dumps(LABELS_EN,ensure_ascii=False,separators=(',',':'))+';'
-app,n=re.subn(r"const THEME_LABELS_EN=\{[\s\S]*?\};",labels,app,count=1)
-assert n==1,'THEME_LABELS_EN replacement failed'
-
-choices="const THEME_CHOICES=[\n ['auto-time','تلقائي حسب الوقت ويوم الأسبوع والفصل'],\n"+"\n".join([f" ['{i}','{LABELS_AR[i]}']," for i in PLUS_IDS])+"\n];"
-asset_lines=["const THEME_ASSETS={"]
-for i,f in ID_TO_FILE.items(): asset_lines.append(f" '{i}':require('./assets/themes/{f}'),")
-asset_lines.append('};')
-block=choices+'\n'+"\n".join(asset_lines)+"\nfunction ThemeBackground({themeId}){const source=THEME_ASSETS[themeId]||THEME_ASSETS['trial-fixed'];return <Image source={source} resizeMode='cover' style={StyleSheet.absoluteFillObject}/>;}\nfunction ThemePreview({themeId}){const source=THEME_ASSETS[themeId]||THEME_ASSETS['trial-fixed'];return <Image source={source} resizeMode='cover' style={StyleSheet.absoluteFillObject}/>;}\n\nfunction AlofoKApp"
-app,n=re.subn(r"const THEME_CHOICES=\[[\s\S]*?\];\nconst SCREEN=Dimensions\.get\('window'\);[\s\S]*?function AlofoKApp",block,app,count=1)
-assert n==1,'atlas theme block replacement failed'
-
-app=app.replace("const [selectedTheme,setSelectedTheme]=useState(IS_PLUS?'auto-time':'night');","const [selectedTheme,setSelectedTheme]=useState(IS_PLUS?'auto-time':'trial-fixed');")
-app=app.replace("else setSelectedTheme(IS_PLUS?'auto-time':'night');","else setSelectedTheme(IS_PLUS?'auto-time':'trial-fixed');")
-
-auto_block=""" const availableThemes=IS_PLUS?THEME_CHOICES:[['trial-fixed','الثيم الثابت']];
- const autoHour=now.getHours();
- const timeThemeId=autoHour>=5&&autoHour<8?'dawn':autoHour<11?'morning':autoHour<17?'midday':autoHour<20?'evening':'night';
- const weekdayThemeId=['week-sunday','week-monday','week-tuesday','week-wednesday','week-thursday','week-friday','week-saturday'][now.getDay()]||'week-sunday';
- const gregorianMonth=now.getMonth();
- const seasonThemeId=(gregorianMonth===2||gregorianMonth===3||gregorianMonth===4)?'spring':(gregorianMonth===5||gregorianMonth===6||gregorianMonth===7)?'summer':(gregorianMonth===8||gregorianMonth===9||gregorianMonth===10)?'autumn':'winter';
- const autoModeSlot=Math.floor(autoHour/3)%3;
- const autoThemeId=(autoHour<6||autoHour>=20)?timeThemeId:(autoModeSlot===0?timeThemeId:autoModeSlot===1?weekdayThemeId:seasonThemeId);
- const activeThemeId=selectedTheme==='auto-time'?autoThemeId:selectedTheme;
-"""
-app,n=re.subn(r" const availableThemes=IS_PLUS\?THEME_CHOICES:[\s\S]*? const atlasIndex=.*?;\n",auto_block,app,count=1)
-assert n==1,'automatic theme logic replacement failed'
-
-app=app.replace("  {IS_PLUS&&<AtlasThemeBackground index={atlasIndex}/>} ","  <ThemeBackground themeId={IS_PLUS?activeThemeId:'trial-fixed'}/>")
-app=app.replace("opacity:IS_PLUS?.12:.76","opacity:IS_PLUS?.18:.42")
-app=re.sub(r"\n  \{!IS_PLUS&&<View pointerEvents='none' style=\{\[s\.themeSky[\s\S]*?</View>\}\n",'\n',app,count=1)
-app=app.replace("availableThemes.map(([id,label,index])=>{return","availableThemes.map(([id,label])=>{return")
-app=app.replace("{index===null?<Text style={s.themeChoiceSymbol}>◉</Text>:<AtlasThemePreview index={index}/>} ","{id==='auto-time'?<Text style={s.themeChoiceSymbol}>◉</Text>:<ThemePreview themeId={id}/>} ")
-app=app.replace("{index===null?<Text style={s.themeChoiceSymbol}>◉</Text>:<AtlasThemePreview index={index}/>}<View","{id==='auto-time'?<Text style={s.themeChoiceSymbol}>◉</Text>:<ThemePreview themeId={id}/>}<View")
-assert 'THEME_ATLAS' not in app and 'AtlasTheme' not in app,'legacy atlas code remains'
-app_path.write_text(app,encoding='utf-8')
-
-qa_path=ROOT/'scripts'/'release-qa.js'
-qa=qa_path.read_text(encoding='utf-8')
-replacement="""assert(app.includes('weekdayThemeId')&&app.includes('seasonThemeId')&&app.includes('timeThemeId'),'standalone automatic theme rotation incomplete');
-assert(app.includes('<ThemePreview themeId={id}/>'),'theme previews must use standalone image files');
-assert(app.includes("<ThemeBackground themeId={IS_PLUS?activeThemeId:'trial-fixed'}/>"),'fixed trial / automatic Plus background binding missing');
-assert(!app.includes('THEME_ATLAS')&&!app.includes('AtlasTheme'),'legacy atlas code must be removed');
-assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must be deleted');
-const themeMatch=app.match(/const THEME_CHOICES=\\[([\\s\\S]*?)\\];/);
-assert(themeMatch,'THEME_CHOICES missing');
-if(themeMatch){
-  const ids=[...themeMatch[1].matchAll(/\\['([^']+)'/g)].map(m=>m[1]);
-  assert(ids.length===35,'expected auto + 34 Plus theme choices');
-  assert(new Set(ids).size===35,'theme ids must be unique');
-}
-"""
-qa,n=re.subn(r"assert\(app\.includes\('weekInLunarMonth'\)[\s\S]*?\n\}\nconst configuredSounds=",lambda _m: replacement+'const configuredSounds=',qa,count=1)
-assert n==1,'release QA atlas block replacement failed'
-qa_path.write_text(qa,encoding='utf-8')
-
-print('Standalone theme migration complete:',len(PLUS_IDS),'Plus themes + fixed Trial theme')
+page_urls=[meta.get('page_url') for meta in sources.values() if meta.get('page_url')]
+if len(page_urls)!=len(set(page_urls)):
+    raise RuntimeError('Duplicate licensed image source remained after migration')
+print(f'Updated {len(sources)} standalone theme assets with unique licensed sources. App.js was not modified.')
