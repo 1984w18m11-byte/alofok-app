@@ -1,1 +1,0 @@
-Migration target: remove alofok-plus-theme-atlas-v1.jpg; use 34 standalone Plus theme file paths; Trial uses one fixed standalone background; Plus automatic rotation uses time of day, weekday and season. APK export is intentionally not part of this change.

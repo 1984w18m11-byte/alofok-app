@@ -22,18 +22,18 @@ assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must c
 assert(config.includes("'com.alofok.plus'")&&config.includes("'com.alofok.trial'"),'trial and Plus package IDs must be distinct');
 assert(app.includes("const IS_PLUS=IS_PAID_BUILD&&licenseTier==='plus';"),'Plus features must be gated by paid build + license');
 assert(!app.includes("appLanguage==='system'?true:isRtlLocale"),'system language must not force RTL');
-assert(app.includes("Automatic rotation by time, week, month and season"),'automatic theme rotation label missing');
-assert(app.includes('weekInLunarMonth')&&app.includes('lunarThemeIndex')&&app.includes('seasonAtlasIndex'),'theme auto rotation logic incomplete');
-assert(app.includes('<AtlasThemePreview index={index}/>'),'theme previews must use real atlas crops');
-assert(app.includes("{!IS_PLUS&&<View pointerEvents='none' style={[s.themeSky"),'Plus themes must not be masked by the generic crescent overlay');
+assert(app.includes("Automatic: time + weekday + season"),'automatic theme rotation label missing');
+assert(app.includes('weekdayThemeId')&&app.includes('seasonThemeId')&&app.includes('timeThemeId'),'standalone automatic theme rotation incomplete');
+assert(app.includes('<ThemePreview themeId={id}/>'),'theme previews must use standalone image files');
+assert(app.includes("<ThemeBackground themeId={IS_PLUS?activeThemeId:'trial-fixed'}/>"),'fixed trial / automatic Plus background binding missing');
+assert(!app.includes('THEME_ATLAS')&&!app.includes('AtlasTheme'),'legacy atlas code must be removed');
+assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must be deleted');
 const themeMatch=app.match(/const THEME_CHOICES=\[([\s\S]*?)\];/);
 assert(themeMatch,'THEME_CHOICES missing');
 if(themeMatch){
-  const indexes=[...themeMatch[1].matchAll(/,\s*(\d+)\]/g)].map(m=>Number(m[1]));
-  const uniq=new Set(indexes);
-  assert(indexes.length===28,'expected 28 concrete theme atlas entries');
-  assert(uniq.size===28,'theme atlas indexes must be unique');
-  assert(Math.min(...indexes)===0&&Math.max(...indexes)===27,'theme atlas indexes must cover 0..27');
+  const ids=[...themeMatch[1].matchAll(/\['([^']+)'/g)].map(m=>m[1]);
+  assert(ids.length===35,'expected auto + 34 Plus theme choices');
+  assert(new Set(ids).size===35,'theme ids must be unique');
 }
 const configuredSounds=(appJson.expo.plugins.find(x=>Array.isArray(x)&&x[0]==='expo-notifications')||[])[1]?.sounds||[];
 assert(configuredSounds.length===4,'four notification Adhan sounds must be configured');

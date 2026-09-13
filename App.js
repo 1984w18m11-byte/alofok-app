@@ -59,11 +59,7 @@ const WEEKDAYS_EN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const LUNAR_MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada II','Rajab',"Sha'ban",'Ramadan','Shawwal','Dhu al-Qidah','Dhu al-Hijjah','Nasi’'];
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
 const RAMADAN_VERSE_EN='Eat and drink until the white thread of dawn becomes distinct from the black thread, then complete the fast until night.';
-const THEME_LABELS_EN={
- 'night':'Free night theme','auto-time':'Automatic rotation by time, week, month and season','dawn':'Dawn and early morning','morning':'Morning','midday':'Daytime','sunset':'Sunset','evening':'Evening','starry-night':'Night and stars','moon-night':'Night and moon',
- 'muharram':'Muharram','safar':'Safar','rabi1':'Rabi I','rabi2':'Rabi II','jumada1':'Jumada I','jumada2':'Jumada II','rajab':'Rajab','shaban':"Sha'ban",'ramadan':'Ramadan','shawwal':'Shawwal','dhulqida':'Dhu al-Qidah','dhulhijja':'Dhu al-Hijjah',
- 'spring':'Spring','summer':'Summer','autumn':'Autumn','winter':'Winter','new-year':'New Year','earth-sun':'Solstice and equinox','solar-eclipse':'Solar eclipse','lunar-eclipse':'Lunar eclipse','galaxy':'Galaxy and stars'
-};
+const THEME_LABELS_EN={"trial-fixed":"Fixed theme","auto-time":"Automatic: time + weekday + season","dawn":"Dawn","morning":"Morning","midday":"Daytime","evening":"Evening","night":"Night","week-sunday":"Sunday","week-monday":"Monday","week-tuesday":"Tuesday","week-wednesday":"Wednesday","week-thursday":"Thursday","week-friday":"Friday","week-saturday":"Saturday","muharram":"Muharram","safar":"Safar","rabi1":"Rabi I","rabi2":"Rabi II","jumada1":"Jumada I","jumada2":"Jumada II","rajab":"Rajab","shaban":"Sha'ban","ramadan":"Ramadan","shawwal":"Shawwal","dhulqida":"Dhu al-Qidah","dhulhijja":"Dhu al-Hijjah","spring":"Spring","summer":"Summer","autumn":"Autumn","winter":"Winter","new-year":"New Year","summer-solstice":"Summer solstice","winter-solstice":"Winter solstice","equinox":"Equinox","solar-eclipse":"Solar eclipse","lunar-eclipse":"Lunar eclipse"};
 const LANGUAGE_CHOICES=LOCALES.map(([id,label])=>[id,label]);
 const PRAYER_METHODS=[['MWL','رابطة العالم الإسلامي'],['EGYPT','الهيئة المصرية'],['KARACHI','جامعة كراتشي'],['UMM_AL_QURA','أم القرى']];
 const PRIVACY_SUMMARY='يستخدم الأفق الموقع الدقيق أثناء تشغيل التطبيق لحساب المواقيت وعرض اسم المنطقة. تُحفظ الإحداثيات والتفضيلات محليًا ولا يرسل التطبيق موقعك إلى المطور أو المعلن. قد تعرض النسخة التجريبية إعلانًا مباشرًا واحدًا في الأسبوع بعد مراجعته من إدارة التطبيق، دون شبكة إعلانات أو تتبع إعلاني. يتصل التطبيق بـ GitHub لفحص رقم الإصدار فقط، دون إرسال إحداثياتك. لا توجد حسابات مستخدمين ولا نبيع بيانات شخصية.';
@@ -128,35 +124,81 @@ const PAID_THEMES={
  winter:{name:'شتوي',background:'#14202a',sky:'#7894a6',accent:'#e9f5ff',symbol:'❄'}
 };
 const THEME_CHOICES=[
- ['auto-time','تلقائي متنوع حسب الوقت والأسبوع والشهر والفصل',null],
- ['dawn','الفجر والصباح الباكر',0],['morning','الصباح',1],['midday','النهار',2],['sunset','الغروب',3],['evening','المساء',4],['starry-night','الليل والنجوم',5],['moon-night','الليل والقمر',6],
- ['muharram','محرم',7],['safar','صفر',8],['rabi1','ربيع الأول',9],['rabi2','ربيع الآخر',10],['jumada1','جمادى الأولى',11],['jumada2','جمادى الآخرة',12],['rajab','رجب',13],['shaban','شعبان',14],['ramadan','رمضان',15],['shawwal','شوال',16],['dhulqida','ذو القعدة',17],['dhulhijja','ذو الحجة',18],
- ['spring','الربيع',19],['summer','الصيف',20],['autumn','الخريف',21],['winter','الشتاء',22],
- ['new-year','رأس السنة',23],['earth-sun','الانقلاب والاعتدال',24],['solar-eclipse','الكسوف الشمسي',25],['lunar-eclipse','الخسوف القمري',26],['galaxy','المجرة والنجوم',27]
+ ['auto-time','تلقائي حسب الوقت ويوم الأسبوع والفصل'],
+ ['dawn','الفجر'],
+ ['morning','الصباح'],
+ ['midday','النهار'],
+ ['evening','المساء'],
+ ['night','الليل'],
+ ['week-sunday','الأحد'],
+ ['week-monday','الإثنين'],
+ ['week-tuesday','الثلاثاء'],
+ ['week-wednesday','الأربعاء'],
+ ['week-thursday','الخميس'],
+ ['week-friday','الجمعة'],
+ ['week-saturday','السبت'],
+ ['muharram','محرم'],
+ ['safar','صفر'],
+ ['rabi1','ربيع الأول'],
+ ['rabi2','ربيع الآخر'],
+ ['jumada1','جمادى الأولى'],
+ ['jumada2','جمادى الآخرة'],
+ ['rajab','رجب'],
+ ['shaban','شعبان'],
+ ['ramadan','رمضان'],
+ ['shawwal','شوال'],
+ ['dhulqida','ذو القعدة'],
+ ['dhulhijja','ذو الحجة'],
+ ['spring','الربيع'],
+ ['summer','الصيف'],
+ ['autumn','الخريف'],
+ ['winter','الشتاء'],
+ ['new-year','رأس السنة'],
+ ['summer-solstice','الانقلاب الصيفي'],
+ ['winter-solstice','الانقلاب الشتوي'],
+ ['equinox','الاعتدال'],
+ ['solar-eclipse','الكسوف الشمسي'],
+ ['lunar-eclipse','الخسوف القمري'],
 ];
-const SCREEN=Dimensions.get('window');
-const THEME_ATLAS=require('./assets/themes/alofok-plus-theme-atlas-v1.jpg');
-const THEME_ATLAS_META=Image.resolveAssetSource(THEME_ATLAS)||{};
-const THEME_TILE_ASPECT=(THEME_ATLAS_META.width&&THEME_ATLAS_META.height)?((THEME_ATLAS_META.width/7)/(THEME_ATLAS_META.height/4)):(4/7);
-function atlasCoverMetrics(frameWidth,frameHeight){
- const widthFromHeight=frameHeight*THEME_TILE_ASPECT;
- const tileWidth=Math.max(frameWidth,widthFromHeight);
- const tileHeight=tileWidth/THEME_TILE_ASPECT;
- return {tileWidth,tileHeight,cropX:Math.max(0,(tileWidth-frameWidth)/2),cropY:Math.max(0,(tileHeight-frameHeight)/2)};
-}
-function AtlasThemeBackground({index}){
- const safe=Math.max(0,Math.min(27,Number(index)||0));
- const col=safe%7,row=Math.floor(safe/7);
- const {tileWidth,tileHeight,cropX,cropY}=atlasCoverMetrics(SCREEN.width,SCREEN.height);
- return <View pointerEvents='none' style={StyleSheet.absoluteFillObject} overflow='hidden'><Image source={THEME_ATLAS} resizeMode='stretch' style={{position:'absolute',width:tileWidth*7,height:tileHeight*4,left:-(col*tileWidth+cropX),top:-(row*tileHeight+cropY)}}/></View>;
-}
-function AtlasThemePreview({index}){
- const [frame,setFrame]=useState({width:160,height:108});
- const safe=Math.max(0,Math.min(27,Number(index)||0));
- const col=safe%7,row=Math.floor(safe/7);
- const {tileWidth,tileHeight,cropX,cropY}=atlasCoverMetrics(frame.width,frame.height);
- return <View pointerEvents='none' onLayout={e=>{const {width,height}=e.nativeEvent.layout;if(width>0&&height>0&&(Math.abs(width-frame.width)>1||Math.abs(height-frame.height)>1))setFrame({width,height})}} style={StyleSheet.absoluteFillObject} overflow='hidden'><Image source={THEME_ATLAS} resizeMode='stretch' style={{position:'absolute',width:tileWidth*7,height:tileHeight*4,left:-(col*tileWidth+cropX),top:-(row*tileHeight+cropY)}}/></View>;
-}
+const THEME_ASSETS={
+ 'trial-fixed':require('./assets/themes/trial-fixed.jpg'),
+ 'dawn':require('./assets/themes/time-dawn.jpg'),
+ 'morning':require('./assets/themes/time-morning.jpg'),
+ 'midday':require('./assets/themes/time-midday.jpg'),
+ 'evening':require('./assets/themes/time-evening.jpg'),
+ 'night':require('./assets/themes/time-night.jpg'),
+ 'week-sunday':require('./assets/themes/week-sunday.jpg'),
+ 'week-monday':require('./assets/themes/week-monday.jpg'),
+ 'week-tuesday':require('./assets/themes/week-tuesday.jpg'),
+ 'week-wednesday':require('./assets/themes/week-wednesday.jpg'),
+ 'week-thursday':require('./assets/themes/week-thursday.jpg'),
+ 'week-friday':require('./assets/themes/week-friday.jpg'),
+ 'week-saturday':require('./assets/themes/week-saturday.jpg'),
+ 'muharram':require('./assets/themes/month-muharram.jpg'),
+ 'safar':require('./assets/themes/month-safar.jpg'),
+ 'rabi1':require('./assets/themes/month-rabi1.jpg'),
+ 'rabi2':require('./assets/themes/month-rabi2.jpg'),
+ 'jumada1':require('./assets/themes/month-jumada1.jpg'),
+ 'jumada2':require('./assets/themes/month-jumada2.jpg'),
+ 'rajab':require('./assets/themes/month-rajab.jpg'),
+ 'shaban':require('./assets/themes/month-shaban.jpg'),
+ 'ramadan':require('./assets/themes/month-ramadan.jpg'),
+ 'shawwal':require('./assets/themes/month-shawwal.jpg'),
+ 'dhulqida':require('./assets/themes/month-dhulqida.jpg'),
+ 'dhulhijja':require('./assets/themes/month-dhulhijja.jpg'),
+ 'spring':require('./assets/themes/season-spring.jpg'),
+ 'summer':require('./assets/themes/season-summer.jpg'),
+ 'autumn':require('./assets/themes/season-autumn.jpg'),
+ 'winter':require('./assets/themes/season-winter.jpg'),
+ 'new-year':require('./assets/themes/special-new-year.jpg'),
+ 'summer-solstice':require('./assets/themes/special-summer-solstice.jpg'),
+ 'winter-solstice':require('./assets/themes/special-winter-solstice.jpg'),
+ 'equinox':require('./assets/themes/special-equinox.jpg'),
+ 'solar-eclipse':require('./assets/themes/special-solar-eclipse.jpg'),
+ 'lunar-eclipse':require('./assets/themes/special-lunar-eclipse.jpg'),
+};
+function ThemeBackground({themeId}){const source=THEME_ASSETS[themeId]||THEME_ASSETS['trial-fixed'];return <Image source={source} resizeMode='cover' style={StyleSheet.absoluteFillObject}/>;}
+function ThemePreview({themeId}){const source=THEME_ASSETS[themeId]||THEME_ASSETS['trial-fixed'];return <Image source={source} resizeMode='cover' style={StyleSheet.absoluteFillObject}/>;}
 
 function AlofoKApp({licenseTier='trial'}){
  const IS_PLUS=IS_PAID_BUILD&&licenseTier==='plus';
@@ -199,7 +241,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const [showMainMenu,setShowMainMenu]=useState(false);
  const [showSupportAccount,setShowSupportAccount]=useState(false);
  const [showCityChoices,setShowCityChoices]=useState(false);
- const [selectedTheme,setSelectedTheme]=useState(IS_PLUS?'auto-time':'night');
+ const [selectedTheme,setSelectedTheme]=useState(IS_PLUS?'auto-time':'trial-fixed');
  const [adhanVolume,setAdhanVolume]=useState(.7);
  const [updateInfo,setUpdateInfo]=useState(null);
  const [updateChecking,setUpdateChecking]=useState(false);
@@ -287,7 +329,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  useEffect(()=>{
   AsyncStorage.getItem('alofq_paid_theme').then(id=>{
    if(IS_PLUS&&THEME_CHOICES.some(([themeId])=>themeId===id))setSelectedTheme(id);
-   else setSelectedTheme(IS_PLUS?'auto-time':'night');
+   else setSelectedTheme(IS_PLUS?'auto-time':'trial-fixed');
   }).catch(e=>console.log('Theme restore error:',e));
  },[]);
 
@@ -699,15 +741,15 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  ]);
 
  const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
- const availableThemes=IS_PLUS?THEME_CHOICES:[['night','الثيم الليلي المجاني',6]];
+ const availableThemes=IS_PLUS?THEME_CHOICES:[['trial-fixed','الثيم الثابت']];
  const autoHour=now.getHours();
- const timeAtlasIndex=autoHour>=5&&autoHour<8?0:autoHour<11?1:autoHour<16?2:autoHour<18?3:autoHour<20?4:autoHour<23?5:6;
- const lunarThemeIndex=7+Math.max(0,Math.min(11,(lunar.month||1)-1));
+ const timeThemeId=autoHour>=5&&autoHour<8?'dawn':autoHour<11?'morning':autoHour<17?'midday':autoHour<20?'evening':'night';
+ const weekdayThemeId=['week-sunday','week-monday','week-tuesday','week-wednesday','week-thursday','week-friday','week-saturday'][now.getDay()]||'week-sunday';
  const gregorianMonth=now.getMonth();
- const seasonAtlasIndex=(gregorianMonth===2||gregorianMonth===3||gregorianMonth===4)?19:(gregorianMonth===5||gregorianMonth===6||gregorianMonth===7)?20:(gregorianMonth===8||gregorianMonth===9||gregorianMonth===10)?21:22;
- const weekInLunarMonth=Math.min(4,Math.floor(((lunar.day||1)-1)/7));
- const autoAtlasIndex=weekInLunarMonth===0?timeAtlasIndex:weekInLunarMonth===1?lunarThemeIndex:weekInLunarMonth===2?seasonAtlasIndex:weekInLunarMonth===3?timeAtlasIndex:(((lunar.day||1)%2===0)?lunarThemeIndex:seasonAtlasIndex);
- const atlasIndex=selectedTheme==='auto-time'?autoAtlasIndex:(THEME_CHOICES.find(([id])=>id===selectedTheme)?.[2]??6);
+ const seasonThemeId=(gregorianMonth===2||gregorianMonth===3||gregorianMonth===4)?'spring':(gregorianMonth===5||gregorianMonth===6||gregorianMonth===7)?'summer':(gregorianMonth===8||gregorianMonth===9||gregorianMonth===10)?'autumn':'winter';
+ const autoModeSlot=Math.floor(autoHour/3)%3;
+ const autoThemeId=(autoHour<6||autoHour>=20)?timeThemeId:(autoModeSlot===0?timeThemeId:autoModeSlot===1?weekdayThemeId:seasonThemeId);
+ const activeThemeId=selectedTheme==='auto-time'?autoThemeId:selectedTheme;
  async function previewAdhan(pack){
   try{
    stopAdhan();
@@ -742,10 +784,9 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  }
 
  return <View style={s.background}>
-  {IS_PLUS&&<AtlasThemeBackground index={atlasIndex}/>} 
-  <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background,opacity:IS_PLUS?.12:.76}]}/>
+  <ThemeBackground themeId={IS_PLUS?activeThemeId:'trial-fixed'}/>
+  <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background,opacity:IS_PLUS?.18:.42}]}/>
   <SafeAreaView style={s.root}>
-  {!IS_PLUS&&<View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>}
  <ScrollView contentContainerStyle={[s.page,{direction:interfaceIsRtl?'rtl':'ltr'}]}>
    {tab==='today'&&<View style={s.hero}>
     <View style={s.heroTopRow}>
@@ -887,7 +928,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     </SettingsCard>
     <SettingsCard title={ui('الثيمات','Themes')}>
      <Text style={s.sub}>{IS_PLUS?ui('اختر من جميع ثيمات الأفق بلس، وسيُحفظ اختيارك تلقائيًا.','Choose from all AlofoK Plus themes. Your selection is saved automatically.'):ui('الثيم الليلي متاح مجاناً. بقية الثيمات ضمن الأفق بلس.','The night theme is available for free. Other themes are included with AlofoK Plus.')}</Text>
-     <View style={s.themeChoices}>{availableThemes.map(([id,label,index])=>{return <Pressable key={id} style={[s.themeChoice,{backgroundColor:'#06121f',borderColor:'#b98532'},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}>{index===null?<Text style={s.themeChoiceSymbol}>◉</Text>:<AtlasThemePreview index={index}/>}<View pointerEvents='none' style={{position:'absolute',left:0,right:0,bottom:0,backgroundColor:'rgba(0,0,0,.58)',paddingVertical:7,paddingHorizontal:4}}><Text style={[s.themeChoiceText,{marginTop:0,textAlign:'center'}]}>{useArabicUi?label:(THEME_LABELS_EN[id]||label)}</Text></View></Pressable>})}</View>
+     <View style={s.themeChoices}>{availableThemes.map(([id,label])=>{return <Pressable key={id} style={[s.themeChoice,{backgroundColor:'#06121f',borderColor:'#b98532'},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}>{id==='auto-time'?<Text style={s.themeChoiceSymbol}>◉</Text>:<ThemePreview themeId={id}/>}<View pointerEvents='none' style={{position:'absolute',left:0,right:0,bottom:0,backgroundColor:'rgba(0,0,0,.58)',paddingVertical:7,paddingHorizontal:4}}><Text style={[s.themeChoiceText,{marginTop:0,textAlign:'center'}]}>{useArabicUi?label:(THEME_LABELS_EN[id]||label)}</Text></View></Pressable>})}</View>
     </SettingsCard>
     {IS_PLUS&&<SettingsCard title={ui('ثيمات خلفية الجهاز','Device Wallpaper Themes')}>
      <View style={s.settingRow}><Text style={s.settingIcon}>▣</Text><View style={s.settingText}><Text style={s.text}>{ui('تفعيل ثيمات الموبايل','Enable phone themes')}</Text><Text style={s.sub}>{ui('لا يتم التفعيل إلا بعد موافقتك من نظام الجهاز.','The feature is enabled only after you approve it in the device system.')}</Text></View><Switch value={mobileThemesEnabled} onValueChange={toggleMobileThemes} trackColor={{true:'#c89232'}}/></View>

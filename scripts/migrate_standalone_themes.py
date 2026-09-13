@@ -8,11 +8,11 @@ UA='AlofoK-theme-migration/1.0 (project asset migration)'
 
 THEMES={
  'trial-fixed.jpg':'mosque night crescent moon photograph',
- 'time-dawn.jpg':'dawn landscape sunrise mosque photograph',
+ 'time-dawn.jpg':'sunrise landscape photograph',
  'time-morning.jpg':'morning green landscape sunlight photograph',
  'time-midday.jpg':'bright daytime blue sky green valley photograph',
  'time-evening.jpg':'mosque sunset evening photograph',
- 'time-night.jpg':'night mosque moon stars photograph',
+ 'time-night.jpg':'night sky stars landscape photograph',
  'week-sunday.jpg':'Alhambra palace architecture photograph',
  'week-monday.jpg':'Sultan Ahmed Mosque Istanbul photograph',
  'week-tuesday.jpg':'Islamic architecture courtyard photograph',
@@ -20,7 +20,7 @@ THEMES={
  'week-thursday.jpg':'Great Mosque Kairouan photograph',
  'week-friday.jpg':'Kaaba Mecca photograph',
  'week-saturday.jpg':'Cordoba mosque architecture photograph',
- 'month-muharram.jpg':'Islamic architecture night peaceful photograph',
+ 'month-muharram.jpg':'mosque architecture night photograph',
  'month-safar.jpg':'desert road sunset landscape photograph',
  'month-rabi1.jpg':'spring green valley flowers photograph',
  'month-rabi2.jpg':'spring meadow flowers mountains photograph',
@@ -78,9 +78,19 @@ LABELS_EN={
 }
 
 def http_json(url):
-    req=urllib.request.Request(url,headers={'User-Agent':UA})
-    with urllib.request.urlopen(req,timeout=35) as r:
-        return json.loads(r.read().decode('utf-8'))
+    last=None
+    for attempt in range(6):
+        try:
+            req=urllib.request.Request(url,headers={'User-Agent':UA})
+            with urllib.request.urlopen(req,timeout=35) as r:
+                return json.loads(r.read().decode('utf-8'))
+        except Exception as e:
+            last=e
+            if getattr(e,'code',None)==429 and attempt<5:
+                time.sleep(8*(attempt+1))
+                continue
+            raise
+    raise last
 
 def download(url):
     req=urllib.request.Request(url,headers={'User-Agent':UA})
@@ -151,7 +161,10 @@ for filename,query in THEMES.items():
     meta=save_theme(filename,query,last)
     sources[filename]={'query':query,**meta}
     last=THEME_DIR/filename
-    time.sleep(0.2)
+    time.sleep(1.8)
+missing_sources=[name for name,meta in sources.items() if not meta.get('page_url')]
+if missing_sources:
+    raise RuntimeError('Licensed image source unavailable for: '+', '.join(missing_sources))
 (THEME_DIR/'theme-sources.json').write_text(json.dumps(sources,ensure_ascii=False,indent=2),encoding='utf-8')
 
 # Remove legacy atlas and obsolete single-file experiment.
@@ -213,7 +226,7 @@ if(themeMatch){
   assert(new Set(ids).size===35,'theme ids must be unique');
 }
 """
-qa,n=re.subn(r"assert\(app\.includes\('weekInLunarMonth'\)[\s\S]*?\n\}\nconst configuredSounds=",replacement+'const configuredSounds=',qa,count=1)
+qa,n=re.subn(r"assert\(app\.includes\('weekInLunarMonth'\)[\s\S]*?\n\}\nconst configuredSounds=",lambda _m: replacement+'const configuredSounds=',qa,count=1)
 assert n==1,'release QA atlas block replacement failed'
 qa_path.write_text(qa,encoding='utf-8')
 
