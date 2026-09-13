@@ -70,6 +70,16 @@ jobs:
       - name: Download licensed standalone images and migrate source
         run: python scripts/migrate_standalone_themes.py
 
+      - name: Align release QA with new theme label
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p=Path('scripts/release-qa.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace("assert(app.includes(\"Automatic rotation by time, week, month and season\"),'automatic theme rotation label missing');","assert(app.includes(\"Automatic: time + weekday + season\"),'automatic theme rotation label missing');")
+          p.write_text(s,encoding='utf-8')
+          PY
+
       - name: Run release QA
         run: node scripts/release-qa.js
 
