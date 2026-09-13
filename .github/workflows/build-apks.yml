@@ -59,8 +59,10 @@ jobs:
             curl -fL --retry 3 --retry-delay 2 -A "AlofoK-build/0.5.7" "$url" -o "$input"
             test -s "$input"
             ffprobe -v error "$input" >/dev/null
-            ffmpeg -hide_banner -loglevel error -xerror -y -i "$input" -vn -ac 1 -ar 44100 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
-            ffmpeg -hide_banner -loglevel error -xerror -y -i "$input" -vn -ac 1 -ar 44100 -c:a pcm_s16le "assets/adhan/${stem}.wav"
+            # Some WebM sources contain discontinuous container timestamps. Rebuild
+            # audio timestamps from the decoded samples so both OGG and WAV are clean.
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 44100 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 44100 -c:a pcm_s16le "assets/adhan/${stem}.wav"
           }
 
           # Beautiful adhan is already the original CC0 OGG bundled in the repo.
