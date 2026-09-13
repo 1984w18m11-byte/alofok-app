@@ -1,0 +1,12 @@
+npm warn exec The following package was not found and will be installed: expo-doctor@1.20.4
+Running 18 checks on your project...
+17/18 checks passed. 1 checks failed. Possible issues detected:
+Use the --verbose flag to see more details about passed checks.
+
+✖ Check Expo config for common issues
+You have an app.json file in your project, but your app.config.js is not using the values from it.
+Advice:
+Remove the static app.json, or use its values in your dynamic app.config.js. Learn more: https://docs.expo.dev/workflow/configuration
+
+1 check failed, indicating possible issues with the project.
+EXIT_CODE=1

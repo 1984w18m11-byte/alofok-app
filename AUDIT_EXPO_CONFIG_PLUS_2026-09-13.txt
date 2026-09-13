@@ -1,0 +1,69 @@
+
+{
+  name: [32m'الأفق بلس'[39m,
+  slug: [32m'alofok-paid'[39m,
+  version: [32m'0.5.7'[39m,
+  orientation: [32m'portrait'[39m,
+  scheme: [32m'alofok-plus'[39m,
+  userInterfaceStyle: [32m'dark'[39m,
+  plugins: [
+    [32m'expo-location'[39m,
+    [
+      [32m'expo-notifications'[39m,
+      {
+        sounds: [
+          [32m'./assets/adhan/beautiful_adhan.wav'[39m,
+          [32m'./assets/adhan/adhan_morocco_hassan_ii.wav'[39m,
+          [32m'./assets/adhan/adhan_kazakhstan_shalqar.wav'[39m,
+          [32m'./assets/adhan/adhan_aaqib_azeez.wav'[39m
+        ]
+      }
+    ],
+    [32m'expo-audio'[39m,
+    [32m'expo-asset'[39m
+  ],
+  icon: [32m'./assets/icon-paid.png'[39m,
+  description: [90mundefined[39m,
+  sdkVersion: [32m'54.0.0'[39m,
+  platforms: [
+    [32m'ios'[39m,
+    [32m'android'[39m
+  ],
+  ios: {
+    supportsTablet: [33mtrue[39m,
+    bundleIdentifier: [32m'com.alofok.plus'[39m,
+    infoPlist: {
+      NSLocationWhenInUseUsageDescription: [32m'نستخدم موقعك أثناء الاستخدام لحساب مواقيت الصلاة وعرض اسم المنطقة القريبة.'[39m,
+      NSUserNotificationUsageDescription: [32m'نستخدم الإشعارات لتذكيرك بالصلاة والمناسبات.'[39m
+    }
+  },
+  android: {
+    package: [32m'com.alofok.plus'[39m,
+    permissions: [
+      [32m'ACCESS_COARSE_LOCATION'[39m,
+      [32m'ACCESS_FINE_LOCATION'[39m,
+      [32m'POST_NOTIFICATIONS'[39m,
+      [32m'VIBRATE'[39m,
+      [32m'SCHEDULE_EXACT_ALARM'[39m,
+      [32m'android.permission.ACCESS_COARSE_LOCATION'[39m,
+      [32m'android.permission.ACCESS_FINE_LOCATION'[39m,
+      [32m'android.permission.RECORD_AUDIO'[39m,
+      [32m'android.permission.MODIFY_AUDIO_SETTINGS'[39m
+    ],
+    versionCode: [33m28[39m,
+    blockedPermissions: [
+      [32m'android.permission.RECORD_AUDIO'[39m
+    ],
+    adaptiveIcon: {
+      foregroundImage: [32m'./assets/icon-paid.png'[39m,
+      backgroundColor: [32m'#061724'[39m
+    }
+  },
+  extra: {
+    appVariant: [32m'paid'[39m,
+    eas: {
+      projectId: [32m'524b2de5-2dd1-4be8-b073-9a87fa6137b7'[39m
+    }
+  }
+}
+
