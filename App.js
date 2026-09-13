@@ -28,7 +28,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
-const APP_VERSION='0.5.6';
+const APP_VERSION='0.5.7';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
 const TRIAL_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
 const PLUS_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json';
@@ -47,10 +47,10 @@ const ADHAN_ASSETS={
  'commons-aaqib-azeez':require('./assets/adhan/adhan_aaqib_azeez.ogg')
 };
 const ADHAN_NOTIFICATION_SOUNDS={
- 'commons-beautiful-adhan':'beautiful_adhan.ogg',
- 'commons-morocco-hassan-ii':'adhan_morocco_hassan_ii.ogg',
- 'commons-kazakhstan-shalqar':'adhan_kazakhstan_shalqar.ogg',
- 'commons-aaqib-azeez':'adhan_aaqib_azeez.ogg'
+ 'commons-beautiful-adhan':'beautiful_adhan.wav',
+ 'commons-morocco-hassan-ii':'adhan_morocco_hassan_ii.wav',
+ 'commons-kazakhstan-shalqar':'adhan_kazakhstan_shalqar.wav',
+ 'commons-aaqib-azeez':'adhan_aaqib_azeez.wav'
 };
 const PRAYERS=[['الفجر','fajr','♜'],['الشروق','sunrise','☼'],['الظهر','dhuhr','☀'],['العصر','asr','☀'],['المغرب','maghrib','◒'],['العشاء','isha','☾']];
 const PRAYER_LABELS_EN={fajr:'Fajr',sunrise:'Sunrise',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};
@@ -60,7 +60,7 @@ const LUNAR_MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada 
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
 const RAMADAN_VERSE_EN='Eat and drink until the white thread of dawn becomes distinct from the black thread, then complete the fast until night.';
 const THEME_LABELS_EN={
- 'night':'Free night theme','auto-time':'Automatic by time of day','dawn':'Dawn and early morning','morning':'Morning','midday':'Daytime','sunset':'Sunset','evening':'Evening','starry-night':'Night and stars','moon-night':'Night and moon',
+ 'night':'Free night theme','auto-time':'Automatic rotation by time, week, month and season','dawn':'Dawn and early morning','morning':'Morning','midday':'Daytime','sunset':'Sunset','evening':'Evening','starry-night':'Night and stars','moon-night':'Night and moon',
  'muharram':'Muharram','safar':'Safar','rabi1':'Rabi I','rabi2':'Rabi II','jumada1':'Jumada I','jumada2':'Jumada II','rajab':'Rajab','shaban':"Sha'ban",'ramadan':'Ramadan','shawwal':'Shawwal','dhulqida':'Dhu al-Qidah','dhulhijja':'Dhu al-Hijjah',
  'spring':'Spring','summer':'Summer','autumn':'Autumn','winter':'Winter','new-year':'New Year','earth-sun':'Solstice and equinox','solar-eclipse':'Solar eclipse','lunar-eclipse':'Lunar eclipse','galaxy':'Galaxy and stars'
 };
@@ -117,8 +117,8 @@ function utcDateFromMinutes(date,minutes){
 function distanceKm(a,b){const R=6371,rad=x=>x*Math.PI/180;const dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon);const x=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
 const religiousFor=(m,d)=>religiousEvents.filter(e=>((e.m===m&&e.d===d)||(e.m===m&&e.range&&d>=e.range[0]&&d<=e.range[1])||(e.dates||[]).some(x=>x.m===m&&x.d===d))).filter((e,i,all)=>all.findIndex(x=>x.ar===e.ar)===i);
 const nationalFor=(country,date)=>(nationalEvents[country]||[]).filter(e=>e.month===date.getMonth()+1&&e.day===date.getDate());
-const lunarEventsForDay=lunar=>religiousFor(lunar.month,lunar.day).map(e=>({type:'مناسبة دينية',name:e.ar,details:e.note_ar||''}));
-const gregorianEventsForDay=(country,date)=>nationalFor(country,date).map(e=>({type:'مناسبة وطنية',name:e.name_ar,details:e.note_ar||''}));
+const lunarEventsForDay=lunar=>religiousFor(lunar.month,lunar.day).map(e=>({type:'مناسبة دينية',name:e.ar,name_en:e.en||'',details:e.note_ar||'',details_en:e.note_en||''}));
+const gregorianEventsForDay=(country,date)=>nationalFor(country,date).map(e=>({type:'مناسبة وطنية',name:e.name_ar,name_en:e.name_en||'',details:e.note_ar||'',details_en:e.note_en||''}));
 
 const LUNAR_ACCENTS=['#f5b94c','#65c7d0','#d6a8ff','#ffb36b','#73d6a1','#83b9ff','#ffc857','#e8a0bf','#f2c14e','#79c9c5','#9ab7ff','#d0a4ff'];
 const PAID_THEMES={
@@ -128,7 +128,7 @@ const PAID_THEMES={
  winter:{name:'شتوي',background:'#14202a',sky:'#7894a6',accent:'#e9f5ff',symbol:'❄'}
 };
 const THEME_CHOICES=[
- ['auto-time','تلقائي حسب وقت اليوم',null],
+ ['auto-time','تلقائي متنوع حسب الوقت والأسبوع والشهر والفصل',null],
  ['dawn','الفجر والصباح الباكر',0],['morning','الصباح',1],['midday','النهار',2],['sunset','الغروب',3],['evening','المساء',4],['starry-night','الليل والنجوم',5],['moon-night','الليل والقمر',6],
  ['muharram','محرم',7],['safar','صفر',8],['rabi1','ربيع الأول',9],['rabi2','ربيع الآخر',10],['jumada1','جمادى الأولى',11],['jumada2','جمادى الآخرة',12],['rajab','رجب',13],['shaban','شعبان',14],['ramadan','رمضان',15],['shawwal','شوال',16],['dhulqida','ذو القعدة',17],['dhulhijja','ذو الحجة',18],
  ['spring','الربيع',19],['summer','الصيف',20],['autumn','الخريف',21],['winter','الشتاء',22],
@@ -164,9 +164,9 @@ function AlofoKApp({licenseTier='trial'}){
  const [appLanguage,setAppLanguage]=useState('system');
  const [showLanguageChoices,setShowLanguageChoices]=useState(false);
  const activeLocale=appLanguage==='system'?undefined:localeTag(appLanguage);
- const interfaceIsRtl=appLanguage==='system'?true:isRtlLocale(appLanguage);
- const t=makeTranslator(appLanguage);
  const systemLocale=Intl.DateTimeFormat().resolvedOptions().locale||'ar';
+ const interfaceIsRtl=appLanguage==='system'?String(systemLocale).toLowerCase().startsWith('ar'):isRtlLocale(appLanguage);
+ const t=makeTranslator(appLanguage);
  const useArabicUi=appLanguage==='ar'||(appLanguage==='system'&&String(systemLocale).toLowerCase().startsWith('ar'));
  const ui=(ar,en)=>useArabicUi?ar:en;
  const displayLocale=useArabicUi?'ar-IQ':(activeLocale||'en-US');
@@ -478,16 +478,18 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
    lon:coords.lon,
    tzOffsetMin,
    method:'MWL',
-   asrFactor:1
- }),[coords.lat,coords.lon,prayerCalcDate,tzOffsetMin]);
+   asrFactor:1,
+   clockLanguage:useArabicUi?'ar':'en'
+ }),[coords.lat,coords.lon,prayerCalcDate,tzOffsetMin,useArabicUi]);
  const prayers=prayerData.formatted;
 
  const fastingData=useMemo(()=>calculateFastingTimes({
    date:prayerCalcDate,
    lat:coords.lat,
    lon:coords.lon,
-   tzOffsetMin
- }),[coords.lat,coords.lon,prayerCalcDate,tzOffsetMin]);
+   tzOffsetMin,
+   clockLanguage:useArabicUi?'ar':'en'
+ }),[coords.lat,coords.lon,prayerCalcDate,tzOffsetMin,useArabicUi]);
 
  const fasting=fastingData.formatted;
 
@@ -566,7 +568,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   let active=true;
   async function setupPrayerNotifications(){
    try{
-    const soundFile=ADHAN_NOTIFICATION_SOUNDS[selectedAdhan?.id]||'beautiful_adhan.ogg';
+    const soundFile=ADHAN_NOTIFICATION_SOUNDS[selectedAdhan?.id]||'beautiful_adhan.wav';
     // Android notification-channel sounds are immutable after creation, so each
     // bundled adhan gets its own stable channel. The OS can then play it while
     // the app is backgrounded, closed, or the screen is locked.
@@ -699,7 +701,12 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
  const availableThemes=IS_PLUS?THEME_CHOICES:[['night','الثيم الليلي المجاني',6]];
  const autoHour=now.getHours();
- const autoAtlasIndex=autoHour>=5&&autoHour<8?0:autoHour<11?1:autoHour<16?2:autoHour<18?3:autoHour<20?4:autoHour<23?5:6;
+ const timeAtlasIndex=autoHour>=5&&autoHour<8?0:autoHour<11?1:autoHour<16?2:autoHour<18?3:autoHour<20?4:autoHour<23?5:6;
+ const lunarThemeIndex=7+Math.max(0,Math.min(11,(lunar.month||1)-1));
+ const gregorianMonth=now.getMonth();
+ const seasonAtlasIndex=(gregorianMonth===2||gregorianMonth===3||gregorianMonth===4)?19:(gregorianMonth===5||gregorianMonth===6||gregorianMonth===7)?20:(gregorianMonth===8||gregorianMonth===9||gregorianMonth===10)?21:22;
+ const weekInLunarMonth=Math.min(4,Math.floor(((lunar.day||1)-1)/7));
+ const autoAtlasIndex=weekInLunarMonth===0?timeAtlasIndex:weekInLunarMonth===1?lunarThemeIndex:weekInLunarMonth===2?seasonAtlasIndex:weekInLunarMonth===3?timeAtlasIndex:(((lunar.day||1)%2===0)?lunarThemeIndex:seasonAtlasIndex);
  const atlasIndex=selectedTheme==='auto-time'?autoAtlasIndex:(THEME_CHOICES.find(([id])=>id===selectedTheme)?.[2]??6);
  async function previewAdhan(pack){
   try{
@@ -736,15 +743,15 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
  return <View style={s.background}>
   {IS_PLUS&&<AtlasThemeBackground index={atlasIndex}/>} 
-  <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background,opacity:IS_PLUS?.2:.76}]}/>
+  <View pointerEvents='none' style={[s.backgroundShade,{backgroundColor:theme.background,opacity:IS_PLUS?.12:.76}]}/>
   <SafeAreaView style={s.root}>
-  <View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>
+  {!IS_PLUS&&<View pointerEvents='none' style={[s.themeSky,{backgroundColor:theme.sky}]}><Text style={[s.themeSymbol,{color:theme.accent}]}>{theme.symbol}</Text><View style={[s.themeOrb,{borderColor:theme.accent}]}/></View>}
  <ScrollView contentContainerStyle={[s.page,{direction:interfaceIsRtl?'rtl':'ltr'}]}>
    {tab==='today'&&<View style={s.hero}>
     <View style={s.heroTopRow}>
      <View style={s.headerLocationWrap}>
       <Pressable accessibilityLabel={ui('تحديث الموقع عبر GPS','Update location with GPS')} accessibilityHint={locState} style={s.headerGpsButton} onPress={()=>useGps(true)} disabled={locationBusy}><Text style={s.headerGpsIcon}>{locationBusy?'…':'📍'}</Text></Pressable>
-      <Text numberOfLines={2} style={s.headerLocationText}>{locationBusy?ui('جاري التحديد…','Locating…'):(locState==='بغداد • افتراضي'?ui('بغداد • افتراضي','Baghdad • default'):locState)}</Text>
+      <Text numberOfLines={2} style={s.headerLocationText}>{locationBusy?ui('جاري التحديد…','Locating…'):(locState==='بغداد • افتراضي'?ui('بغداد • افتراضي','Baghdad • default'):(!useArabicUi&&/[\u0600-\u06FF]/.test(locState)?(city?.name_en||'Current location'):locState))}</Text>
      </View>
      <View style={s.brandBlock}>
       <Text style={[s.appName,{color:theme.accent}]}>{ui('الأفق','AlofoK')}</Text>
@@ -916,7 +923,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 function Card({title,children}){return <View style={s.card}><Text style={s.title}>{title}</Text>{children}</View>}
 function SettingsCard({title,children}){return <View style={s.settingsCard}><Text style={s.settingsCardTitle}>{title}</Text>{children}</View>}
 function PrayerGrid({p,useArabicUi=true}){return <View style={s.pg}>{PRAYERS.map(([a,k,icon])=><View style={s.prayerRow} key={k}><Text style={s.prayerTime}>{p[k]}</Text><Text style={s.prayerName}>{useArabicUi?a:(PRAYER_LABELS_EN[k]||a)}</Text><Text style={s.prayerIcon}>{icon}</Text></View>)}</View>}
-function EventDetails({title,events,useArabicUi=true}){return <View style={s.eventList}><Text style={s.eventTitle}>{title}</Text>{events.length?events.map((e,i)=><View key={`${e.type}-${e.name}-${i}`} style={s.eventItem}><Text style={s.eventName}>● {e.name}</Text><Text style={s.eventType}>{useArabicUi?e.type:(e.type==='مناسبة دينية'?'Religious event':e.type==='مناسبة وطنية'?'National event':e.type)}</Text>{Boolean(e.details)&&<Text style={s.sub}>{e.details}</Text>}</View>):<Text style={s.noEvent}>{useArabicUi?'لا توجد مناسبة مسجلة في هذا اليوم.':'No event is recorded for this day.'}</Text>}</View>}
+function EventDetails({title,events,useArabicUi=true}){return <View style={s.eventList}><Text style={s.eventTitle}>{title}</Text>{events.length?events.map((e,i)=><View key={`${e.type}-${e.name}-${i}`} style={s.eventItem}><Text style={s.eventName}>● {useArabicUi?e.name:(e.name_en||(e.type==='مناسبة دينية'?'Religious event':'National event'))}</Text><Text style={s.eventType}>{useArabicUi?e.type:(e.type==='مناسبة دينية'?'Religious event':e.type==='مناسبة وطنية'?'National event':e.type)}</Text>{Boolean(useArabicUi?e.details:e.details_en)&&<Text style={s.sub}>{useArabicUi?e.details:e.details_en}</Text>}</View>):<Text style={s.noEvent}>{useArabicUi?'لا توجد مناسبة مسجلة في هذا اليوم.':'No event is recorded for this day.'}</Text>}</View>}
 const s=StyleSheet.create({
  background:{flex:1,backgroundColor:'#020b12'},supportQuickWrap:{alignItems:'flex-end',marginTop:2,marginBottom:3},supportButton:{alignSelf:'flex-end',minHeight:32,paddingVertical:6,paddingHorizontal:9,borderRadius:9,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(28,20,8,.88)'},supportButtonText:{color:'#f4bb52',fontSize:10,fontWeight:'900',textAlign:'center'},supportMiniPanel:{alignSelf:'flex-end',flexDirection:'row-reverse',alignItems:'center',gap:6,marginTop:5,padding:5,borderRadius:9,borderWidth:1,borderColor:'#4b5961',backgroundColor:'rgba(2,16,24,.94)'},supportMiniAccount:{minWidth:120,maxWidth:205,color:'#fff',fontSize:11,fontWeight:'800',textAlign:'center',paddingHorizontal:6},supportMiniCopy:{minWidth:48,minHeight:31,paddingHorizontal:8,borderRadius:8,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'},supportMiniCopyText:{color:'#111820',fontSize:11,fontWeight:'900'},supportCard:{marginTop:12,padding:14,borderRadius:18,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(28,20,8,.94)'},supportHeading:{flexDirection:'row-reverse',alignItems:'center',justifyContent:'space-between'},supportTitle:{color:'#fff',fontSize:18,fontWeight:'900',textAlign:'right'},supportDollar:{color:'#f4bb52',fontSize:34,fontWeight:'900'},supportDescription:{color:'#d8d4c9',fontSize:12,lineHeight:20,textAlign:'right',marginTop:6},supportAccountRow:{flexDirection:'row-reverse',alignItems:'stretch',gap:8,marginTop:12},supportAccount:{flex:1,minHeight:52,color:'#fff',backgroundColor:'rgba(2,16,24,.9)',borderWidth:1,borderColor:'#4d5960',borderRadius:13,padding:14,textAlign:'center',fontSize:14,fontWeight:'800'},copyButton:{width:67,minHeight:52,borderRadius:13,backgroundColor:'#efb44d',alignItems:'center',justifyContent:'center'},copyButtonDisabled:{opacity:.55},copyButtonIcon:{color:'#111820',fontSize:17,fontWeight:'900'},copyButtonText:{color:'#111820',fontSize:11,fontWeight:'900'},backgroundShade:{...StyleSheet.absoluteFillObject},root:{flex:1,backgroundColor:'transparent'},themeSky:{position:'absolute',top:0,left:0,right:0,height:360,opacity:.18,overflow:'hidden'},themeSymbol:{position:'absolute',top:78,right:34,fontSize:72,fontWeight:'900'},themeOrb:{position:'absolute',width:230,height:230,borderRadius:115,borderWidth:1,top:120,left:-100,opacity:.2},themeLabel:{fontSize:12,fontWeight:'800',textAlign:'center',marginBottom:10},page:{paddingHorizontal:13,paddingTop:5,paddingBottom:28},hero:{paddingTop:8,paddingBottom:12},heroTopRow:{minHeight:82,flexDirection:'row-reverse',alignItems:'flex-start',justifyContent:'space-between'},brandBlock:{flex:1,alignItems:'center'},headerIconButton:{width:42,height:42,alignItems:'center',justifyContent:'center'},headerLocationWrap:{width:82,alignItems:'center'},headerGpsButton:{width:42,height:42,borderRadius:21,borderWidth:1,borderColor:'#b98532',backgroundColor:'rgba(2,16,24,.55)',alignItems:'center',justifyContent:'center'},headerGpsIcon:{fontSize:21,color:'#f4bb52',fontWeight:'900'},headerLocationText:{color:'#f1d28e',fontSize:9,fontWeight:'800',textAlign:'center',lineHeight:12,marginTop:3,maxWidth:82},headerIcon:{color:'#fff',fontSize:25},headerUpdateDot:{position:'absolute',top:3,right:2,width:10,height:10,borderRadius:5,backgroundColor:'#ef3f3f',borderWidth:1,borderColor:'#07131b'},menuIcon:{color:'#fff',fontSize:27,width:42,textAlign:'center'},mainMenu:{marginBottom:12,borderRadius:16,borderWidth:1,borderColor:'#80632f',backgroundColor:'rgba(2,14,22,.94)',overflow:'hidden'},mainMenuItem:{minHeight:49,justifyContent:'center',paddingHorizontal:16,borderBottomWidth:1,borderBottomColor:'#26343d'},mainMenuText:{color:'#f4bb52',fontSize:15,fontWeight:'900',textAlign:'right'},appName:{fontSize:29,fontWeight:'900',textAlign:'center',marginTop:4},appSub:{color:'#e0c384',fontSize:12,fontWeight:'700',textAlign:'center',marginTop:5},locationPill:{alignSelf:'center',minWidth:'57%',minHeight:54,paddingVertical:8,paddingHorizontal:18,borderRadius:28,borderWidth:1,borderColor:'#d39c3f',backgroundColor:'rgba(3,14,22,.86)',flexDirection:'row',alignItems:'center',justifyContent:'center',gap:10},locationPin:{fontSize:21},locationText:{color:'#fff',fontSize:14,fontWeight:'800',textAlign:'center',maxWidth:180},locationCaption:{color:'#9ea9ae',fontSize:10,textAlign:'center',marginTop:2},
  plusClockStage:{minHeight:Math.max(520,SCREEN.height-155),justifyContent:'center',paddingBottom:115},clockCard:{alignItems:'center',paddingVertical:18,paddingHorizontal:13,marginTop:6,borderRadius:22,borderWidth:0,borderColor:'transparent',backgroundColor:'transparent'},clock:{color:'#efb64f',fontSize:27,fontWeight:'900',marginTop:8},week:{color:'#fff',fontSize:22,fontWeight:'900',marginBottom:9,textShadowColor:'#000',textShadowRadius:5},hdate:{textAlign:'center',fontSize:20,fontWeight:'900',color:'#fff',textShadowColor:'#000',textShadowRadius:5},gdate:{textAlign:'center',fontSize:15,fontWeight:'800',color:'#fff',marginTop:6,textShadowColor:'#000',textShadowRadius:5},researchIdentity:{color:'#f3cf82',fontSize:12,fontWeight:'900',textAlign:'center',lineHeight:20,marginTop:12,textShadowColor:'#000',textShadowRadius:4},ramadanMini:{marginTop:14,width:'100%',backgroundColor:'rgba(4,15,22,.55)',borderRadius:15,paddingVertical:12,paddingHorizontal:14,alignItems:'center',borderWidth:1,borderColor:'#8c713f'},ramadanMiniTitle:{color:'#efc570',fontSize:21,fontWeight:'900'},ramadanMiniText:{color:'#ddd5c4',fontSize:12,fontWeight:'700',marginTop:4,textAlign:'center'},

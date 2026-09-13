@@ -29,16 +29,16 @@ function hourAngle(lat,decl,alt){
   return Math.acos(c)*R2D;
 }
 const pad=n=>String(n).padStart(2,"0");
-function fmtMinutes(min,tzOffsetMin){
+function fmtMinutes(min,tzOffsetMin,clockLanguage='ar'){
   let total=Math.round(min+tzOffsetMin);
   total=((total%1440)+1440)%1440;
   const h24=Math.floor(total/60);
   const m=total%60;
   const h12=h24%12||12;
-  const ap=h24<12?"ص":"م";
+  const ap=clockLanguage==='ar'?(h24<12?"ص":"م"):(h24<12?"AM":"PM");
   return `${h12}:${pad(m)} ${ap}`;
 }
-export function calculatePrayerTimes({date,lat,lon,tzOffsetMin,method="MWL",asrFactor=1}){
+export function calculatePrayerTimes({date,lat,lon,tzOffsetMin,method="MWL",asrFactor=1,clockLanguage="ar"}){
   const cfg=METHODS[method]||METHODS.MWL;
   const {decl,noonMin}=solarNoonAndDecl(date,lon);
   const Hrise=hourAngle(lat,decl,-0.833);
@@ -55,7 +55,7 @@ export function calculatePrayerTimes({date,lat,lon,tzOffsetMin,method="MWL",asrF
     maghrib:Hrise==null?null:noonMin+4*Hrise,
     isha: cfg.ishaMinutes ? noonMin+4*Hrise+cfg.ishaMinutes : (Hisha==null?null:noonMin+4*Hisha)
   };
-  const formatted=Object.fromEntries(Object.entries(raw).map(([k,v])=>[k,v==null?"--:--":fmtMinutes(v,tzOffsetMin)]));
+  const formatted=Object.fromEntries(Object.entries(raw).map(([k,v])=>[k,v==null?"--:--":fmtMinutes(v,tzOffsetMin,clockLanguage)]));
   return {rawMinutesUtc:raw,formatted,method,declinationDeg:decl};
 }
 
@@ -65,7 +65,7 @@ export function calculatePrayerTimes({date,lat,lon,tzOffsetMin,method="MWL",asrF
  * الإفطار: نهاية الشفق المسائي المدني عندما يكون مركز الشمس عند -6°
  * القاعدة ثابتة، والوقت يتغير حسب الموقع والتاريخ.
  */
-export function calculateFastingTimes({date,lat,lon,tzOffsetMin}){
+export function calculateFastingTimes({date,lat,lon,tzOffsetMin,clockLanguage="ar"}){
   const FASTING_ALTITUDE=-6;
   const {decl,noonMin}=solarNoonAndDecl(date,lon);
   const H=hourAngle(lat,decl,FASTING_ALTITUDE);
@@ -76,8 +76,8 @@ export function calculateFastingTimes({date,lat,lon,tzOffsetMin}){
   };
 
   const formatted={
-    imsak:raw.imsak==null?"--:--":fmtMinutes(raw.imsak,tzOffsetMin),
-    iftar:raw.iftar==null?"--:--":fmtMinutes(raw.iftar,tzOffsetMin)
+    imsak:raw.imsak==null?"--:--":fmtMinutes(raw.imsak,tzOffsetMin,clockLanguage),
+    iftar:raw.iftar==null?"--:--":fmtMinutes(raw.iftar,tzOffsetMin,clockLanguage)
   };
 
   return {

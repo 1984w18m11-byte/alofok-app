@@ -1,10 +1,11 @@
 {
   "channel": "trial",
-  "version": "0.5.5",
-  "versionCode": 26,
+  "version": "0.5.7",
+  "versionCode": 28,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "قناة تحديث الأفق التجريبي. يحصل غير المشتركين على تحديثات التجريبي فقط.",
-  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/latest",
+  "notes_ar": "إصدار تدقيق شامل: فصل النسختين، تدوير الثيمات، إصلاح الإنجليزية، أصوات أذان مرخصة، وتحسين موثوقية الصوت والتنبيهات.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v0.5.7/alofok-trial-0.5.7.apk",
   "mandatory": false,
-  "published_at": "2026-09-10"
+  "published_at": "2026-09-13",
+  "notes_en": "Comprehensive QA release: separate trial/Plus builds, theme rotation, English UI cleanup, licensed Adhan audio, and notification reliability fixes."
 }

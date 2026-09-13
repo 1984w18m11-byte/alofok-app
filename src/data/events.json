@@ -5,7 +5,8 @@
     "d": 1,
     "ar": "أول محرم",
     "pack": "common",
-    "notifyBefore": true
+    "notifyBefore": true,
+    "en": "First of Muharram"
   },
   {
     "id": "ashura",
@@ -13,7 +14,8 @@
     "d": 10,
     "ar": "عاشوراء — ذكرى استشهاد الإمام الحسين",
     "pack": "common",
-    "notifyBefore": true
+    "notifyBefore": true,
+    "en": "Ashura — remembrance of the martyrdom of Imam Husayn"
   },
   {
     "id": "arbaeen",
@@ -21,7 +23,8 @@
     "d": 20,
     "ar": "الأربعينية — ذكرى أربعين الإمام الحسين",
     "pack": "common",
-    "notifyBefore": true
+    "notifyBefore": true,
+    "en": "Arbaeen — forty-day remembrance of Imam Husayn"
   },
   {
     "id": "ramadan1",
@@ -29,7 +32,8 @@
     "d": 1,
     "ar": "أول رمضان",
     "pack": "common",
-    "notifyBefore": true
+    "notifyBefore": true,
+    "en": "First of Ramadan"
   },
   {
     "id": "ali_martyrdom",
@@ -37,7 +41,9 @@
     "d": 21,
     "ar": "ذكرى استشهاد الإمام علي بن أبي طالب",
     "pack": "historical",
-    "note_ar": "تُحيى الذكرى في 21 رمضان، بعد إصابته في 19 رمضان."
+    "note_ar": "تُحيى الذكرى في 21 رمضان، بعد إصابته في 19 رمضان.",
+    "en": "Remembrance of the martyrdom of Imam Ali ibn Abi Talib",
+    "note_en": "Observed on 21 Ramadan; the injury is traditionally dated to 19 Ramadan."
   },
   {
     "id": "qadr",
@@ -45,7 +51,9 @@
     "d": 27,
     "ar": "ليلة القدر المحتملة — ليلة 27 رمضان",
     "pack": "common",
-    "note_ar": "ليلة القدر تُلتمس في العشر الأواخر، ويُبرز التطبيق ليلة 27 باعتبارها من أشهر الليالي المحتملة."
+    "note_ar": "ليلة القدر تُلتمس في العشر الأواخر، ويُبرز التطبيق ليلة 27 باعتبارها من أشهر الليالي المحتملة.",
+    "en": "Possible Laylat al-Qadr — night of 27 Ramadan",
+    "note_en": "Laylat al-Qadr is sought in the last ten nights; the app highlights the 27th as one of the widely observed possibilities."
   },
   {
     "id": "eidfitr",
@@ -53,7 +61,8 @@
     "d": 1,
     "ar": "عيد الفطر المبارك",
     "pack": "common",
-    "notifyBefore": true
+    "notifyBefore": true,
+    "en": "Eid al-Fitr"
   },
   {
     "id": "arafah",
@@ -61,7 +70,8 @@
     "d": 9,
     "ar": "يوم عرفة",
     "pack": "common",
-    "notifyBefore": true
+    "notifyBefore": true,
+    "en": "Day of Arafah"
   },
   {
     "id": "eidadha",
@@ -69,7 +79,8 @@
     "d": 10,
     "ar": "عيد الأضحى المبارك",
     "pack": "common",
-    "notifyBefore": true
+    "notifyBefore": true,
+    "en": "Eid al-Adha"
   },
   {
     "id": "ali_birth",
@@ -78,7 +89,9 @@
     "ar": "مولد الإمام علي",
     "pack": "shia_imami",
     "sourceStatus": "tradition_specific",
-    "note_ar": "المشهور في عدد من المصادر الإسلامية: 13 رجب."
+    "note_ar": "المشهور في عدد من المصادر الإسلامية: 13 رجب.",
+    "en": "Birth anniversary of Imam Ali",
+    "note_en": "A commonly cited date in a number of Islamic sources is 13 Rajab."
   },
   {
     "id": "prophet_birth",
@@ -87,9 +100,17 @@
     "sourceStatus": "multiple_reported_dates",
     "note_ar": "توجد روايتان مشهورتان: 12 و17 ربيع الأول.",
     "dates": [
-      {"m": 3, "d": 12},
-      {"m": 3, "d": 17}
-    ]
+      {
+        "m": 3,
+        "d": 12
+      },
+      {
+        "m": 3,
+        "d": 17
+      }
+    ],
+    "en": "Birth anniversary of Prophet Muhammad",
+    "note_en": "Two widely reported dates are 12 and 17 Rabi I."
   },
   {
     "id": "prophet_death",
@@ -98,9 +119,17 @@
     "sourceStatus": "multiple_reported_dates",
     "note_ar": "يعرض التطبيق الروايتين المتداولتين: 28 صفر و12 ربيع الأول.",
     "dates": [
-      {"m": 2, "d": 28},
-      {"m": 3, "d": 12}
-    ]
+      {
+        "m": 2,
+        "d": 28
+      },
+      {
+        "m": 3,
+        "d": 12
+      }
+    ],
+    "en": "Death anniversary of Prophet Muhammad",
+    "note_en": "The app shows two commonly reported dates: 28 Safar and 12 Rabi I."
   },
   {
     "id": "fatima_death",
@@ -117,7 +146,9 @@
         "d": 3
       }
     ],
-    "note_ar": "توجد روايتان مشهورتان: 13 جمادى الأولى و3 جمادى الآخرة."
+    "note_ar": "توجد روايتان مشهورتان: 13 جمادى الأولى و3 جمادى الآخرة.",
+    "en": "Death anniversary of Fatimah al-Zahra",
+    "note_en": "Two widely reported dates are 13 Jumada I and 3 Jumada II."
   },
   {
     "id": "umar_death",
@@ -126,14 +157,24 @@
     "sourceStatus": "multiple_reported_dates",
     "note_ar": "طُعن في 26 ذي الحجة، وتذكر مصادر أن وفاته كانت في 1 محرم.",
     "dates": [
-      {"m": 12, "d": 26},
-      {"m": 1, "d": 1}
-    ]
+      {
+        "m": 12,
+        "d": 26
+      },
+      {
+        "m": 1,
+        "d": 1
+      }
+    ],
+    "en": "Remembrance of the death of Umar ibn al-Khattab",
+    "note_en": "He was wounded on 26 Dhu al-Hijjah; some sources date his death to 1 Muharram."
   },
   {
     "id": "aisha_death",
     "ar": "وفاة السيدة عائشة",
     "pack": "historical",
-    "sourceStatus": "source_review_required"
+    "sourceStatus": "source_review_required",
+    "en": "Death anniversary of Aisha",
+    "note_en": "Source review required."
   }
 ]

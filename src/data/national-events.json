@@ -3,236 +3,278 @@
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 1,
       "day": 6,
-      "name_ar": "عيد الجيش العراقي"
+      "name_ar": "عيد الجيش العراقي",
+      "name_en": "Iraqi Army Day"
     },
     {
       "month": 1,
       "day": 9,
-      "name_ar": "عيد الشرطة العراقية"
+      "name_ar": "عيد الشرطة العراقية",
+      "name_en": "Iraqi Police Day"
     },
     {
       "month": 5,
       "day": 1,
-      "name_ar": "عيد العمال العالمي"
+      "name_ar": "عيد العمال العالمي",
+      "name_en": "International Workers’ Day"
     },
     {
       "month": 10,
       "day": 3,
-      "name_ar": "العيد الوطني العراقي"
+      "name_ar": "العيد الوطني العراقي",
+      "name_en": "Iraq National Day"
     },
     {
       "month": 12,
       "day": 10,
-      "name_ar": "يوم النصر"
+      "name_ar": "يوم النصر",
+      "name_en": "Victory Day"
     }
   ],
   "SA": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية — مناسبة عالمية"
+      "name_ar": "رأس السنة الميلادية — مناسبة عالمية",
+      "name_en": "New Year’s Day — international observance"
     },
     {
       "month": 2,
       "day": 22,
-      "name_ar": "يوم التأسيس"
+      "name_ar": "يوم التأسيس",
+      "name_en": "Founding Day"
     },
     {
       "month": 9,
       "day": 23,
-      "name_ar": "اليوم الوطني السعودي"
+      "name_ar": "اليوم الوطني السعودي",
+      "name_en": "Saudi National Day"
     }
   ],
   "AE": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 11,
       "day": 3,
-      "name_ar": "يوم العلم الإماراتي"
+      "name_ar": "يوم العلم الإماراتي",
+      "name_en": "UAE Flag Day"
     },
     {
       "month": 12,
       "day": 2,
-      "name_ar": "عيد الاتحاد"
+      "name_ar": "عيد الاتحاد",
+      "name_en": "UAE Union Day"
     }
   ],
   "KW": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 2,
       "day": 25,
-      "name_ar": "العيد الوطني الكويتي"
+      "name_ar": "العيد الوطني الكويتي",
+      "name_en": "Kuwait National Day"
     },
     {
       "month": 2,
       "day": 26,
-      "name_ar": "يوم التحرير"
+      "name_ar": "يوم التحرير",
+      "name_en": "Liberation Day"
     }
   ],
   "QA": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 12,
       "day": 18,
-      "name_ar": "اليوم الوطني القطري"
+      "name_ar": "اليوم الوطني القطري",
+      "name_en": "Qatar National Day"
     }
   ],
   "BH": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 12,
       "day": 16,
-      "name_ar": "العيد الوطني البحريني"
+      "name_ar": "العيد الوطني البحريني",
+      "name_en": "Bahrain National Day"
     }
   ],
   "OM": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 11,
       "day": 18,
-      "name_ar": "العيد الوطني العُماني"
+      "name_ar": "العيد الوطني العُماني",
+      "name_en": "Oman National Day"
     }
   ],
   "JO": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 6,
       "day": 10,
-      "name_ar": "يوم الجيش والثورة العربية الكبرى"
+      "name_ar": "يوم الجيش والثورة العربية الكبرى",
+      "name_en": "Army Day and Great Arab Revolt anniversary"
     },
     {
       "month": 5,
       "day": 25,
-      "name_ar": "عيد الاستقلال الأردني"
+      "name_ar": "عيد الاستقلال الأردني",
+      "name_en": "Jordan Independence Day"
     }
   ],
   "EG": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 1,
       "day": 25,
-      "name_ar": "عيد الشرطة المصرية وذكرى ثورة 25 يناير"
+      "name_ar": "عيد الشرطة المصرية وذكرى ثورة 25 يناير",
+      "name_en": "Egyptian Police Day and January 25 Revolution anniversary"
     },
     {
       "month": 4,
       "day": 25,
-      "name_ar": "عيد تحرير سيناء"
+      "name_ar": "عيد تحرير سيناء",
+      "name_en": "Sinai Liberation Day"
     },
     {
       "month": 5,
       "day": 1,
-      "name_ar": "عيد العمال"
+      "name_ar": "عيد العمال",
+      "name_en": "Workers’ Day"
     },
     {
       "month": 6,
       "day": 30,
-      "name_ar": "ذكرى ثورة 30 يونيو"
+      "name_ar": "ذكرى ثورة 30 يونيو",
+      "name_en": "June 30 Revolution anniversary"
     },
     {
       "month": 7,
       "day": 23,
-      "name_ar": "عيد الثورة المصرية"
+      "name_ar": "عيد الثورة المصرية",
+      "name_en": "Egypt Revolution Day"
     },
     {
       "month": 10,
       "day": 6,
-      "name_ar": "عيد القوات المسلحة"
+      "name_ar": "عيد القوات المسلحة",
+      "name_en": "Armed Forces Day"
     }
   ],
   "US": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 11,
       "day": 11,
-      "name_ar": "يوم المحاربين القدامى"
+      "name_ar": "يوم المحاربين القدامى",
+      "name_en": "Veterans Day"
     },
     {
       "month": 7,
       "day": 4,
-      "name_ar": "عيد الاستقلال الأمريكي"
+      "name_ar": "عيد الاستقلال الأمريكي",
+      "name_en": "US Independence Day"
     }
   ],
   "GB": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 12,
       "day": 25,
-      "name_ar": "عيد الميلاد"
+      "name_ar": "عيد الميلاد",
+      "name_en": "Christmas Day"
     },
     {
       "month": 12,
       "day": 26,
-      "name_ar": "يوم الصناديق"
+      "name_ar": "يوم الصناديق",
+      "name_en": "Boxing Day"
     }
   ],
   "FR": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 5,
       "day": 8,
-      "name_ar": "يوم النصر في أوروبا"
+      "name_ar": "يوم النصر في أوروبا",
+      "name_en": "Victory in Europe Day"
     },
     {
       "month": 7,
       "day": 14,
-      "name_ar": "اليوم الوطني الفرنسي"
+      "name_ar": "اليوم الوطني الفرنسي",
+      "name_en": "France National Day"
     }
   ],
   "ES": [
     {
       "month": 1,
       "day": 1,
-      "name_ar": "رأس السنة الميلادية"
+      "name_ar": "رأس السنة الميلادية",
+      "name_en": "New Year’s Day"
     },
     {
       "month": 10,
       "day": 12,
-      "name_ar": "اليوم الوطني الإسباني"
+      "name_ar": "اليوم الوطني الإسباني",
+      "name_en": "Spain National Day"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "name": "horizon-calendar-v2",
-  "version": "0.5.5",
+  "version": "0.5.7",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -8,7 +8,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "check:translations": "node scripts/check-translations.js"
+    "check:translations": "node scripts/check-translations.js",
+    "check:release": "node scripts/release-qa.js"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

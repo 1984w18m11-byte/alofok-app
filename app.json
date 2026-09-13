@@ -2,7 +2,7 @@
   "expo": {
     "name": "الأفق",
     "slug": "horizon-calendar-v2",
-    "version": "0.5.6",
+    "version": "0.5.7",
     "orientation": "portrait",
     "scheme": "horizoncalendar",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"
       ],
-      "versionCode": 27
+      "versionCode": 28
     },
     "plugins": [
       "expo-location",
@@ -31,10 +31,10 @@
         "expo-notifications",
         {
           "sounds": [
-            "./assets/adhan/beautiful_adhan.ogg",
-            "./assets/adhan/adhan_morocco_hassan_ii.ogg",
-            "./assets/adhan/adhan_kazakhstan_shalqar.ogg",
-            "./assets/adhan/adhan_aaqib_azeez.ogg"
+            "./assets/adhan/beautiful_adhan.wav",
+            "./assets/adhan/adhan_morocco_hassan_ii.wav",
+            "./assets/adhan/adhan_kazakhstan_shalqar.wav",
+            "./assets/adhan/adhan_aaqib_azeez.wav"
           ]
         }
       ],

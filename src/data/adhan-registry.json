@@ -77,7 +77,8 @@
       "trial",
       "paid"
     ],
-    "source_url": "https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg"
+    "source_url": "https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg",
+    "modification_note": "Original OGG is used for in-app preview; a PCM WAV derivative is generated for Android notification playback."
   },
   {
     "id": "commons-syria-sabah-fakhry",
@@ -108,7 +109,8 @@
     "available_in": [
       "trial",
       "paid"
-    ]
+    ],
+    "modification_note": "Source recording converted to OGG for in-app preview and PCM WAV for Android notification playback; no editorial audio changes intended."
   },
   {
     "id": "commons-kazakhstan-shalqar",
@@ -125,7 +127,8 @@
     "available_in": [
       "trial",
       "paid"
-    ]
+    ],
+    "modification_note": "Source recording converted to OGG for in-app preview and PCM WAV for Android notification playback; no editorial audio changes intended."
   },
   {
     "id": "commons-aaqib-azeez",
@@ -142,7 +145,8 @@
     "available_in": [
       "trial",
       "paid"
-    ]
+    ],
+    "modification_note": "Source recording converted to OGG for in-app preview and PCM WAV for Android notification playback; no editorial audio changes intended."
   },
   {
     "id": "commons-istanbul-adhan",
