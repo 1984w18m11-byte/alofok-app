@@ -1,0 +1,42 @@
+name: AlofoK source audit repair — NO BUILD
+
+on:
+  push:
+    branches:
+      - audit-no-build-2026-09-13
+    paths:
+      - .github/audit-source-repair.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  repair-source-only:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout audit branch
+        uses: actions/checkout@v4
+        with:
+          ref: audit-no-build-2026-09-13
+          fetch-depth: 0
+
+      - name: Apply source-only audit repairs
+        run: python3 scripts/apply_audit_no_build_20260913.py
+
+      - name: Run static release QA only
+        run: node scripts/release-qa.js
+
+      - name: Run translation-key QA only
+        run: node scripts/check-translations.js
+
+      - name: Commit repaired source to audit branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.js src/services/license.js scripts/release-qa.js
+          git diff --cached --quiet && exit 0
+          git commit -m "audit: repair source blockers without building"
+          git push origin audit-no-build-2026-09-13
+
+      - name: Confirm no build was performed
+        run: echo "Source audit completed. No Expo prebuild, Gradle, EAS, APK, or AAB build command was run."
