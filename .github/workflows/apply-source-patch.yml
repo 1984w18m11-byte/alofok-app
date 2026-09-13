@@ -31,26 +31,27 @@ jobs:
           p=Path('scripts/apply_release_058.py')
           s=p.read_text(encoding='utf-8')
           old="""    font_title=ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoKufiArabic-ExtraBold.ttf',118)
-              font_sub=ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoKufiArabic-Medium.ttf',51)"""
-          # Match the actual indentation from the source script.
-          old=old.replace('              font_sub','    font_sub')
+    font_sub=ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoKufiArabic-Medium.ttf',51)"""
           new="""    font_file = next(iter(Path('/usr/share/fonts').rglob('NotoKufiArabic-Regular.ttf')), None)
-              if font_file is None:
-                  font_file = next(iter(Path('/usr/share/fonts').rglob('NotoSansArabic-Regular.ttf')), None)
-              if font_file is None:
-                  font_file = next(iter(Path('/usr/share/fonts').rglob('DejaVuSans.ttf')), None)
-              if font_file is None:
-                  raise SystemExit('No Arabic-capable font found for launcher icon generation')
-              font_title=ImageFont.truetype(str(font_file),118)
-              font_sub=ImageFont.truetype(str(font_file),51)"""
-          new=new.replace('              if','    if').replace('                  font_file','        font_file').replace('                  raise','        raise').replace('              font_title','    font_title').replace('              font_sub','    font_sub')
-          if old not in s:
-              raise SystemExit('Expected hard-coded icon font lines were not found')
-          p.write_text(s.replace(old,new,1),encoding='utf-8')
+    if font_file is None:
+        font_file = next(iter(Path('/usr/share/fonts').rglob('NotoSansArabic-Regular.ttf')), None)
+    if font_file is None:
+        font_file = next(iter(Path('/usr/share/fonts').rglob('DejaVuSans.ttf')), None)
+    if font_file is None:
+        raise SystemExit('No Arabic-capable font found for launcher icon generation')
+    font_title=ImageFont.truetype(str(font_file),118)
+    font_sub=ImageFont.truetype(str(font_file),51)"""
+          if old in s:
+              p.write_text(s.replace(old,new,1),encoding='utf-8')
+          elif "font_file = next(iter(Path('/usr/share/fonts').rglob('NotoKufiArabic-Regular.ttf'))" not in s:
+              raise SystemExit('Expected icon-font code was not found')
           PY
 
       - name: Apply AlofoK 0.5.8 update
         run: python3 scripts/apply_release_058.py
+
+      - name: Keep externally managed build workflow unchanged
+        run: git restore --source=HEAD -- .github/workflows/build-apks.yml
 
       - name: Run source QA
         run: node scripts/release-qa.js
