@@ -1,0 +1,47 @@
+name: AlofoK theme dedup diagnostics — NO BUILD
+
+on:
+  push:
+    branches:
+      - audit-no-build-2026-09-13
+    paths:
+      - .github/audit-theme-dedup-diagnostics.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose-theme-dedup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit-no-build-2026-09-13
+          fetch-depth: 0
+      - name: Harden migration tool
+        run: python3 scripts/harden_theme_tools_20260913.py
+      - name: Install Pillow
+        run: python3 -m pip install --quiet pillow
+      - name: Capture dedup result
+        shell: bash
+        run: |
+          set +e
+          python3 scripts/deduplicate_theme_assets_20260913.py > AUDIT_THEME_DEDUP_2026-09-13.txt 2>&1
+          code=$?
+          echo "EXIT_CODE=$code" >> AUDIT_THEME_DEDUP_2026-09-13.txt
+          echo "$code" > /tmp/dedup-code
+          exit 0
+      - name: Commit diagnostics and hardened migration tool
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add scripts/migrate_standalone_themes.py AUDIT_THEME_DEDUP_2026-09-13.txt
+          if [ "$(cat /tmp/dedup-code)" = "0" ]; then
+            git add assets/themes
+          fi
+          git diff --cached --quiet && exit 0
+          git commit -m "audit: capture theme dedup diagnostics"
+          git push origin audit-no-build-2026-09-13
+      - name: Confirm no build
+        run: echo "Theme diagnostics only. No app build ran."
