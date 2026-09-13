@@ -1,0 +1,36 @@
+name: Publish AlofoK 0.5.7 APKs
+
+on:
+  push:
+    paths:
+      - .github/publish-057.trigger
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download successful APK artifacts from final build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p artifacts/trial artifacts/paid
+          gh run download 34727521797 --repo 1984w18m11-byte/alofok-app --name alofok-trial-0.5.7 --dir artifacts/trial
+          gh run download 34727521797 --repo 1984w18m11-byte/alofok-app --name alofok-paid-0.5.7 --dir artifacts/paid
+          cp artifacts/trial/app-release.apk alofok-trial-0.5.7.apk
+          cp artifacts/paid/app-release.apk alofok-plus-0.5.7.apk
+          test -s alofok-trial-0.5.7.apk
+          test -s alofok-plus-0.5.7.apk
+
+      - name: Publish release and both APKs
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          REPO=1984w18m11-byte/alofok-app
+          gh release view v0.5.7 --repo "$REPO" >/dev/null 2>&1 || gh release create v0.5.7 --repo "$REPO" --target main --title "الأفق 0.5.7" --notes "إصدار فحص نهائي: فصل التجريبية عن Plus، تدوير الثيمات حسب الوقت والأسبوع والشهر والفصل، إصلاح بقايا العربية في الواجهة الإنجليزية، إضافة دراسة أصحاب الكهف، وتثبيت أصوات أذان مرخصة بعد فحص ملفات الصوت كاملة قبل البناء."
+          gh release upload v0.5.7 alofok-trial-0.5.7.apk alofok-plus-0.5.7.apk --repo "$REPO" --clobber
