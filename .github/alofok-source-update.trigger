@@ -1,1 +1,1 @@
-Apply AlofoK final QA pass 5: preserve all prior fixes and clean the update-dialog source newline before any build. Trigger 2026-09-13.
+Apply consolidated AlofoK 0.5.7 release repair after full code audit: theme rotation, bilingual UI fixes, licensed Adhan audio, package separation, version alignment, and release QA. Trigger 2026-09-13.
