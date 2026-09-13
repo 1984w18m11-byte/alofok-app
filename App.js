@@ -28,7 +28,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
-const APP_VERSION='0.5.7';
+const APP_VERSION='0.5.8';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
 const TRIAL_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
 const PLUS_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json';
@@ -42,15 +42,27 @@ const IS_PAID_BUILD=APP_VARIANT==='paid';
 const SUPPORT_ACCOUNT=process.env.EXPO_PUBLIC_SUPPORT_ACCOUNT||'';
 const ADHAN_ASSETS={
  'commons-beautiful-adhan':require('./assets/adhan/beautiful_adhan.ogg'),
- 'commons-morocco-hassan-ii':require('./assets/adhan/adhan_morocco_hassan_ii.ogg'),
- 'commons-kazakhstan-shalqar':require('./assets/adhan/adhan_kazakhstan_shalqar.ogg'),
- 'commons-aaqib-azeez':require('./assets/adhan/adhan_aaqib_azeez.ogg')
+ 'commons-andrewler-azan':require('./assets/adhan/adhan_andrewler.ogg'),
+ 'commons-aishatu98-adhan':require('./assets/adhan/adhan_aishatu98.ogg'),
+ 'commons-nigeria-isaac':require('./assets/adhan/adhan_nigeria_isaac.ogg'),
+ 'commons-medina-ejaz215':require('./assets/adhan/adhan_medina_ejaz215.ogg'),
+ 'commons-mecca-2013':require('./assets/adhan/adhan_mecca_2013.ogg'),
+ 'commons-mecca-maghrib-2012':require('./assets/adhan/adhan_mecca_maghrib_2012.ogg'),
+ 'commons-konya-2012':require('./assets/adhan/adhan_konya_2012.ogg'),
+ 'commons-tripoli-2019':require('./assets/adhan/adhan_tripoli_2019.ogg'),
+ 'commons-isfahan-shah':require('./assets/adhan/adhan_isfahan_shah.ogg')
 };
 const ADHAN_NOTIFICATION_SOUNDS={
  'commons-beautiful-adhan':'beautiful_adhan.wav',
- 'commons-morocco-hassan-ii':'adhan_morocco_hassan_ii.wav',
- 'commons-kazakhstan-shalqar':'adhan_kazakhstan_shalqar.wav',
- 'commons-aaqib-azeez':'adhan_aaqib_azeez.wav'
+ 'commons-andrewler-azan':'adhan_andrewler.wav',
+ 'commons-aishatu98-adhan':'adhan_aishatu98.wav',
+ 'commons-nigeria-isaac':'adhan_nigeria_isaac.wav',
+ 'commons-medina-ejaz215':'adhan_medina_ejaz215.wav',
+ 'commons-mecca-2013':'adhan_mecca_2013.wav',
+ 'commons-mecca-maghrib-2012':'adhan_mecca_maghrib_2012.wav',
+ 'commons-konya-2012':'adhan_konya_2012.wav',
+ 'commons-tripoli-2019':'adhan_tripoli_2019.wav',
+ 'commons-isfahan-shah':'adhan_isfahan_shah.wav'
 };
 const PRAYERS=[['الفجر','fajr','♜'],['الشروق','sunrise','☼'],['الظهر','dhuhr','☀'],['العصر','asr','☀'],['المغرب','maghrib','◒'],['العشاء','isha','☾']];
 const PRAYER_LABELS_EN={fajr:'Fajr',sunrise:'Sunrise',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};

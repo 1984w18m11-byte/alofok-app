@@ -36,10 +36,11 @@ if(themeMatch){
   assert(new Set(ids).size===35,'theme ids must be unique');
 }
 const configuredSounds=(appJson.expo.plugins.find(x=>Array.isArray(x)&&x[0]==='expo-notifications')||[])[1]?.sounds||[];
-assert(configuredSounds.length===4,'four notification Adhan sounds must be configured');
+assert(configuredSounds.length===10,'ten notification Adhan sounds must be configured');
 assert(configuredSounds.every(x=>x.endsWith('.wav')),'notification sounds should use WAV');
 const playable=registry.filter(x=>x.status==='licensed'&&Array.isArray(x.available_in)&&x.available_in.length);
-assert(playable.length>=4,'expected at least four licensed playable Adhan entries');
+assert(playable.length===10,'expected exactly ten licensed playable Adhan entries');
+assert(!registry.some(x=>['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez'].includes(x.id)),'rejected Adhan ids must stay removed');
 for(const x of playable){
   assert(Boolean(x.license),`${x.id}: license missing`);
   assert(Boolean(x.source),`${x.id}: source missing`);

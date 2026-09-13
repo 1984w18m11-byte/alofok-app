@@ -1,38 +1,64 @@
-# سجل تراخيص أصوات الأذان — تطبيق الأفق
+# AlofoK 0.5.8 — Adhan licensing inventory
 
-**آخر مراجعة:** 6 سبتمبر 2026
+Only the ten entries below are exposed in the app. The previous Morocco/Kazakhstan/Aaqib selections were removed at the owner’s request.
 
-لا يُضمّن أي تسجيل قبل التحقق من صفحة الملف، واسم صاحب العمل، ونوع الرخصة، وشروط النسبة والتعديل.
+## 1. أذان جميل — Adam-synagda
+- Performer/source credit: Adam-synagda
+- License: CC0 1.0 Universal
+- Source: https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg
+- Packaged asset: assets/adhan/beautiful_adhan.ogg
 
-## التسجيلات المضمّنة
+## 2. أذان — Andrewler
+- Performer/source credit: Andrewler
+- License: CC BY-SA 4.0
+- Source: https://commons.wikimedia.org/wiki/File:Azan.ogg
+- Packaged asset: assets/adhan/adhan_andrewler.ogg
 
-1. **Beautiful adhan.ogg — Adam-synagda**
-   - المصدر: https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg
-   - الرخصة: CC0 1.0 Universal.
-   - التعديل: إعادة تسمية الملف وتهيئته لحزمة التطبيق.
+## 3. أذان — Aishatu98
+- Performer/source credit: Aishatu98
+- License: CC0 1.0 Universal
+- Source: https://commons.wikimedia.org/wiki/File:Adhan.ogg
+- Packaged asset: assets/adhan/adhan_aishatu98.ogg
 
-2. **Llamada a oración Mezquita Hassan II.wav — Fraguando**
-   - المصدر: https://commons.wikimedia.org/wiki/File:Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav
-   - الرخصة المسجلة: CC BY-SA 4.0.
-   - التعديل: تحويل إلى Ogg Vorbis وتهيئة الاسم والحجم.
+## 4. أذان نيجيريا — Isaacayodele32
+- Performer/source credit: Isaacayodele32
+- License: CC BY-SA 4.0
+- Source: https://commons.wikimedia.org/wiki/File:Call_to_prayer.ogg
+- Packaged asset: assets/adhan/adhan_nigeria_isaac.ogg
 
-3. **Adhan in Shalqar mosque.webm — Esetok**
-   - المصدر: https://commons.wikimedia.org/wiki/File:Adhan_in_Shalqar_mosque.webm
-   - الرخصة: CC BY-SA 4.0.
-   - التعديل: استخراج الصوت وتحويله إلى Ogg Vorbis.
+## 5. أذان المدينة — المسجد النبوي
+- Performer/source credit: ejaz215
+- License: CC BY 3.0
+- Source: https://commons.wikimedia.org/wiki/File:33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg
+- Packaged asset: assets/adhan/adhan_medina_ejaz215.ogg
 
-4. **The Adhan - Muslim Call to Prayer - Aaqib Azeez.mp3 — Aaqib Azeez**
-   - المصدر: https://commons.wikimedia.org/wiki/File:The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3
-   - الرخصة: CC BY-SA 4.0.
-   - التعديل: تحويل إلى Ogg Vorbis وتهيئته للتطبيق.
+## 6. أذان مكة — المسجد الحرام 2013
+- Performer/source credit: Seyfula Islam
+- License: CC BY 3.0
+- Source: https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm
+- Packaged asset: assets/adhan/adhan_mecca_2013.ogg
 
-## صوت أزيل
+## 7. أذان المغرب — المسجد الحرام 2012
+- Performer/source credit: 3omar Faruq
+- License: CC BY 3.0
+- Source: https://commons.wikimedia.org/wiki/File:Maghrib_Adhan_at_the_Masjid_al_Haram,_Mecca_-_25_Feb,_2012.webm
+- Packaged asset: assets/adhan/adhan_mecca_maghrib_2012.ogg
 
-- **Call to prayer by Sabah Fakhry.mp3:** أزيل من واجهة التطبيق ومن حزمة Android لأن إثبات حقوق التسجيل والأداء لم يكن واضحًا بما يكفي للنشر التجاري الآمن.
+## 8. أذان قونية — تركيا
+- Performer/source credit: Frans van der Vaart
+- License: CC BY 3.0
+- Source: https://commons.wikimedia.org/wiki/File:Hminsec150_Konya.webm
+- Packaged asset: assets/adhan/adhan_konya_2012.ogg
 
-## شروط إعادة الاستخدام
+## 9. أذان طرابلس — ساحة النور
+- Performer/source credit: باسم
+- License: CC BY-SA 4.0
+- Source: https://commons.wikimedia.org/wiki/File:Adhan_During_the_Lebanese_Protests_in_Tripoli_2019.webm
+- Packaged asset: assets/adhan/adhan_tripoli_2019.ogg
 
-الأعمال المرخصة بـ CC BY-SA 4.0 تبقى منسوبة إلى أصحابها، وتخضع النسخ الصوتية المعدّلة للرخصة نفسها:
-https://creativecommons.org/licenses/by-sa/4.0/
+## 10. أذان أصفهان — مسجد الشاه
+- Performer/source credit: 10EldarionElessar
+- License: CC BY 3.0
+- Source: https://commons.wikimedia.org/wiki/File:Tour_guide_recite_Adhan_in_the_Shah_mosque_in_Isfahan,_Iran.webm
+- Packaged asset: assets/adhan/adhan_isfahan_shah.ogg
 
-لا تعني النسبة أن أصحاب التسجيلات أو Wikimedia Commons يؤيدون تطبيق الأفق. ولا تمنح تراخيص الصوت حق استعمال أسماء أو شعارات جهات أخرى لأغراض دعائية.

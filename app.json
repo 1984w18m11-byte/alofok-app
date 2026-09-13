@@ -2,20 +2,20 @@
   "expo": {
     "name": "الأفق",
     "slug": "horizon-calendar-v2",
-    "version": "0.5.7",
+    "version": "0.5.8",
     "orientation": "portrait",
     "scheme": "horizoncalendar",
     "userInterfaceStyle": "dark",
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.horizon.calendar",
+      "bundleIdentifier": "com.alofok.trial",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "نستخدم موقعك أثناء الاستخدام لحساب مواقيت الصلاة وعرض اسم المنطقة القريبة.",
         "NSUserNotificationUsageDescription": "نستخدم الإشعارات لتذكيرك بالصلاة والمناسبات."
       }
     },
     "android": {
-      "package": "com.horizon.calendar",
+      "package": "com.alofok.trial",
       "permissions": [
         "ACCESS_COARSE_LOCATION",
         "ACCESS_FINE_LOCATION",
@@ -23,7 +23,7 @@
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"
       ],
-      "versionCode": 28
+      "versionCode": 29
     },
     "plugins": [
       "expo-location",
@@ -32,9 +32,15 @@
         {
           "sounds": [
             "./assets/adhan/beautiful_adhan.wav",
-            "./assets/adhan/adhan_morocco_hassan_ii.wav",
-            "./assets/adhan/adhan_kazakhstan_shalqar.wav",
-            "./assets/adhan/adhan_aaqib_azeez.wav"
+            "./assets/adhan/adhan_andrewler.wav",
+            "./assets/adhan/adhan_aishatu98.wav",
+            "./assets/adhan/adhan_nigeria_isaac.wav",
+            "./assets/adhan/adhan_medina_ejaz215.wav",
+            "./assets/adhan/adhan_mecca_2013.wav",
+            "./assets/adhan/adhan_mecca_maghrib_2012.wav",
+            "./assets/adhan/adhan_konya_2012.wav",
+            "./assets/adhan/adhan_tripoli_2019.wav",
+            "./assets/adhan/adhan_isfahan_shah.wav"
           ]
         }
       ],

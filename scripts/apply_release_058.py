@@ -56,8 +56,8 @@ def make_icon(kind, foreground=False):
         for x in (292,700):
             d.rectangle((x,282,x+44,520),fill=(231,221,192,255)); d.polygon([(x-10,282),(x+22,226),(x+54,282)],fill=(228,211,161,255)); d.rectangle((x-8,352,x+52,369),fill=GOLD2); d.ellipse((x+12,210,x+32,230),fill=GOLD)
         for x in (382,470,558): d.rounded_rectangle((x,456,x+52,524),radius=24,fill=(13,42,52,255))
-    font_title=ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoKufiArabic-ExtraBold.ttf',118)
-    font_sub=ImageFont.truetype('/usr/share/fonts/truetype/noto/NotoKufiArabic-Medium.ttf',51)
+    font_file=next(iter(Path('/usr/share/fonts').rglob('NotoKufiArabic-Regular.ttf')), None) or next(iter(Path('/usr/share/fonts').rglob('NotoSansArabic-Regular.ttf')), None) or next(iter(Path('/usr/share/fonts').rglob('DejaVuSans.ttf')), None); font_title=ImageFont.truetype(str(font_file),118)
+    font_sub=ImageFont.truetype(str(font_file),51)
     d.text((S//2,663),'الأفق',font=font_title,fill=GOLD,anchor='mm',direction='rtl',language='ar')
     d.text((S//2,790),'تقويم عربي ثابت',font=font_sub,fill=WHITE,anchor='mm',direction='rtl',language='ar')
     if not foreground: d.line((260,724,764,724),fill=(244,187,82,85),width=3)
