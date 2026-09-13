@@ -1,0 +1,51 @@
+name: AlofoK audit round 3 + Expo verify — NO BUILD
+
+on:
+  push:
+    branches:
+      - audit-no-build-2026-09-13
+    paths:
+      - .github/audit-round3.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  source-and-config-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit-no-build-2026-09-13
+          fetch-depth: 0
+      - name: Apply layout identity repairs
+        run: python3 scripts/apply_audit_round3_no_build_20260913.py
+      - name: Install JS dependencies only
+        run: npm ci --ignore-scripts
+      - name: Static project checks
+        run: |
+          node scripts/release-qa.js
+          node scripts/check-translations.js
+      - name: Expo Doctor (no build)
+        run: npx expo-doctor@latest
+      - name: Resolve Trial Expo config (no prebuild)
+        env:
+          APP_VARIANT: trial
+          EXPO_PUBLIC_APP_VARIANT: trial
+        run: npx expo config --type public >/tmp/expo-trial-config.txt
+      - name: Resolve Plus Expo config (no prebuild)
+        env:
+          APP_VARIANT: paid
+          EXPO_PUBLIC_APP_VARIANT: paid
+          EXPO_PUBLIC_LICENSE_DEV_BYPASS: '1'
+        run: npx expo config --type public >/tmp/expo-plus-config.txt
+      - name: Commit source-only repairs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add App.js scripts/release-qa.js
+          git diff --cached --quiet && exit 0
+          git commit -m "audit: align Trial and Plus main layout"
+          git push origin audit-no-build-2026-09-13
+      - name: Confirm prohibited build commands were not used
+        run: echo "Verified dependencies and Expo config only. No expo prebuild, Gradle, EAS build, APK, AAB, or release publication ran."
