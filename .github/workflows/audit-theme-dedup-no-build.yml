@@ -1,0 +1,38 @@
+name: AlofoK theme dedup audit — NO BUILD
+
+on:
+  push:
+    branches:
+      - audit-no-build-2026-09-13
+    paths:
+      - .github/audit-theme-dedup.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  deduplicate-theme-assets:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: audit-no-build-2026-09-13
+          fetch-depth: 0
+      - name: Harden theme migration maintenance tool
+        run: python3 scripts/harden_theme_tools_20260913.py
+      - name: Install image library only
+        run: python3 -m pip install --quiet pillow
+      - name: Replace duplicate licensed theme images
+        run: python3 scripts/deduplicate_theme_assets_20260913.py
+      - name: Static source QA only
+        run: node scripts/release-qa.js
+      - name: Commit theme-source repairs
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add assets/themes scripts/migrate_standalone_themes.py
+          git diff --cached --quiet && exit 0
+          git commit -m "themes: remove duplicate images and harden asset migration"
+          git push origin audit-no-build-2026-09-13
+      - name: Confirm no application build
+        run: echo "Theme assets only. No Expo prebuild, Gradle, EAS, APK or AAB build ran."
