@@ -57,6 +57,9 @@ for(const x of playable){
 assert(events.every(x=>Boolean(x.en)),'all religious events need English names');
 for(const rows of Object.values(national)) assert(rows.every(x=>Boolean(x.name_en)),'all national events need English names');
 assert(app.includes("clockLanguage:useArabicUi?'ar':'en'"),'prayer time AM/PM language switch missing');
+assert(app.includes("const horizonDays=Platform.OS==='ios'?7:14;"),'prayer and fasting notifications must be pre-scheduled beyond the current day');
+const licenseSource=read('src/services/license.js');
+assert(licenseSource.includes("return {valid:false,reason:'license_service_not_configured'}"),'Plus must fail closed when the license service is absent');
 assert(app.includes('300 solar years × 365 days = 109,500 days.'),'Cave verse calculation missing from English research section');
 assert(app.includes("Support AlofoK development"),'bilingual support menu missing');
 assert(!app.includes('<View style={s.supportQuickWrap}>'),'large home support block must remain removed');

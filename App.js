@@ -617,9 +617,6 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
   async function setupPrayerNotifications(){
    try{
     const soundFile=ADHAN_NOTIFICATION_SOUNDS[selectedAdhan?.id]||'beautiful_adhan.wav';
-    // Android notification-channel sounds are immutable after creation, so each
-    // bundled adhan gets its own stable channel. The OS can then play it while
-    // the app is backgrounded, closed, or the screen is locked.
     const channelId=`prayers-adhan-${String(selectedAdhan?.id||'default').replace(/[^a-z0-9-]/gi,'-')}`;
     if(Platform.OS==='android'){
      await Notifications.setNotificationChannelAsync(channelId,{
@@ -628,123 +625,63 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
       importance:Notifications.AndroidImportance.MAX,
       vibrationPattern:[0,250,200,250],
       sound:soundFile,
-      audioAttributes:{
-       contentType:Notifications.AndroidAudioContentType.SONIFICATION,
-       usage:Notifications.AndroidAudioUsage.NOTIFICATION
-      }
+      audioAttributes:{contentType:Notifications.AndroidAudioContentType.SONIFICATION,usage:Notifications.AndroidAudioUsage.NOTIFICATION}
      });
     }
     const scheduled=await Notifications.getAllScheduledNotificationsAsync();
-    for(const item of scheduled){
-     if(item.content?.data?.kind==='alofq-prayer')await Notifications.cancelScheduledNotificationAsync(item.identifier);
-    }
+    for(const item of scheduled){if(item.content?.data?.kind==='alofq-prayer')await Notifications.cancelScheduledNotificationAsync(item.identifier)}
     if(!adhanEnabled||!selectedAdhan||!active)return;
     const permission=await Notifications.getPermissionsAsync();
     if(permission.status!=='granted')return;
     const prayerNames=useArabicUi?{fajr:'الفجر',dhuhr:'الظهر',asr:'العصر',maghrib:'المغرب',isha:'العشاء'}:{fajr:'Fajr',dhuhr:'Dhuhr',asr:'Asr',maghrib:'Maghrib',isha:'Isha'};
-    for(const [key,title] of Object.entries(prayerNames)){
-     const date=utcDateFromMinutes(prayerCalcDate,prayerData.rawMinutesUtc[key]);
-     if(!date||date.getTime()<=Date.now())continue;
-     await Notifications.scheduleNotificationAsync({
-      content:{
-       title:useArabicUi?`حان وقت صلاة ${title}`:`It is time for ${title}`,
-       body:useArabicUi?`يُرفع الآن الأذان بصوت ${selectedAdhan.display_ar}.`:`Adhan is now playing with ${selectedAdhan.performer||'the selected sound'}.`,
-       sound:soundFile,
-       priority:Notifications.AndroidNotificationPriority.MAX,
-       data:{kind:'alofq-prayer',prayer:key,adhanId:selectedAdhan.id}
-      },
-      trigger:{
-       type:Notifications.SchedulableTriggerInputTypes.DATE,
-       date,
-       channelId:Platform.OS==='android'?channelId:undefined
-      }
-     });
+    // Keep iOS comfortably below its pending-local-notification limit; Android can hold a longer rolling window.
+    const horizonDays=Platform.OS==='ios'?7:14;
+    const firstCivilDate=civilDateForTimeZone(now,city?.tz);
+    for(let offset=0;offset<horizonDays&&active;offset++){
+     const calcDate=new Date(firstCivilDate);calcDate.setUTCDate(calcDate.getUTCDate()+offset);
+     const offsetMinutes=timeZoneOffsetMinutes(calcDate,city?.tz);
+     const dayPrayerData=calculatePrayerTimes({date:calcDate,lat:coords.lat,lon:coords.lon,tzOffsetMin:offsetMinutes,method:'MWL',asrFactor:1,clockLanguage:useArabicUi?'ar':'en'});
+     for(const [key,title] of Object.entries(prayerNames)){
+      const date=utcDateFromMinutes(calcDate,dayPrayerData.rawMinutesUtc[key]);
+      if(!date||date.getTime()<=Date.now())continue;
+      await Notifications.scheduleNotificationAsync({
+       content:{title:useArabicUi?`حان وقت صلاة ${title}`:`It is time for ${title}`,body:useArabicUi?`يُرفع الآن الأذان بصوت ${selectedAdhan.display_ar}.`:`Adhan is now playing with ${selectedAdhan.performer||'the selected sound'}.`,sound:soundFile,priority:Notifications.AndroidNotificationPriority.MAX,data:{kind:'alofq-prayer',prayer:key,adhanId:selectedAdhan.id,dayOffset:offset}},
+       trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date,channelId:Platform.OS==='android'?channelId:undefined}
+      });
+     }
     }
    }catch(e){console.log('Prayer notifications error:',e)}
   }
   setupPrayerNotifications();
   return()=>{active=false};
- },[adhanEnabled,dayKey,prayerData,prayerCalcDate,selectedAdhan?.id]);
+ },[adhanEnabled,dayKey,coords.lat,coords.lon,city?.tz,selectedAdhan?.id,useArabicUi]);
 
  useEffect(()=>{
    let active=true;
-
    async function setupFastingNotifications(){
-     try{
-       if(Platform.OS==='android'){
-         await Notifications.setNotificationChannelAsync('fasting',{
-           name:ui('تنبيهات الإمساك والإفطار','Imsak and Iftar alerts'),
-           importance:Notifications.AndroidImportance.HIGH,
-           vibrationPattern:[0,300,250,300]
-         });
-       }
-
-       const scheduled=await Notifications.getAllScheduledNotificationsAsync();
-
-       for(const n of scheduled){
-         if(
-           n.content?.data?.kind==='alofq-imsak'||
-           n.content?.data?.kind==='alofq-iftar'
-         ){
-           await Notifications.cancelScheduledNotificationAsync(n.identifier);
-         }
-       }
-
-       const current=await Notifications.getPermissionsAsync();
-       if(current.status!=='granted'||!active)return;
-
-       if(!isRamadan)return;
-
-       const imsakDate=utcDateFromMinutes(prayerCalcDate,fastingData.rawMinutesUtc.imsak);
-       const iftarDate=utcDateFromMinutes(prayerCalcDate,fastingData.rawMinutesUtc.iftar);
-
-       if(imsakAlertEnabled&&imsakDate&&imsakDate>Date.now()){
-         await Notifications.scheduleNotificationAsync({
-           content:{
-             title:ui('موعد الإمساك','Imsak time'),
-             body:ui('حان الآن موعد الإمساك بحسب المعيار الفلكي المعتمد في الأفق.','It is now Imsak time according to AlofoK’s astronomical research criterion.'),
-             sound:'default',
-             data:{kind:'alofq-imsak'}
-           },
-           trigger:{
-             type:Notifications.SchedulableTriggerInputTypes.DATE,
-             date:imsakDate,
-             channelId:'fasting'
-           }
-         });
-       }
-
-       if(iftarAlertEnabled&&iftarDate&&iftarDate>Date.now()){
-         await Notifications.scheduleNotificationAsync({
-           content:{
-             title:ui('موعد الإفطار','Iftar time'),
-             body:useArabicUi?(RAMADAN_VERSE+' — سورة البقرة، الآية 187'):(RAMADAN_VERSE_EN+' — Al-Baqarah 2:187'),
-             sound:'default',
-             data:{kind:'alofq-iftar'}
-           },
-           trigger:{
-             type:Notifications.SchedulableTriggerInputTypes.DATE,
-             date:iftarDate,
-             channelId:'fasting'
-           }
-         });
-       }
-     }catch(e){
-       console.log('Fasting notifications error:',e);
+    try{
+     if(Platform.OS==='android')await Notifications.setNotificationChannelAsync('fasting',{name:ui('تنبيهات الإمساك والإفطار','Imsak and Iftar alerts'),importance:Notifications.AndroidImportance.HIGH,vibrationPattern:[0,300,250,300]});
+     const scheduled=await Notifications.getAllScheduledNotificationsAsync();
+     for(const n of scheduled){if(n.content?.data?.kind==='alofq-imsak'||n.content?.data?.kind==='alofq-iftar')await Notifications.cancelScheduledNotificationAsync(n.identifier)}
+     const permission=await Notifications.getPermissionsAsync();
+     if(permission.status!=='granted'||!active||(!imsakAlertEnabled&&!iftarAlertEnabled))return;
+     const horizonDays=Platform.OS==='ios'?7:14;
+     const firstCivilDate=civilDateForTimeZone(now,city?.tz);
+     for(let offset=0;offset<horizonDays&&active;offset++){
+      const calcDate=new Date(firstCivilDate);calcDate.setUTCDate(calcDate.getUTCDate()+offset);
+      if(proposedLunisolarDate(calcDate).month!==9)continue;
+      const offsetMinutes=timeZoneOffsetMinutes(calcDate,city?.tz);
+      const dayFasting=calculateFastingTimes({date:calcDate,lat:coords.lat,lon:coords.lon,tzOffsetMin:offsetMinutes,clockLanguage:useArabicUi?'ar':'en'});
+      const imsakDate=utcDateFromMinutes(calcDate,dayFasting.rawMinutesUtc.imsak);
+      const iftarDate=utcDateFromMinutes(calcDate,dayFasting.rawMinutesUtc.iftar);
+      if(imsakAlertEnabled&&imsakDate&&imsakDate.getTime()>Date.now())await Notifications.scheduleNotificationAsync({content:{title:ui('موعد الإمساك','Imsak time'),body:ui('حان الآن موعد الإمساك بحسب المعيار الفلكي المعتمد في الأفق.','It is now Imsak time according to AlofoK’s astronomical research criterion.'),sound:'default',data:{kind:'alofq-imsak',dayOffset:offset}},trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:imsakDate,channelId:Platform.OS==='android'?'fasting':undefined}});
+      if(iftarAlertEnabled&&iftarDate&&iftarDate.getTime()>Date.now())await Notifications.scheduleNotificationAsync({content:{title:ui('موعد الإفطار','Iftar time'),body:useArabicUi?(RAMADAN_VERSE+' — سورة البقرة، الآية 187'):(RAMADAN_VERSE_EN+' — Al-Baqarah 2:187'),sound:'default',data:{kind:'alofq-iftar',dayOffset:offset}},trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:iftarDate,channelId:Platform.OS==='android'?'fasting':undefined}});
      }
+    }catch(e){console.log('Fasting notifications error:',e)}
    }
-
    setupFastingNotifications();
    return()=>{active=false};
- },[
-   fastingData.rawMinutesUtc.imsak,
-   fastingData.rawMinutesUtc.iftar,
-   imsakAlertEnabled,
-   iftarAlertEnabled,
-   isRamadan,
-   dayKey,
-   prayerCalcDate
- ]);
+ },[imsakAlertEnabled,iftarAlertEnabled,dayKey,coords.lat,coords.lon,city?.tz,useArabicUi]);
 
  const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
  const availableThemes=IS_PLUS?THEME_CHOICES:[['trial-fixed','ثيم رمضان الثابت']];

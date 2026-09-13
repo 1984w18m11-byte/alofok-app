@@ -38,7 +38,7 @@ async function postJson(path,body){
 
 export async function activateOfficialInstall({activationToken,appVersion,appVariant}){
   if(!activationToken)return {valid:false,reason:'missing_activation_token'};
-  if(!LICENSE_API_URL)return ENFORCEMENT_REQUIRED?{valid:false,reason:'license_service_not_configured'}:{valid:true,tier:appVariant==='paid'?'plus':'trial',developmentBypass:true};
+  if(!LICENSE_API_URL){if(EXPLICIT_DEV_BYPASS&&!ENFORCEMENT_REQUIRED)return {valid:true,tier:appVariant==='paid'?'plus':'trial',developmentBypass:true};return {valid:false,reason:'license_service_not_configured'};}
   const installId=await getInstallId();
   const data=await postJson('/v1/install/activate',{
     activationToken,
