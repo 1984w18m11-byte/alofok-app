@@ -28,6 +28,7 @@ Notifications.setNotificationHandler({
 });
 
 const fmtPct=x=>`${Math.round(x*100)}%`;
+const SCREEN=Dimensions.get('window');
 const APP_VERSION='0.5.7';
 const DISTRIBUTION_CHANNEL=process.env.EXPO_PUBLIC_DISTRIBUTION_CHANNEL==='play'?'play':(Platform.OS==='ios'?'appstore':'direct');
 const TRIAL_UPDATE_MANIFEST_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
@@ -59,7 +60,7 @@ const WEEKDAYS_EN=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const LUNAR_MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada II','Rajab',"Sha'ban",'Ramadan','Shawwal','Dhu al-Qidah','Dhu al-Hijjah','Nasi’'];
 const RAMADAN_VERSE='وَكُلُوا وَاشْرَبُوا حَتَّىٰ يَتَبَيَّنَ لَكُمُ الْخَيْطُ الْأَبْيَضُ مِنَ الْخَيْطِ الْأَسْوَدِ مِنَ الْفَجْرِ ۖ ثُمَّ أَتِمُّوا الصِّيَامَ إِلَى اللَّيْلِ';
 const RAMADAN_VERSE_EN='Eat and drink until the white thread of dawn becomes distinct from the black thread, then complete the fast until night.';
-const THEME_LABELS_EN={"trial-fixed":"Fixed theme","auto-time":"Automatic: time + weekday + season","dawn":"Dawn","morning":"Morning","midday":"Daytime","evening":"Evening","night":"Night","week-sunday":"Sunday","week-monday":"Monday","week-tuesday":"Tuesday","week-wednesday":"Wednesday","week-thursday":"Thursday","week-friday":"Friday","week-saturday":"Saturday","muharram":"Muharram","safar":"Safar","rabi1":"Rabi I","rabi2":"Rabi II","jumada1":"Jumada I","jumada2":"Jumada II","rajab":"Rajab","shaban":"Sha'ban","ramadan":"Ramadan","shawwal":"Shawwal","dhulqida":"Dhu al-Qidah","dhulhijja":"Dhu al-Hijjah","spring":"Spring","summer":"Summer","autumn":"Autumn","winter":"Winter","new-year":"New Year","summer-solstice":"Summer solstice","winter-solstice":"Winter solstice","equinox":"Equinox","solar-eclipse":"Solar eclipse","lunar-eclipse":"Lunar eclipse"};
+const THEME_LABELS_EN={"trial-fixed":"Fixed theme","auto-time":"Automatic: time + date + weekday + month + season + year","dawn":"Dawn","morning":"Morning","midday":"Daytime","evening":"Evening","night":"Night","week-sunday":"Sunday","week-monday":"Monday","week-tuesday":"Tuesday","week-wednesday":"Wednesday","week-thursday":"Thursday","week-friday":"Friday","week-saturday":"Saturday","muharram":"Muharram","safar":"Safar","rabi1":"Rabi I","rabi2":"Rabi II","jumada1":"Jumada I","jumada2":"Jumada II","rajab":"Rajab","shaban":"Sha'ban","ramadan":"Ramadan","shawwal":"Shawwal","dhulqida":"Dhu al-Qidah","dhulhijja":"Dhu al-Hijjah","spring":"Spring","summer":"Summer","autumn":"Autumn","winter":"Winter","new-year":"New Year","summer-solstice":"Summer solstice","winter-solstice":"Winter solstice","equinox":"Equinox","solar-eclipse":"Solar eclipse","lunar-eclipse":"Lunar eclipse"};
 const LANGUAGE_CHOICES=LOCALES.map(([id,label])=>[id,label]);
 const PRAYER_METHODS=[['MWL','رابطة العالم الإسلامي'],['EGYPT','الهيئة المصرية'],['KARACHI','جامعة كراتشي'],['UMM_AL_QURA','أم القرى']];
 const PRIVACY_SUMMARY='يستخدم الأفق الموقع الدقيق أثناء تشغيل التطبيق لحساب المواقيت وعرض اسم المنطقة. تُحفظ الإحداثيات والتفضيلات محليًا ولا يرسل التطبيق موقعك إلى المطور أو المعلن. قد تعرض النسخة التجريبية إعلانًا مباشرًا واحدًا في الأسبوع بعد مراجعته من إدارة التطبيق، دون شبكة إعلانات أو تتبع إعلاني. يتصل التطبيق بـ GitHub لفحص رقم الإصدار فقط، دون إرسال إحداثياتك. لا توجد حسابات مستخدمين ولا نبيع بيانات شخصية.';
@@ -124,7 +125,7 @@ const PAID_THEMES={
  winter:{name:'شتوي',background:'#14202a',sky:'#7894a6',accent:'#e9f5ff',symbol:'❄'}
 };
 const THEME_CHOICES=[
- ['auto-time','تلقائي حسب الوقت ويوم الأسبوع والفصل'],
+ ['auto-time','تلقائي حسب الوقت والتاريخ واليوم والأسبوع والشهر والفصل والسنة'],
  ['dawn','الفجر'],
  ['morning','الصباح'],
  ['midday','النهار'],
@@ -161,7 +162,7 @@ const THEME_CHOICES=[
  ['lunar-eclipse','الخسوف القمري'],
 ];
 const THEME_ASSETS={
- 'trial-fixed':require('./assets/themes/trial-fixed.jpg'),
+ 'trial-fixed':require('./assets/themes/month-ramadan.jpg'),
  'dawn':require('./assets/themes/time-dawn.jpg'),
  'morning':require('./assets/themes/time-morning.jpg'),
  'midday':require('./assets/themes/time-midday.jpg'),
@@ -259,7 +260,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
 
  useEffect(()=>{const t=setInterval(()=>setNow(new Date()),1000);return()=>clearInterval(t)},[]);
  useEffect(()=>{AsyncStorage.getItem('alofq_app_language').then(value=>{if(value&&LANGUAGE_CHOICES.some(([id])=>id===value))setAppLanguage(value)}).catch(e=>console.log('Language restore error:',e))},[]);
- async function chooseAppLanguage(id){setAppLanguage(id);setShowLanguageChoices(false);try{await AsyncStorage.setItem('alofq_app_language',id)}catch(e){console.log('Language save error:',e)}const isEnglish=String(id).startsWith('en');Alert.alert(isEnglish?'App language':'لغة التطبيق',isEnglish?'Language saved. The interface changes immediately.':'تم حفظ اللغة، وستتغير الواجهة مباشرة.')} 
+ async function chooseAppLanguage(id){setAppLanguage(id);setShowLanguageChoices(false);try{await AsyncStorage.setItem('alofq_app_language',id)}catch(e){console.log('Language save error:',e)}} 
  useEffect(()=>{AsyncStorage.getItem('alofq_dismissed_ad_week').then(setDismissedAdWeek).catch(e=>console.log('Ad preference restore error:',e))},[]);
  useEffect(()=>{Promise.all([AsyncStorage.getItem('alofq_mobile_themes'),AsyncStorage.getItem('alofq_wallpaper_mode'),AsyncStorage.getItem('alofq_wallpaper_target'),AsyncStorage.getItem('alofq_wallpaper_fallback')]).then(([enabled,mode,target,fallback])=>{setMobileThemesEnabled(IS_PLUS&&enabled==='1');if(['time','lunar','season','fixed'].includes(mode))setWallpaperMode(mode);if(['home','lock','both'].includes(target))setWallpaperTarget(target);setWallpaperFallback(fallback==='1')}).catch(e=>console.log('Wallpaper settings restore error:',e))},[]);
  async function setWallpaperPreference(key,value){try{await AsyncStorage.setItem(key,value)}catch(e){console.log('Wallpaper preference save error:',e)}}
@@ -308,8 +309,9 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     if(!active)return;
     const savedCity=cities.find(x=>x.id===cityId);
     const lat=Number(savedLat),lon=Number(savedLon),accuracy=Number(savedAccuracy);
+    const hasStoredGps=Boolean(savedLat&&savedLon)&&Number.isFinite(lat)&&Number.isFinite(lon)&&Math.abs(lat)<=90&&Math.abs(lon)<=180;
     if(savedCity)setCity(savedCity);
-    if(Number.isFinite(lat)&&Number.isFinite(lon)){
+    if(hasStoredGps){
      setCoords({lat,lon});
      const restoredLabel=savedLabel||(useArabicUi?savedCity?.name_ar:savedCity?.name_en)||ui('موقعي المحفوظ','Saved location');
      setLocState(restoredLabel);
@@ -376,7 +378,11 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
     else Alert.alert(ui('التحديثات','Updates'),ui('أنت تستخدم أحدث نسخة من تطبيق الأفق.','You are using the latest version of AlofoK.'));
    }
   }catch(e){
-   if(showResult)Alert.alert(ui('تعذر البحث عن تحديث','Unable to check for updates'),ui('تحقق من اتصال الإنترنت ثم حاول مرة أخرى.','Check your internet connection and try again.'));
+   const message=String(e?.message||'');
+   if(showResult){
+    if(message.startsWith('LICENSE_'))Alert.alert(ui('تعذر التحقق من التفعيل','Unable to verify activation'),ui('المشكلة مرتبطة بالتفعيل أو خدمة الترخيص، وليست بالضرورة من اتصال الإنترنت.','The problem is related to activation or the license service, not necessarily your Internet connection.'));
+    else Alert.alert(ui('تعذر البحث عن تحديث','Unable to check for updates'),ui('تعذر الوصول إلى ملف التحديث. تحقق من الإنترنت أو حاول لاحقًا.','The update manifest could not be reached. Check your connection or try again later.'));
+   }
   }finally{setUpdateChecking(false)}
  }
  function showUpdateDialog(info=updateInfo){
@@ -741,14 +747,19 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
  ]);
 
  const packs=adhanRegistry.filter(p=>p.status==='licensed'&&p.asset&&ADHAN_ASSETS[p.id]&&p.available_in?.includes(APP_VARIANT));
- const availableThemes=IS_PLUS?THEME_CHOICES:[['trial-fixed','الثيم الثابت']];
+ const availableThemes=IS_PLUS?THEME_CHOICES:[['trial-fixed','ثيم رمضان الثابت']];
  const autoHour=now.getHours();
  const timeThemeId=autoHour>=5&&autoHour<8?'dawn':autoHour<11?'morning':autoHour<17?'midday':autoHour<20?'evening':'night';
  const weekdayThemeId=['week-sunday','week-monday','week-tuesday','week-wednesday','week-thursday','week-friday','week-saturday'][now.getDay()]||'week-sunday';
+ const lunarMonthThemeId=['muharram','safar','rabi1','rabi2','jumada1','jumada2','rajab','shaban','ramadan','shawwal','dhulqida','dhulhijja'][Math.max(0,Math.min(11,(lunar.month||1)-1))]||'ramadan';
  const gregorianMonth=now.getMonth();
+ const gregorianDay=now.getDate();
  const seasonThemeId=(gregorianMonth===2||gregorianMonth===3||gregorianMonth===4)?'spring':(gregorianMonth===5||gregorianMonth===6||gregorianMonth===7)?'summer':(gregorianMonth===8||gregorianMonth===9||gregorianMonth===10)?'autumn':'winter';
- const autoModeSlot=Math.floor(autoHour/3)%3;
- const autoThemeId=(autoHour<6||autoHour>=20)?timeThemeId:(autoModeSlot===0?timeThemeId:autoModeSlot===1?weekdayThemeId:seasonThemeId);
+ const specialThemeId=(gregorianMonth===0&&gregorianDay===1)?'new-year':((gregorianMonth===5&&gregorianDay===21)?'summer-solstice':((gregorianMonth===11&&gregorianDay===21)?'winter-solstice':(((gregorianMonth===2&&gregorianDay===20)||(gregorianMonth===8&&gregorianDay===22))?'equinox':null)));
+ const yearThemeOffset=Math.abs((now.getFullYear()+(lunar.year||0))%4);
+ const dateThemeSlot=(Math.floor(((lunar.day||1)-1)/2)+yearThemeOffset)%4;
+ const rotatingThemeId=[timeThemeId,weekdayThemeId,lunarMonthThemeId,seasonThemeId][dateThemeSlot];
+ const autoThemeId=specialThemeId||((autoHour<6||autoHour>=20)?timeThemeId:rotatingThemeId);
  const activeThemeId=selectedTheme==='auto-time'?autoThemeId:selectedTheme;
  async function previewAdhan(pack){
   try{
@@ -927,7 +938,7 @@ const [selectedCalendarEvent,setSelectedCalendarEvent]=useState(null);
      </>}
     </SettingsCard>
     <SettingsCard title={ui('الثيمات','Themes')}>
-     <Text style={s.sub}>{IS_PLUS?ui('اختر من جميع ثيمات الأفق بلس، وسيُحفظ اختيارك تلقائيًا.','Choose from all AlofoK Plus themes. Your selection is saved automatically.'):ui('الثيم الليلي متاح مجاناً. بقية الثيمات ضمن الأفق بلس.','The night theme is available for free. Other themes are included with AlofoK Plus.')}</Text>
+     <Text style={s.sub}>{IS_PLUS?ui('اختر من جميع ثيمات الأفق بلس، وسيُحفظ اختيارك تلقائيًا.','Choose from all AlofoK Plus themes. Your selection is saved automatically.'):ui('النسخة التجريبية تستخدم ثيم رمضان ثابتًا واحدًا. الثيمات المتغيرة والاختيار اليدوي ضمن الأفق Plus.','The trial edition uses one fixed Ramadan theme. Automatic rotation and manual theme selection are AlofoK Plus features.')}</Text>
      <View style={s.themeChoices}>{availableThemes.map(([id,label])=>{return <Pressable key={id} style={[s.themeChoice,{backgroundColor:'#06121f',borderColor:'#b98532'},selectedTheme===id&&s.themeChoiceOn]} onPress={async()=>{setSelectedTheme(id);try{await AsyncStorage.setItem('alofq_paid_theme',id)}catch(e){console.log('Theme save error:',e)}}}>{id==='auto-time'?<Text style={s.themeChoiceSymbol}>◉</Text>:<ThemePreview themeId={id}/>}<View pointerEvents='none' style={{position:'absolute',left:0,right:0,bottom:0,backgroundColor:'rgba(0,0,0,.58)',paddingVertical:7,paddingHorizontal:4}}><Text style={[s.themeChoiceText,{marginTop:0,textAlign:'center'}]}>{useArabicUi?label:(THEME_LABELS_EN[id]||label)}</Text></View></Pressable>})}</View>
     </SettingsCard>
     {IS_PLUS&&<SettingsCard title={ui('ثيمات خلفية الجهاز','Device Wallpaper Themes')}>

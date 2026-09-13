@@ -3,6 +3,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const LICENSE_API_URL=(process.env.EXPO_PUBLIC_LICENSE_API_URL||'').replace(/\/$/,'');
 const OFFICIAL_PORTAL_URL=process.env.EXPO_PUBLIC_OFFICIAL_PORTAL_URL||'';
 const ENFORCEMENT_REQUIRED=process.env.EXPO_PUBLIC_LICENSE_ENFORCEMENT==='required';
+const EXPLICIT_DEV_BYPASS=process.env.EXPO_PUBLIC_LICENSE_DEV_BYPASS==='1';
 const INSTALL_ID_KEY='alofok_install_id_v1';
 const LICENSE_TOKEN_KEY='alofok_license_token_v1';
 const BUILD_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
@@ -52,13 +53,17 @@ export async function activateOfficialInstall({activationToken,appVersion,appVar
 }
 
 export async function verifyEntitlement({appVersion,appVariant}){
-  if(!LICENSE_API_URL){
-    if(ENFORCEMENT_REQUIRED)return {valid:false,reason:'license_service_not_configured'};
-    return {valid:true,tier:appVariant==='paid'?'plus':'trial',developmentBypass:true};
-  }
   const installId=await getInstallId();
   const licenseToken=await AsyncStorage.getItem(LICENSE_TOKEN_KEY);
-  if(!licenseToken)return {valid:false,reason:'official_activation_required'};
+  if(!LICENSE_API_URL){
+    if(BUILD_VARIANT==='trial')return {valid:true,tier:'trial',offlineFreeTrial:true};
+    if(EXPLICIT_DEV_BYPASS&&!ENFORCEMENT_REQUIRED)return {valid:true,tier:'plus',developmentBypass:true};
+    return {valid:false,reason:'license_service_not_configured'};
+  }
+  if(!licenseToken){
+    if(BUILD_VARIANT==='trial')return {valid:true,tier:'trial',freeTrial:true};
+    return {valid:false,reason:'official_activation_required'};
+  }
   try{
     const data=await postJson('/v1/license/verify',{
       licenseToken,
@@ -85,4 +90,4 @@ export async function clearLocalLicense(){
   await AsyncStorage.removeItem(LICENSE_TOKEN_KEY);
 }
 
-export const licenseConfig={enforcementRequired:ENFORCEMENT_REQUIRED,packageId:PACKAGE_ID};
+export const licenseConfig={enforcementRequired:ENFORCEMENT_REQUIRED,explicitDevBypass:EXPLICIT_DEV_BYPASS,packageId:PACKAGE_ID};

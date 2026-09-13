@@ -22,11 +22,16 @@ assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must c
 assert(config.includes("'com.alofok.plus'")&&config.includes("'com.alofok.trial'"),'trial and Plus package IDs must be distinct');
 assert(app.includes("const IS_PLUS=IS_PAID_BUILD&&licenseTier==='plus';"),'Plus features must be gated by paid build + license');
 assert(!app.includes("appLanguage==='system'?true:isRtlLocale"),'system language must not force RTL');
-assert(app.includes("Automatic: time + weekday + season"),'automatic theme rotation label missing');
-assert(app.includes('weekdayThemeId')&&app.includes('seasonThemeId')&&app.includes('timeThemeId'),'standalone automatic theme rotation incomplete');
+assert(app.includes("Automatic: time + date + weekday + month + season + year"),'automatic theme rotation label missing');
+assert(app.includes('weekdayThemeId')&&app.includes('lunarMonthThemeId')&&app.includes('seasonThemeId')&&app.includes('timeThemeId')&&app.includes('yearThemeOffset')&&app.includes('specialThemeId'),'standalone automatic theme rotation incomplete');
 assert(app.includes('<ThemePreview themeId={id}/>'),'theme previews must use standalone image files');
 assert(app.includes("<ThemeBackground themeId={IS_PLUS?activeThemeId:'trial-fixed'}/>"),'fixed trial / automatic Plus background binding missing');
 assert(!app.includes('THEME_ATLAS')&&!app.includes('AtlasTheme'),'legacy atlas code must be removed');
+
+assert(!app.includes('SCREEN.height')||app.includes("const SCREEN=Dimensions.get('window');"),'SCREEN must be defined before StyleSheet uses it');
+assert(app.includes('const hasStoredGps=Boolean(savedLat&&savedLon)'), 'saved GPS must reject empty values instead of restoring 0,0');
+assert(app.includes("'trial-fixed':require('./assets/themes/month-ramadan.jpg')"),'trial must use one fixed Ramadan theme');
+assert(app.includes("const availableThemes=IS_PLUS?THEME_CHOICES:[['trial-fixed','ثيم رمضان الثابت']]"),'trial must expose exactly one fixed theme');
 assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must be deleted');
 const themeMatch=app.match(/const THEME_CHOICES=\[([\s\S]*?)\];/);
 assert(themeMatch,'THEME_CHOICES missing');
