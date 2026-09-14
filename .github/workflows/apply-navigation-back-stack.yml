@@ -1,0 +1,43 @@
+name: Apply navigation back stack
+
+on:
+  push:
+    paths:
+      - .github/navigation-back-stack.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          token: ${{ github.token }}
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply navigation patch
+        run: node scripts/apply-navigation-back-stack.js
+      - name: Validate translations
+        run: npm run check:translations
+      - name: Run release QA
+        run: npm run check:release
+      - name: Verify back-stack wiring
+        shell: bash
+        run: |
+          grep -q "const \[screenHistory,setScreenHistory\]=useState(\[\]);" src/app/AppV3.js
+          grep -q "const goBack=useCallback" src/app/AppV3.js
+          grep -q "onBack={goBack}" src/app/AppV3.js
+      - name: Commit integrated source
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/AppV3.js
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(navigation): make back return to previous screen"
+          git push
