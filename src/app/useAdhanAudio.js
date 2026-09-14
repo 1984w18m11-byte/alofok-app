@@ -7,6 +7,8 @@ import {ADHAN_BY_ID,ADHAN_CATALOG,DEFAULT_ADHAN_ID} from './adhanCatalog';
 
 const SELECTED_KEY='alofok_v3_adhan_id';
 const ALERTS_KEY='alofok_v3_prayer_alerts';
+const VOLUME_KEY='alofok_v3_adhan_volume';
+const DEFAULT_VOLUME=0.9;
 
 Notifications.setNotificationHandler({
  handleNotification:async()=>({shouldShowBanner:true,shouldShowList:true,shouldPlaySound:true,shouldSetBadge:false})
@@ -15,14 +17,17 @@ Notifications.setNotificationHandler({
 export function useAdhanAudio(){
  const [selectedId,setSelectedId]=useState(DEFAULT_ADHAN_ID);
  const [alertsEnabled,setAlertsEnabled]=useState(false);
+ const [volume,setVolumeState]=useState(DEFAULT_VOLUME);
  const [playingId,setPlayingId]=useState(null);
  const [error,setError]=useState(null);
  const playerRef=useRef(null);
 
  useEffect(()=>{
-  Promise.all([AsyncStorage.getItem(SELECTED_KEY),AsyncStorage.getItem(ALERTS_KEY)]).then(([id,alerts])=>{
+  Promise.all([AsyncStorage.getItem(SELECTED_KEY),AsyncStorage.getItem(ALERTS_KEY),AsyncStorage.getItem(VOLUME_KEY)]).then(([id,alerts,savedVolume])=>{
    if(id&&ADHAN_BY_ID[id])setSelectedId(id);
    setAlertsEnabled(alerts==='1');
+   const parsed=Number(savedVolume);
+   if(Number.isFinite(parsed)&&parsed>=0&&parsed<=1)setVolumeState(parsed);
   }).catch(()=>{});
   return()=>{try{playerRef.current?.pause();playerRef.current?.release()}catch(e){}}
  },[]);
@@ -33,19 +38,28 @@ export function useAdhanAudio(){
   setPlayingId(null);
  },[]);
 
+ const setVolume=useCallback(async value=>{
+  const numeric=Number(value);
+  const next=Number.isFinite(numeric)?Math.max(0,Math.min(1,numeric)):DEFAULT_VOLUME;
+  setVolumeState(next);
+  try{if(playerRef.current)playerRef.current.volume=next}catch(e){}
+  try{await AsyncStorage.setItem(VOLUME_KEY,String(next))}catch(e){}
+  return next;
+ },[]);
+
  const preview=useCallback(async id=>{
   const item=ADHAN_BY_ID[id];
   if(!item?.audio){setError('ASSET_MISSING');return false;}
   try{
    stop();setError(null);
    const player=createAudioPlayer(item.audio);
-   player.volume=0.9;
+   player.volume=volume;
    playerRef.current=player;
    setPlayingId(id);
    player.play();
    return true;
   }catch(e){setError(e?.message||'PLAYBACK_ERROR');stop();return false;}
- },[stop]);
+ },[stop,volume]);
 
  const select=useCallback(async id=>{
   if(!ADHAN_BY_ID[id])return false;
@@ -98,5 +112,5 @@ export function useAdhanAudio(){
   }catch(e){setError(e?.message||'SCHEDULE_ERROR')}
  },[alertsEnabled,selectedId]);
 
- return useMemo(()=>({catalog:ADHAN_CATALOG,selectedId,selected:ADHAN_BY_ID[selectedId],alertsEnabled,playingId,error,preview,stop,select,setPrayerAlerts,schedulePrayerAlerts}),[selectedId,alertsEnabled,playingId,error,preview,stop,select,setPrayerAlerts,schedulePrayerAlerts]);
+ return useMemo(()=>({catalog:ADHAN_CATALOG,selectedId,selected:ADHAN_BY_ID[selectedId],alertsEnabled,volume,playingId,error,preview,stop,select,setVolume,setPrayerAlerts,schedulePrayerAlerts}),[selectedId,alertsEnabled,volume,playingId,error,preview,stop,select,setVolume,setPrayerAlerts,schedulePrayerAlerts]);
 }
