@@ -14,6 +14,7 @@ import nationalEvents from '../data/national-events.json';
 import religiousEventsExtra from '../data/religious-events-extra.json';
 import {useCountryHolidays} from './useCountryHolidays';
 import {AuthenticityScreen,CopyrightScreen,PrivacyScreen} from './LegalScreens';
+import {AdvertiseScreen,TrialAdOverlay,useTrialAd} from './TrialAds';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -173,7 +174,7 @@ function HijriGrid({date,currentDate,locale,t,rtl,onPrevious,onNext,onToday}){
 
 function Drawer({t,rtl,onClose,onNavigate,onUpdate}){
  const items=[
-  ['⚙','settings','settings'],['⟳','checkUpdate','update'],['♛','subscription','plus'],['◉','support','support'],['◎','languages','languages'],['ⓘ','about','about'],['◇','privacy','privacy']
+  ['⚙','settings','settings'],['⟳','checkUpdate','update'],['♛','subscription','plus'],['◉','support','support'],...(!IS_PLUS?[['▣','advertise','advertise']]:[]),['◎','languages','languages'],['ⓘ','about','about'],['◇','privacy','privacy']
  ];
  return <View style={s.drawerBackdrop}>
   <Pressable style={s.drawerDismiss} onPress={onClose}/>
@@ -321,6 +322,7 @@ export default function AppV3(){
  const rtl=v3IsRtl(language),locale=v3LocaleTag(language),t=useMemo(()=>makeV3Translator(language),[language]);
  const location=useDeviceLocation({rtl});
  const adhan=useAdhanAudio();
+ const trialAds=useTrialAd({enabled:!IS_PLUS,country:location.country,language});
 
  useEffect(()=>{AsyncStorage.getItem(LANGUAGE_KEY).then(x=>{if(x&&LOCALES.some(([id])=>id===x))setLanguage(x)}).catch(()=>{});AsyncStorage.getItem(THEME_KEY).then(x=>{if(x&&(x==='auto'||THEME_BY_ID[x]))setSelectedThemeState(x)}).catch(()=>{})},[]);
  useEffect(()=>{const id=setInterval(()=>setNow(new Date()),30000);return()=>clearInterval(id)},[]);
@@ -374,6 +376,7 @@ export default function AppV3(){
  if(screen==='privacy')return <PrivacyScreen rtl={rtl} onBack={goHome} onNavigate={navigate}/>;
  if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={()=>setScreen('privacy')}/>;
  if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={()=>setScreen('privacy')} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
+ if(screen==='advertise')return <AdvertiseScreen rtl={rtl} language={language} country={location.country} onBack={goHome}/>;
  if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} onNavigate={navigate} location={location} onBack={goHome}/>;
  if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={()=>setScreen('settings')}/>;
  if(screen==='calendarHijri'||screen==='calendarGregorian')setTimeout(()=>setScreen('home'),0);
@@ -381,6 +384,7 @@ export default function AppV3(){
  return <View style={s.root}>
   <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate}/>
   {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate}/>} 
+  {!IS_PLUS&&<TrialAdOverlay ad={trialAds.ad} rtl={rtl} onClose={trialAds.dismiss} onOpen={trialAds.open}/>} 
  </View>
 }
 

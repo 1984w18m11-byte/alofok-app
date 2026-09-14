@@ -107,3 +107,15 @@ assert(authClient.includes('EXPO_PUBLIC_AUTH_API_URL')&&authClient.includes('/v1
 assert(authClient.includes("edition,version,installationId"),'authenticity challenge must bind edition, version and installation');
 const pkgLegal=JSON.parse(read('package.json'));
 assert(pkgLegal.dependencies['react-native-qrcode-svg']&&pkgLegal.dependencies['react-native-svg'],'QR dependencies must be installed');
+
+// Trial advertising guards
+const trialAds=read('src/app/TrialAds.js');
+assert(app.includes("from './TrialAds';"),'trial advertising client must be wired into V3');
+assert(app.includes('useTrialAd({enabled:!IS_PLUS'),'ads must be disabled in Plus at the app boundary');
+assert(app.includes("...(!IS_PLUS?[['▣','advertise','advertise']]:[])"),'Advertise menu entry must exist only in Trial');
+assert(trialAds.includes('MAX_WEEKLY_ADS=2'),'Trial must cap advertising at two impressions per week');
+assert(trialAds.includes('/v1/ads/approved/next'),'users must fetch only approved ads');
+assert(trialAds.includes("item.status!=='approved'"),'client must reject any ad that is not approved');
+assert(trialAds.includes('/v1/ads/submissions'),'advertisers need a moderated submission endpoint');
+assert(trialAds.includes("status:'pending_review'"),'new ad submissions must remain pending until manual approval');
+assert(trialAds.includes('EXPO_PUBLIC_AD_PAYMENT_URL'),'ad payment must use configurable provider routing, never a hardcoded card number');
