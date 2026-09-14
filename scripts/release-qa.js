@@ -86,8 +86,10 @@ assert(app.includes("import religiousEventsExtra from '../data/religious-events-
 const holidayHook=read('src/app/useCountryHolidays.js');
 assert(holidayHook.includes('https://nagerholidays.com/api/v4/Holidays'),'global holiday API must remain configured');
 assert(holidayHook.includes('AsyncStorage'),'country holidays must be cached for offline fallback');
+assert(holidayHook.includes("code==='IQ'&&String(x.date).slice(5)==='03-16'"),'Iraq March 16 political observance must be filtered from remote holiday data');
 const iraq=JSON.parse(read('src/data/iraq-observances.json'));
 for(const key of ['عيد الجيش العراقي','عيد الشرطة العراقية','عيد نوروز','اليوم الوطني العراقي','يوم النصر على داعش'])assert(iraq.some(x=>x.name_ar===key),`Iraq observance missing: ${key}`);
+assert(!iraq.some(x=>String(x.name_ar||'').includes('البعث')||String(x.name_en||'').toLowerCase().includes("ba'ath")),'political Baath-era commemoration must stay excluded from Iraq observances');
 
 if(process.exitCode)process.exit(process.exitCode);
 console.log('Release QA passed for AlofoK V3',version);
