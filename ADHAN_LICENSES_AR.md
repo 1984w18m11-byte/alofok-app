@@ -1,6 +1,6 @@
-# AlofoK 0.5.8 — Adhan licensing inventory
+# AlofoK — قائمة أصوات الأذان المعتمدة
 
-Only the ten entries below are exposed in the app. The previous Morocco/Kazakhstan/Aaqib selections were removed at the owner’s request.
+تعرض النسختان التجريبية وPlus حاليًا ستة أصوات فقط. تم حذف تسجيلات: أذان المغرب — المسجد الحرام 2012، قونية — تركيا، طرابلس — ساحة النور، وأصفهان — مسجد الشاه، بناءً على مراجعة الجودة وطلب مالك المشروع. لا يجوز إعادتها تلقائيًا في البناء.
 
 ## 1. أذان جميل — Adam-synagda
 - Performer/source credit: Adam-synagda
@@ -38,27 +38,5 @@ Only the ten entries below are exposed in the app. The previous Morocco/Kazakhst
 - Source: https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm
 - Packaged asset: assets/adhan/adhan_mecca_2013.ogg
 
-## 7. أذان المغرب — المسجد الحرام 2012
-- Performer/source credit: 3omar Faruq
-- License: CC BY 3.0
-- Source: https://commons.wikimedia.org/wiki/File:Maghrib_Adhan_at_the_Masjid_al_Haram,_Mecca_-_25_Feb,_2012.webm
-- Packaged asset: assets/adhan/adhan_mecca_maghrib_2012.ogg
-
-## 8. أذان قونية — تركيا
-- Performer/source credit: Frans van der Vaart
-- License: CC BY 3.0
-- Source: https://commons.wikimedia.org/wiki/File:Hminsec150_Konya.webm
-- Packaged asset: assets/adhan/adhan_konya_2012.ogg
-
-## 9. أذان طرابلس — ساحة النور
-- Performer/source credit: باسم
-- License: CC BY-SA 4.0
-- Source: https://commons.wikimedia.org/wiki/File:Adhan_During_the_Lebanese_Protests_in_Tripoli_2019.webm
-- Packaged asset: assets/adhan/adhan_tripoli_2019.ogg
-
-## 10. أذان أصفهان — مسجد الشاه
-- Performer/source credit: 10EldarionElessar
-- License: CC BY 3.0
-- Source: https://commons.wikimedia.org/wiki/File:Tour_guide_recite_Adhan_in_the_Shah_mosque_in_Isfahan,_Iran.webm
-- Packaged asset: assets/adhan/adhan_isfahan_shah.ogg
-
+## قاعدة إضافة أي صوت جديد
+لا يُضاف أي تسجيل جديد إلا بعد التأكد من: اكتمال الأذان، نقاء الصوت، عدم وجود جمهور أو هتافات أو موسيقى أو ضجيج مزعج، ووجود ترخيص صريح يسمح بإعادة التوزيع داخل النسخة المجانية وPlus. ويُفضّل تسجيل استوديو نظيف بصوت مؤذن بشري حقيقي.
