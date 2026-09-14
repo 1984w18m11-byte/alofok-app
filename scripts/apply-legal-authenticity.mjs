@@ -3,6 +3,7 @@ import fs from 'node:fs';
 const appPath='src/app/AppV3.js';
 const stringsPath='src/app/v3Strings.js';
 const qaPath='scripts/release-qa.js';
+const releaseVersion=JSON.parse(fs.readFileSync('app.json','utf8')).expo.version;
 let app=fs.readFileSync(appPath,'utf8');
 let strings=fs.readFileSync(stringsPath,'utf8');
 let qa=fs.readFileSync(qaPath,'utf8');
@@ -12,6 +13,8 @@ const mustReplace=(text,pattern,replacement,label)=>{
  if(next===text)throw new Error(`Patch failed: ${label}`);
  return next;
 };
+
+app=app.replace(/const VERSION='[^']+';/,`const VERSION='${releaseVersion}';`);
 
 if(!app.includes("from './LegalScreens';")){
  app=mustReplace(
