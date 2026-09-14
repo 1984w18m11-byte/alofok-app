@@ -1,4 +1,4 @@
-export const HOME_REFERENCE_BACKGROUND=require('../../assets/mecca-night-background.png');
+export const HOME_REFERENCE_BACKGROUND=require('../../assets/themes/trial-fixed.jpg');
 
 export const THEME_CATALOG=[
  {id:'trial-fixed',group:'fixed',labelKey:'themeFixed',plus:false,image:require('../../assets/themes/trial-fixed.jpg')},
