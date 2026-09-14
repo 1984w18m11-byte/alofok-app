@@ -1,7 +1,12 @@
 const fs=require('fs');
 const assert=(ok,msg)=>{if(!ok){console.error('QA FAIL:',msg);process.exitCode=1}};
 const read=p=>fs.readFileSync(p,'utf8');
-const app=read('App.js');
+const entry=read('App.js');
+const app=read('src/app/AppV3.js');
+const themes=read('src/app/themeCatalog.js');
+const adhans=read('src/app/adhanCatalog.js');
+const gps=read('src/app/useDeviceLocation.js');
+const strings=read('src/app/v3Strings.js');
 const config=read('app.config.js');
 const appJson=JSON.parse(read('app.json'));
 const pkg=JSON.parse(read('package.json'));
@@ -13,28 +18,26 @@ const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
 
-assert(app.includes(`const APP_VERSION='${version}';`),'App.js version must match app.json');
+assert(entry.includes("import AppV3 from './src/app/AppV3'"),'App.js must use the modular V3 entry');
+assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.json');
 assert(pkg.version===version,'package.json version mismatch');
 assert(lock.version===version&&lock.packages?.['']?.version===version,'package-lock version mismatch');
 assert(trial.version===version&&plus.version===version,'update manifests version mismatch');
 assert(trial.versionCode===appJson.expo.android.versionCode&&plus.versionCode===appJson.expo.android.versionCode,'manifest versionCode mismatch');
 assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must contain exactly one packageId declaration');
 assert(config.includes("'com.alofok.plus'")&&config.includes("'com.alofok.trial'"),'trial and Plus package IDs must be distinct');
-assert(app.includes("const IS_PLUS=IS_PAID_BUILD&&licenseTier==='plus';"),'Plus features must be gated by paid build + license');
-assert(!app.includes("appLanguage==='system'?true:isRtlLocale"),'system language must not force RTL');
-assert(app.includes("Automatic: time + weekday + season"),'automatic theme rotation label missing');
-assert(app.includes('weekdayThemeId')&&app.includes('seasonThemeId')&&app.includes('timeThemeId'),'standalone automatic theme rotation incomplete');
-assert(app.includes('<ThemePreview themeId={id}/>'),'theme previews must use standalone image files');
-assert(app.includes("<ThemeBackground themeId={IS_PLUS?activeThemeId:'trial-fixed'}/>"),'fixed trial / automatic Plus background binding missing');
-assert(!app.includes('THEME_ATLAS')&&!app.includes('AtlasTheme'),'legacy atlas code must be removed');
-assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must be deleted');
-const themeMatch=app.match(/const THEME_CHOICES=\[([\s\S]*?)\];/);
-assert(themeMatch,'THEME_CHOICES missing');
-if(themeMatch){
-  const ids=[...themeMatch[1].matchAll(/\['([^']+)'/g)].map(m=>m[1]);
-  assert(ids.length===35,'expected auto + 34 Plus theme choices');
-  assert(new Set(ids).size===35,'theme ids must be unique');
-}
+
+assert(app.includes("const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';"),'Plus features must be gated by paid build variant');
+assert(app.includes("if(!IS_PLUS&&id!=='trial-fixed')"),'trial build must reject Plus theme selection');
+assert(app.includes("if(!IS_PLUS)return HOME_REFERENCE_BACKGROUND"),'trial home background must stay fixed');
+assert(app.includes('automaticThemeId(now)'),'Plus automatic theme rotation missing');
+assert(!app.includes('THEME_ATLAS')&&!themes.includes('THEME_ATLAS'),'legacy atlas code must stay removed');
+assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must stay deleted');
+const standaloneThemeRequires=[...themes.matchAll(/require\('\.\.\/\.\.\/assets\/themes\/([^']+)'\)/g)].map(x=>x[1]);
+assert(standaloneThemeRequires.length===35,'expected 35 standalone theme images including fixed trial theme');
+assert(new Set(standaloneThemeRequires).size===35,'standalone theme image paths must be unique');
+for(const name of standaloneThemeRequires)assert(fs.existsSync(`assets/themes/${name}`),`missing theme asset: ${name}`);
+
 const configuredSounds=(appJson.expo.plugins.find(x=>Array.isArray(x)&&x[0]==='expo-notifications')||[])[1]?.sounds||[];
 assert(configuredSounds.length===10,'ten notification Adhan sounds must be configured');
 assert(configuredSounds.every(x=>x.endsWith('.wav')),'notification sounds should use WAV');
@@ -42,19 +45,32 @@ const playable=registry.filter(x=>x.status==='licensed'&&Array.isArray(x.availab
 assert(playable.length===10,'expected exactly ten licensed playable Adhan entries');
 assert(!registry.some(x=>['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez'].includes(x.id)),'rejected Adhan ids must stay removed');
 for(const x of playable){
-  assert(Boolean(x.license),`${x.id}: license missing`);
-  assert(Boolean(x.source),`${x.id}: source missing`);
-  assert(Boolean(x.source_url),`${x.id}: source URL missing`);
-  assert(Boolean(x.asset),`${x.id}: asset path missing`);
-  assert(x.available_in.includes('trial')&&x.available_in.includes('paid'),`${x.id}: must be enabled in both editions`);
-  assert(app.includes(`'${x.id}':require(`),`${x.id}: preview asset not bundled in App.js`);
-  assert(app.includes(`'${x.id}':'`)&&app.includes('.wav'),`${x.id}: notification sound map missing`);
+ assert(Boolean(x.license),`${x.id}: license missing`);
+ assert(Boolean(x.source),`${x.id}: source missing`);
+ assert(Boolean(x.source_url),`${x.id}: source URL missing`);
+ assert(Boolean(x.asset),`${x.id}: asset path missing`);
+ assert(x.available_in.includes('trial')&&x.available_in.includes('paid'),`${x.id}: must be enabled in both editions`);
+ assert(adhans.includes(`'${x.id}':require(`),`${x.id}: preview asset not bundled in adhanCatalog.js`);
+ assert(adhans.includes(`'${x.id}':'`)&&adhans.includes('.wav'),`${x.id}: notification sound map missing`);
 }
+
+assert(gps.includes('Location.Accuracy.Highest'),'GPS must request highest available accuracy');
+assert(gps.includes('watchPositionAsync'),'GPS must briefly watch for a better fix');
+assert(gps.includes('nearestCity'),'GPS label must support nearest seeded locality');
+assert(app.includes("calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon"),'prayer times must use current coordinates');
+assert(app.includes("method:'MWL'"),'MWL prayer calculation default missing');
+assert(app.includes('schedulePrayerAlerts'),'background prayer notification scheduling missing');
+
+assert(strings.includes("appName:'الأفق'")&&strings.includes("appName:'AlofoK'"),'Arabic and English V3 packs are required');
+assert(strings.includes("languageTitle:'Interface language'")&&strings.includes("languageTitle:'لغة الواجهة'"),'language screen strings missing');
+assert(app.includes('makeV3Translator(language)'),'all V3 screens must use centralized translations');
+assert(app.includes('v3IsRtl(language)'),'interface direction must follow selected language');
 assert(events.every(x=>Boolean(x.en)),'all religious events need English names');
-for(const rows of Object.values(national)) assert(rows.every(x=>Boolean(x.name_en)),'all national events need English names');
-assert(app.includes("clockLanguage:useArabicUi?'ar':'en'"),'prayer time AM/PM language switch missing');
-assert(app.includes('300 solar years × 365 days = 109,500 days.'),'Cave verse calculation missing from English research section');
-assert(app.includes("Support AlofoK development"),'bilingual support menu missing');
+for(const rows of Object.values(national))assert(rows.every(x=>Boolean(x.name_en)),'all national events need English names');
+
+assert(strings.includes('This app is not a religious authority')&&strings.includes('هذا البرنامج ليس دينيًا'),'research disclaimer missing');
+assert(strings.includes('Nasi')&&strings.includes('شهر النسيء'),'Nasi leap-month research explanation missing');
 assert(!app.includes('<View style={s.supportQuickWrap}>'),'large home support block must remain removed');
-if(process.exitCode){process.exit(process.exitCode)}
-console.log('Release QA passed for',version);
+
+if(process.exitCode)process.exit(process.exitCode);
+console.log('Release QA passed for AlofoK V3',version);
