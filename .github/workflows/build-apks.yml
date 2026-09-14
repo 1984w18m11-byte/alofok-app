@@ -22,7 +22,8 @@ jobs:
       EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_DISTRIBUTION_CHANNEL: direct
       EXPO_NO_TELEMETRY: "1"
-      RELEASE_VERSION: "0.5.8"
+      RELEASE_VERSION: "1.0.0"
+      NODE_ENV: production
 
     steps:
       - name: Checkout
@@ -40,6 +41,23 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - name: Synchronize 1.0.0 release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs = require('fs');
+          const version = JSON.parse(fs.readFileSync('app.json','utf8')).expo.version;
+          const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
+          lock.version = version;
+          if (lock.packages && lock.packages['']) lock.packages[''].version = version;
+          fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
+          const appPath = 'src/app/AppV3.js';
+          let app = fs.readFileSync(appPath,'utf8');
+          app = app.replace(/const VERSION='[^']+';/, `const VERSION='${version}';`);
+          fs.writeFileSync(appPath, app);
+          NODE
+
       - name: Install dependencies
         run: npm ci
 
@@ -48,7 +66,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg librsvg2-bin fonts-noto-core
+          sudo apt-get install -y -qq ffmpeg librsvg2-bin fonts-noto-core imagemagick
           mkdir -p assets/adhan /tmp/alofok-adhan
 
           convert_source() {
@@ -59,7 +77,7 @@ jobs:
             local url="https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}"
             local input="/tmp/alofok-adhan/${stem}.source"
             echo "Downloading licensed source: ${file_title}"
-            curl -fL --retry 4 --retry-delay 2 -A "AlofoK-build/0.5.8" "$url" -o "$input"
+            curl -fL --retry 4 --retry-delay 2 -A "AlofoK-build/1.0.0" "$url" -o "$input"
             test -s "$input"
             ffprobe -v error "$input" >/dev/null
             ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
@@ -89,13 +107,15 @@ jobs:
             done
           done
 
-      - name: Render approved launcher icons
+      - name: Render approved launcher icons and normalize PNG resources
         shell: bash
         run: |
           set -euo pipefail
           rsvg-convert -w 1024 -h 1024 assets/icons/icon-trial-approved.svg -o assets/icon-trial.png
           rsvg-convert -w 1024 -h 1024 assets/icons/icon-paid-approved.svg -o assets/icon-paid.png
-          for name in icon-trial icon-paid; do
+          convert assets/mecca-night-background.png -strip PNG32:/tmp/mecca-night-background.png
+          mv /tmp/mecca-night-background.png assets/mecca-night-background.png
+          for name in icon-trial icon-paid mecca-night-background; do
             file "assets/${name}.png"
             ffprobe -v error "assets/${name}.png" >/dev/null
             ffmpeg -hide_banner -loglevel error -xerror -i "assets/${name}.png" -f null -
@@ -120,7 +140,7 @@ jobs:
       - name: Keep build for internal verification
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-${{ matrix.variant }}-0.5.8
+          name: alofok-${{ matrix.variant }}-1.0.0
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
@@ -133,17 +153,17 @@ jobs:
       - name: Download both APK artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: alofok-*-0.5.8
+          pattern: alofok-*-1.0.0
           path: artifacts
 
       - name: Prepare clear APK filenames
         run: |
-          cp artifacts/alofok-trial-0.5.8/app-release.apk alofok-trial-0.5.8.apk
-          cp artifacts/alofok-paid-0.5.8/app-release.apk alofok-plus-0.5.8.apk
+          cp artifacts/alofok-trial-1.0.0/app-release.apk alofok-trial-1.0.0.apk
+          cp artifacts/alofok-paid-1.0.0/app-release.apk alofok-plus-1.0.0.apk
 
       - name: Publish GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v0.5.8 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v0.5.8 --repo 1984w18m11-byte/alofok-app --title "الأفق 0.5.8" --notes "واجهة الأفق V3 الجديدة مع الأيقونات المعتمدة للتجريبية وPlus، ثيمات Plus المستقلة، GPS ومواقيت الصلاة، اللغات، و10 أصوات أذان مرخصة."
-          gh release upload v0.5.8 alofok-trial-0.5.8.apk alofok-plus-0.5.8.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release view v1.0.0 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.0 --repo 1984w18m11-byte/alofok-app --title "الأفق 1.0.0" --notes "أول إصدار عام لإعادة بناء الأفق الجديدة: النسخة التجريبية ونسخة Plus، الواجهة الجديدة، GPS ومواقيت الصلاة، اللغات، الثيمات، و10 أصوات أذان مرخصة."
+          gh release upload v1.0.0 alofok-trial-1.0.0.apk alofok-plus-1.0.0.apk --repo 1984w18m11-byte/alofok-app --clobber
