@@ -11,6 +11,8 @@ import {useDeviceLocation} from './useDeviceLocation';
 import {useAdhanAudio} from './useAdhanAudio';
 import religiousEvents from '../data/events.json';
 import nationalEvents from '../data/national-events.json';
+import religiousEventsExtra from '../data/religious-events-extra.json';
+import {useCountryHolidays} from './useCountryHolidays';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -58,7 +60,7 @@ function isNewer(remote,current){
 function textDir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl':'ltr'}}
 function rowDir(rtl){return {flexDirection:rtl?'row-reverse':'row'}}
 function religiousEventsFor(month,day){
- return religiousEvents.filter(item=>{
+ return [...religiousEvents,...religiousEventsExtra].filter(item=>{
   if(item.m===month&&item.d===day)return true;
   return Array.isArray(item.dates)&&item.dates.some(x=>x.m===month&&x.d===day);
  });
@@ -67,7 +69,7 @@ function nationalEventsFor(country,month,day){
  return (nationalEvents[country]||[]).filter(item=>item.month===month&&item.day===day);
 }
 function eventLabel(item,rtl){
- return rtl?(item.ar||item.name_ar||''):(item.en||item.name_en||item.ar||item.name_ar||'');
+ return rtl?(item.ar||item.name_ar||item.name||item.name_en||''):(item.en||item.name_en||item.name||item.ar||item.name_ar||'');
 }
 
 function IconButton({label,onPress,children,accent=false}){
@@ -103,6 +105,7 @@ function PrayerStrip({times,t,rtl}){
 
 function GregorianGrid({date,locale,t,rtl,onPrevious,onNext,onToday,country}){
  const year=date.getFullYear(),month=date.getMonth();
+ const countryHolidays=useCountryHolidays(country,year);
  const [selectedDay,setSelectedDay]=useState(null);
  useEffect(()=>{setSelectedDay(null)},[year,month,country]);
  const first=new Date(year,month,1),days=new Date(year,month+1,0).getDate(),offset=first.getDay();
@@ -111,7 +114,10 @@ function GregorianGrid({date,locale,t,rtl,onPrevious,onNext,onToday,country}){
  const cells=[...Array(offset).fill(null),...Array.from({length:days},(_,i)=>i+1)];
  const title=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(date);
  const today=new Date();
- const eventsForDay=day=>nationalEventsFor(country,month+1,day);
+ const eventsForDay=day=>{
+  const ymd=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+  return (countryHolidays.items||[]).filter(item=>item.date===ymd);
+ };
  const selectedEvents=selectedDay?eventsForDay(selectedDay):[];
  return <>
   <View style={[s.calendarNav,rowDir(rtl)]}>

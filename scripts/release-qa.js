@@ -80,7 +80,14 @@ assert(app.includes("import religiousEvents from '../data/events.json';")&&app.i
 assert(app.includes('info.month===todayInfo.month&&info.year===todayInfo.year'),'Hijri today highlight must match day, month, and year');
 assert(app.includes('country={location.country}'),'Gregorian national events must follow the selected/current country');
 assert(app.includes('religiousEventsFor(info.month,day)'),'Hijri religious events must be enabled');
-assert(app.includes('nationalEventsFor(country,month+1,day)'),'Gregorian national events must be enabled');
+assert(app.includes("import {useCountryHolidays} from './useCountryHolidays';"),'global country holiday hook must be wired into calendar');
+assert(app.includes('useCountryHolidays(country,year)'),'Gregorian calendar must load holidays for GPS country and visible year');
+assert(app.includes("import religiousEventsExtra from '../data/religious-events-extra.json';"),'expanded religious event data must be wired into Hijri calendar');
+const holidayHook=read('src/app/useCountryHolidays.js');
+assert(holidayHook.includes('https://nagerholidays.com/api/v4/Holidays'),'global holiday API must remain configured');
+assert(holidayHook.includes('AsyncStorage'),'country holidays must be cached for offline fallback');
+const iraq=JSON.parse(read('src/data/iraq-observances.json'));
+for(const key of ['عيد الجيش العراقي','عيد الشرطة العراقية','عيد نوروز','اليوم الوطني العراقي','يوم النصر على داعش'])assert(iraq.some(x=>x.name_ar===key),`Iraq observance missing: ${key}`);
 
 if(process.exitCode)process.exit(process.exitCode);
 console.log('Release QA passed for AlofoK V3',version);
