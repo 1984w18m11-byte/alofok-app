@@ -64,6 +64,8 @@ assert(gps.includes('nearestCity'),'GPS label must support nearest seeded locali
 assert(app.includes("calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon"),'prayer times must use current coordinates');
 assert(app.includes("method:'MWL'"),'MWL prayer calculation default missing');
 assert(app.includes('schedulePrayerAlerts'),'background prayer notification scheduling missing');
+assert(app.includes("return <View style={[s.prayerStrip,rowDir(rtl)]}>"),'prayer strip must show all six times without horizontal scrolling');
+assert(app.includes("prayerItem:{flex:1,minWidth:0,minHeight:72"),'prayer items must share the available width');
 
 assert(strings.includes("appName:'الأفق'")&&strings.includes("appName:'AlofoK'"),'Arabic and English V3 packs are required');
 assert(strings.includes("languageTitle:'Interface language'")&&strings.includes("languageTitle:'لغة الواجهة'"),'language screen strings missing');
