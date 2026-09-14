@@ -74,8 +74,8 @@ if(!qa.includes('legal/authenticity screens must be wired')){
  qa += `const authClient=read('src/app/authenticityClient.js');\n`;
  qa += `assert(authClient.includes('EXPO_PUBLIC_AUTH_API_URL')&&authClient.includes('/v1/authenticity/challenge'),'authenticity API contract missing');\n`;
  qa += `assert(authClient.includes("edition,version,installationId"),'authenticity challenge must bind edition, version and installation');\n`;
- qa += `const pkg=JSON.parse(read('package.json'));\n`;
- qa += `assert(pkg.dependencies['react-native-qrcode-svg']&&pkg.dependencies['react-native-svg'],'QR dependencies must be installed');\n`;
+ qa += `const pkgLegal=JSON.parse(read('package.json'));\n`;
+ qa += `assert(pkgLegal.dependencies['react-native-qrcode-svg']&&pkgLegal.dependencies['react-native-svg'],'QR dependencies must be installed');\n`;
 }
 
 fs.writeFileSync(appPath,app);
