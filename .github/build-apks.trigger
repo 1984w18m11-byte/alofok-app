@@ -1,1 +1,1 @@
-Build AlofoK 1.0.0 trial and Plus APKs for the rebuilt generation internally tracked as AlofoK 2. QA duplicate-theme require fixed; rebuild both APKs now.
+Build AlofoK Plus APK only for preview after calendar calibration: 15 September 2026 = 4 Ramadan 1405 in the AlofoK accumulated-Nasi research model. Do not build Trial in this run.
