@@ -75,6 +75,12 @@ for(const rows of Object.values(national))assert(rows.every(x=>Boolean(x.name_en
 assert(strings.includes('This app is not a religious authority')&&strings.includes('هذا البرنامج ليس دينيًا'),'research disclaimer missing');
 assert(strings.includes('Nasi')&&strings.includes('شهر النسيء'),'Nasi leap-month research explanation missing');
 assert(!app.includes('<View style={s.supportQuickWrap}>'),'large home support block must remain removed');
+assert(!app.includes('<View style={[s.dualCards,rowDir(rtl)]}>'),'mini calendar summary cards must stay removed');
+assert(app.includes("import religiousEvents from '../data/events.json';")&&app.includes("import nationalEvents from '../data/national-events.json';"),'calendar event data must be wired into the app');
+assert(app.includes('info.month===todayInfo.month&&info.year===todayInfo.year'),'Hijri today highlight must match day, month, and year');
+assert(app.includes('country={location.country}'),'Gregorian national events must follow the selected/current country');
+assert(app.includes('religiousEventsFor(info.month,day)'),'Hijri religious events must be enabled');
+assert(app.includes('nationalEventsFor(country,month+1,day)'),'Gregorian national events must be enabled');
 
 if(process.exitCode)process.exit(process.exitCode);
 console.log('Release QA passed for AlofoK V3',version);

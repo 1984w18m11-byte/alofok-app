@@ -9,6 +9,8 @@ import {makeV3Translator,v3IsRtl,v3LocaleTag} from './v3Strings';
 import {HOME_REFERENCE_BACKGROUND,THEME_BY_ID,THEME_CATALOG,automaticThemeId} from './themeCatalog';
 import {useDeviceLocation} from './useDeviceLocation';
 import {useAdhanAudio} from './useAdhanAudio';
+import religiousEvents from '../data/events.json';
+import nationalEvents from '../data/national-events.json';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -55,6 +57,18 @@ function isNewer(remote,current){
 }
 function textDir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl':'ltr'}}
 function rowDir(rtl){return {flexDirection:rtl?'row-reverse':'row'}}
+function religiousEventsFor(month,day){
+ return religiousEvents.filter(item=>{
+  if(item.m===month&&item.d===day)return true;
+  return Array.isArray(item.dates)&&item.dates.some(x=>x.m===month&&x.d===day);
+ });
+}
+function nationalEventsFor(country,month,day){
+ return (nationalEvents[country]||[]).filter(item=>item.month===month&&item.day===day);
+}
+function eventLabel(item,rtl){
+ return rtl?(item.ar||item.name_ar||''):(item.en||item.name_en||item.ar||item.name_ar||'');
+}
 
 function IconButton({label,onPress,children,accent=false}){
  return <Pressable accessibilityLabel={label} onPress={onPress} style={[s.iconButton,accent&&s.iconButtonGold]}><Text style={[s.iconButtonText,accent&&{color:GOLD}]}>{children}</Text></Pressable>
@@ -87,13 +101,18 @@ function PrayerStrip({times,t,rtl}){
  </ScrollView>
 }
 
-function GregorianGrid({date,locale,t,rtl,onPrevious,onNext,onToday}){
+function GregorianGrid({date,locale,t,rtl,onPrevious,onNext,onToday,country}){
  const year=date.getFullYear(),month=date.getMonth();
+ const [selectedDay,setSelectedDay]=useState(null);
+ useEffect(()=>{setSelectedDay(null)},[year,month,country]);
  const first=new Date(year,month,1),days=new Date(year,month+1,0).getDate(),offset=first.getDay();
  const weekdayFmt=new Intl.DateTimeFormat(locale,{weekday:'short'});
  const headers=Array.from({length:7},(_,i)=>weekdayFmt.format(new Date(2026,0,4+i)));
  const cells=[...Array(offset).fill(null),...Array.from({length:days},(_,i)=>i+1)];
  const title=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(date);
+ const today=new Date();
+ const eventsForDay=day=>nationalEventsFor(country,month+1,day);
+ const selectedEvents=selectedDay?eventsForDay(selectedDay):[];
  return <>
   <View style={[s.calendarNav,rowDir(rtl)]}>
    <Pressable onPress={onPrevious} style={s.navSmall}><Text style={s.navSmallText}>‹</Text></Pressable>
@@ -101,13 +120,22 @@ function GregorianGrid({date,locale,t,rtl,onPrevious,onNext,onToday}){
    <Pressable onPress={onNext} style={s.navSmall}><Text style={s.navSmallText}>›</Text></Pressable>
   </View>
   <View style={s.weekHeader}>{headers.map((x,i)=><Text key={`${x}-${i}`} style={s.weekHeaderText}>{x}</Text>)}</View>
-  <View style={s.calendarGrid}>{cells.map((d,i)=><View key={i} style={s.dayCell}>{d!=null&&<Text style={[s.dayText,d===new Date().getDate()&&year===new Date().getFullYear()&&month===new Date().getMonth()?s.dayToday:null]}>{d}</Text>}</View>)}</View>
+  <View style={s.calendarGrid}>{cells.map((d,i)=>{
+   const events=d==null?[]:eventsForDay(d);
+   const isToday=d!=null&&d===today.getDate()&&year===today.getFullYear()&&month===today.getMonth();
+   const highlighted=isToday||events.length>0;
+   return <Pressable key={i} disabled={d==null} onPress={()=>setSelectedDay(d)} style={s.dayCell}>{d!=null&&<Text style={[s.dayText,highlighted?s.dayToday:null]}>{d}</Text>}</Pressable>;
+  })}</View>
+  {selectedEvents.length>0&&<View style={s.eventNotice}>{selectedEvents.map((item,i)=><Text key={i} style={[s.eventNoticeText,textDir(rtl)]}>• {rtl?'وطنية':'National'} — {eventLabel(item,rtl)}</Text>)}</View>}
   <Pressable onPress={onToday} style={s.inlineLink}><Text style={s.inlineLinkText}>{t('today')}</Text></Pressable>
  </>
 }
 
-function HijriGrid({date,locale,t,rtl,onPrevious,onNext,onToday}){
+function HijriGrid({date,currentDate,locale,t,rtl,onPrevious,onNext,onToday}){
  const info=proposedLunisolarDate(date);
+ const todayInfo=proposedLunisolarDate(currentDate||new Date());
+ const [selectedDay,setSelectedDay]=useState(null);
+ useEffect(()=>{setSelectedDay(null)},[info.year,info.month]);
  const monthLength=lunisolarMonthLength(date);
  const start=new Date(date);start.setUTCDate(start.getUTCDate()-(info.day-1));
  const offset=start.getUTCDay();
@@ -115,6 +143,8 @@ function HijriGrid({date,locale,t,rtl,onPrevious,onNext,onToday}){
  const title=`${rtl?info.monthNameAr:monthName(info.month,'en')} ${info.year}`;
  const weekdayFmt=new Intl.DateTimeFormat(locale,{weekday:'short'});
  const headers=Array.from({length:7},(_,i)=>weekdayFmt.format(new Date(2026,0,4+i)));
+ const eventsForDay=day=>religiousEventsFor(info.month,day);
+ const selectedEvents=selectedDay?eventsForDay(selectedDay):[];
  return <>
   <View style={[s.calendarNav,rowDir(rtl)]}>
    <Pressable onPress={onPrevious} style={s.navSmall}><Text style={s.navSmallText}>‹</Text></Pressable>
@@ -122,8 +152,14 @@ function HijriGrid({date,locale,t,rtl,onPrevious,onNext,onToday}){
    <Pressable onPress={onNext} style={s.navSmall}><Text style={s.navSmallText}>›</Text></Pressable>
   </View>
   <View style={s.weekHeader}>{headers.map((x,i)=><Text key={`${x}-${i}`} style={s.weekHeaderText}>{x}</Text>)}</View>
-  <View style={s.calendarGrid}>{cells.map((d,i)=><View key={i} style={s.dayCell}>{d!=null&&<Text style={[s.dayText,d===info.day?s.dayToday:null]}>{d}</Text>}</View>)}</View>
-  {info.isLeapYear&&<Text style={[s.note,textDir(rtl)]}>{rtl?'السنة الكبيسة: 13 شهرًا، والشهر الثالث عشر هو شهر النسيء.':'Leap research year: 13 months; the thirteenth is Nasi.’'}</Text>}
+  <View style={s.calendarGrid}>{cells.map((d,i)=>{
+   const events=d==null?[]:eventsForDay(d);
+   const isToday=d!=null&&d===todayInfo.day&&info.month===todayInfo.month&&info.year===todayInfo.year;
+   const highlighted=isToday||events.length>0;
+   return <Pressable key={i} disabled={d==null} onPress={()=>setSelectedDay(d)} style={s.dayCell}>{d!=null&&<Text style={[s.dayText,highlighted?s.dayToday:null]}>{d}</Text>}</Pressable>;
+  })}</View>
+  {selectedEvents.length>0&&<View style={s.eventNotice}>{selectedEvents.map((item,i)=><Text key={i} style={[s.eventNoticeText,textDir(rtl)]}>• {rtl?'دينية':'Religious'} — {eventLabel(item,rtl)}</Text>)}</View>}
+  {info.isLeapYear&&<Text style={[s.note,textDir(rtl)]}>{rtl?'السنة الكبيسة: 13 شهرًا، والشهر الثالث عشر هو شهر النسيء.':'Leap research year: 13 months; the thirteenth is Nasi.'}</Text>}
  </>
 }
 
@@ -177,20 +213,11 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
      <PrayerStrip times={prayers.formatted} t={t} rtl={rtl}/>
     </View>
 
-    <View style={[s.dualCards,rowDir(rtl)]}>
-     <Pressable style={s.dateMiniCard} onPress={()=>onNavigate('calendarHijri')}>
-      <Text style={[s.miniTitle,textDir(rtl)]}>{t('hijriCalendar')}</Text><Text style={s.miniSubtitle}>{hMonth} {lunar.year}</Text><Text style={s.miniDay}>{lunar.day}</Text><Text style={s.miniWeek}>{week}</Text>
-     </Pressable>
-     <Pressable style={s.dateMiniCard} onPress={()=>onNavigate('calendarGregorian')}>
-      <Text style={[s.miniTitle,textDir(rtl)]}>{t('gregorianCalendar')}</Text><Text style={s.miniSubtitle}>{gregMonth}</Text><Text style={s.miniDay}>{gregDay}</Text><Text style={s.miniWeek}>{week}</Text>
-     </Pressable>
-    </View>
-
     <SectionCard title={t('hijriCalendar')} rtl={rtl}>
-     <HijriGrid date={hijriDate} locale={locale} t={t} rtl={rtl} onPrevious={()=>setHijriDate(d=>addLunisolarMonths(d,-1))} onNext={()=>setHijriDate(d=>addLunisolarMonths(d,1))} onToday={()=>setHijriDate(new Date())}/>
+     <HijriGrid date={hijriDate} currentDate={now} locale={locale} t={t} rtl={rtl} onPrevious={()=>setHijriDate(d=>addLunisolarMonths(d,-1))} onNext={()=>setHijriDate(d=>addLunisolarMonths(d,1))} onToday={()=>setHijriDate(new Date())}/>
     </SectionCard>
     <SectionCard title={t('gregorianCalendar')} rtl={rtl}>
-     <GregorianGrid date={gregDate} locale={locale} t={t} rtl={rtl} onPrevious={()=>setGregDate(d=>new Date(d.getFullYear(),d.getMonth()-1,1))} onNext={()=>setGregDate(d=>new Date(d.getFullYear(),d.getMonth()+1,1))} onToday={()=>setGregDate(new Date())}/>
+     <GregorianGrid date={gregDate} locale={locale} t={t} rtl={rtl} country={location.country} onPrevious={()=>setGregDate(d=>new Date(d.getFullYear(),d.getMonth()-1,1))} onNext={()=>setGregDate(d=>new Date(d.getFullYear(),d.getMonth()+1,1))} onToday={()=>setGregDate(new Date())}/>
     </SectionCard>
    </ScrollView>
   </SafeAreaView>
@@ -360,7 +387,7 @@ const s=StyleSheet.create({
  dateHero:{alignItems:'center',paddingTop:4},hijriHero:{color:WHITE,fontSize:25,fontWeight:'700',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},gregHero:{color:'#E5E9EF',fontSize:15,marginTop:8,textAlign:'center',textShadowColor:'rgba(0,0,0,.8)',textShadowRadius:5},visualSpace:{height:245},quoteBlock:{alignItems:'center',marginBottom:14},quoteText:{color:WHITE,fontSize:23,fontWeight:'600',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},quoteSub:{color:WHITE,fontSize:14,marginTop:7,textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:5},
  glassPanel:{backgroundColor:'rgba(7,23,41,.82)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:20,padding:12,overflow:'hidden'},panelHeading:{alignItems:'center',justifyContent:'space-between',marginBottom:10},panelTitle:{fontSize:19,fontWeight:'800',color:GOLD},panelAction:{color:'#DCE3EC',fontSize:13},prayerStrip:{gap:5,paddingVertical:3},prayerItem:{width:74,minHeight:88,alignItems:'center',justifyContent:'center',borderRightWidth:StyleSheet.hairlineWidth,borderColor:LINE},prayerIcon:{color:WHITE,fontSize:21},prayerName:{color:WHITE,fontSize:12,fontWeight:'700',marginTop:4},prayerTime:{color:'#F2F3F5',fontSize:12,fontWeight:'700',marginTop:3},
  dualCards:{gap:10,marginTop:12},dateMiniCard:{flex:1,minHeight:152,backgroundColor:CARD,borderRadius:18,borderWidth:1,borderColor:'rgba(255,255,255,.20)',padding:14},miniTitle:{color:WHITE,fontSize:15,fontWeight:'800'},miniSubtitle:{color:'#D2DBE5',fontSize:11,marginTop:7},miniDay:{color:WHITE,fontSize:43,fontWeight:'800',textAlign:'center',marginTop:10},miniWeek:{color:'#DDE5EE',fontSize:12,textAlign:'center'},
- sectionCard:{backgroundColor:'rgba(5,20,37,.90)',borderRadius:20,borderWidth:1,borderColor:'rgba(255,255,255,.13)',padding:15,marginTop:14},sectionTitleRow:{alignItems:'center',justifyContent:'space-between',marginBottom:12},sectionTitle:{color:GOLD,fontSize:19,fontWeight:'800',flex:1},calendarNav:{alignItems:'center',justifyContent:'space-between',marginBottom:12},calendarMonthTitle:{color:WHITE,fontSize:17,fontWeight:'800'},navSmall:{width:36,height:36,borderRadius:18,backgroundColor:CARD_2,alignItems:'center',justifyContent:'center'},navSmallText:{color:WHITE,fontSize:26},weekHeader:{flexDirection:'row'},weekHeaderText:{width:'14.2857%',textAlign:'center',color:MUTED,fontSize:10,fontWeight:'700'},calendarGrid:{flexDirection:'row',flexWrap:'wrap',marginTop:6},dayCell:{width:'14.2857%',height:42,alignItems:'center',justifyContent:'center'},dayText:{color:WHITE,fontSize:14},dayToday:{color:NAVY,backgroundColor:GOLD,borderRadius:16,overflow:'hidden',paddingHorizontal:9,paddingVertical:5,fontWeight:'900'},inlineLink:{alignSelf:'center',padding:8,marginTop:3},inlineLinkText:{color:GOLD,fontWeight:'700'},note:{color:MUTED,fontSize:12,lineHeight:19,marginTop:8},
+ sectionCard:{backgroundColor:'rgba(5,20,37,.90)',borderRadius:20,borderWidth:1,borderColor:'rgba(255,255,255,.13)',padding:15,marginTop:14},sectionTitleRow:{alignItems:'center',justifyContent:'space-between',marginBottom:12},sectionTitle:{color:GOLD,fontSize:19,fontWeight:'800',flex:1},calendarNav:{alignItems:'center',justifyContent:'space-between',marginBottom:12},calendarMonthTitle:{color:WHITE,fontSize:17,fontWeight:'800'},navSmall:{width:36,height:36,borderRadius:18,backgroundColor:CARD_2,alignItems:'center',justifyContent:'center'},navSmallText:{color:WHITE,fontSize:26},weekHeader:{flexDirection:'row'},weekHeaderText:{width:'14.2857%',textAlign:'center',color:MUTED,fontSize:10,fontWeight:'700'},calendarGrid:{flexDirection:'row',flexWrap:'wrap',marginTop:6},dayCell:{width:'14.2857%',height:42,alignItems:'center',justifyContent:'center'},dayText:{color:WHITE,fontSize:14},dayToday:{color:NAVY,backgroundColor:GOLD,borderRadius:16,overflow:'hidden',paddingHorizontal:9,paddingVertical:5,fontWeight:'900'},inlineLink:{alignSelf:'center',padding:8,marginTop:3},inlineLinkText:{color:GOLD,fontWeight:'700'},eventNotice:{marginTop:10,borderRadius:12,borderWidth:1,borderColor:GOLD_SOFT,backgroundColor:'rgba(244,196,93,.13)',paddingHorizontal:12,paddingVertical:9},eventNoticeText:{color:'#FFE7A6',fontSize:12,fontWeight:'700',lineHeight:19},note:{color:MUTED,fontSize:12,lineHeight:19,marginTop:8},
  drawerBackdrop:{...StyleSheet.absoluteFillObject,zIndex:20,backgroundColor:'rgba(0,0,0,.30)'},drawerDismiss:{...StyleSheet.absoluteFillObject},drawer:{position:'absolute',top:0,bottom:0,width:'83%',maxWidth:380,backgroundColor:'rgba(5,20,37,.98)',borderColor:'rgba(255,255,255,.12)',borderWidth:StyleSheet.hairlineWidth},drawerSafe:{flex:1,padding:22},drawerClose:{width:42,height:42,alignItems:'center',justifyContent:'center'},drawerCloseText:{color:WHITE,fontSize:34},drawerBrand:{alignItems:'center',marginTop:6,marginBottom:20},logoTile:{width:70,height:70,borderRadius:18,borderWidth:1.5,borderColor:GOLD,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(244,196,93,.10)'},logoTileText:{fontSize:34,color:GOLD},drawerAppName:{fontSize:28,color:GOLD,fontWeight:'900',marginTop:10},drawerTagline:{fontSize:13,color:GOLD_SOFT,marginTop:2},drawerLine:{height:1,backgroundColor:LINE,marginBottom:3},drawerItem:{height:58,alignItems:'center',gap:16,borderBottomWidth:StyleSheet.hairlineWidth,borderBottomColor:LINE},drawerItemIcon:{width:28,textAlign:'center',color:WHITE,fontSize:22},drawerItemText:{flex:1,color:WHITE,fontSize:17,fontWeight:'600'},drawerBottom:{marginTop:'auto',paddingTop:25},drawerSlogan:{color:GOLD,fontSize:20,lineHeight:31,fontWeight:'600'},
  screenContent:{padding:18,paddingBottom:45},screenHeader:{height:60,alignItems:'center',justifyContent:'space-between'},screenTitle:{color:WHITE,fontSize:24,fontWeight:'900',flex:1,marginHorizontal:12},headerSpacer:{width:44},screenHint:{color:MUTED,fontSize:14,lineHeight:21,marginVertical:8},
  adhanCard:{backgroundColor:CARD_2,borderWidth:1,borderColor:LINE,borderRadius:17,padding:11,marginTop:10},selectedGold:{borderColor:GOLD,borderWidth:1.5,shadowColor:GOLD,shadowOpacity:.35,shadowRadius:7,elevation:3},adhanRow:{alignItems:'center',gap:12},playCircle:{width:49,height:49,borderRadius:25,borderWidth:1.5,borderColor:WHITE,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(0,0,0,.25)'},playCircleText:{color:WHITE,fontSize:18},adhanTextWrap:{flex:1},adhanName:{color:WHITE,fontSize:16,fontWeight:'800'},adhanMeta:{color:MUTED,fontSize:11,marginTop:5,lineHeight:16},radio:{width:26,height:26,borderRadius:13,borderWidth:2,borderColor:'#8B95A0',alignItems:'center',justifyContent:'center'},radioSelected:{backgroundColor:GOLD,borderColor:GOLD},radioCheck:{color:NAVY,fontWeight:'900'},previewBox:{marginTop:18,padding:16,borderRadius:18,backgroundColor:CARD_2,borderWidth:1,borderColor:LINE},wave:{color:MUTED,fontSize:21,letterSpacing:2},errorText:{color:'#FFB4B4',marginTop:10,fontSize:12},
