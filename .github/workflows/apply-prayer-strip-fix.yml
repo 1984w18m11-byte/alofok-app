@@ -1,0 +1,35 @@
+name: Apply prayer strip fix
+
+on:
+  push:
+    paths:
+      - .github/prayer-strip-fix.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply compact prayer strip
+        run: node scripts/apply-prayer-strip-fix.mjs
+      - name: Commit fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "AlofoK Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/app/AppV3.js scripts/release-qa.js
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "fix(ui): fit all six prayer times on home card"
+          git push
