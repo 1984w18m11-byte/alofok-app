@@ -1,0 +1,31 @@
+name: AlofoK V3 QA
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Translation checks
+        run: npm run check:translations
+      - name: Existing release QA
+        run: npm run check:release
+      - name: Bundle Android with Expo
+        env:
+          EXPO_PUBLIC_APP_VARIANT: trial
+        run: npx expo export --platform android --output-dir dist-v3-trial
+      - name: Bundle Plus variant with Expo
+        env:
+          EXPO_PUBLIC_APP_VARIANT: paid
+        run: npx expo export --platform android --output-dir dist-v3-plus
