@@ -13,6 +13,7 @@ import religiousEvents from '../data/events.json';
 import nationalEvents from '../data/national-events.json';
 import religiousEventsExtra from '../data/religious-events-extra.json';
 import {useCountryHolidays} from './useCountryHolidays';
+import {AuthenticityScreen,CopyrightScreen,PrivacyScreen} from './LegalScreens';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -23,7 +24,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='0.5.8';
+const VERSION='1.0.0';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -292,13 +293,6 @@ function AboutScreen({t,rtl,onBack}){
  </ScrollView></SafeAreaView>
 }
 
-function PrivacyScreen({t,rtl,onBack}){
- const text=rtl
-  ?'يستخدم الأفق موقع الجهاز أثناء تشغيل التطبيق لحساب المواقيت وعرض المنطقة القريبة. تُحفظ الإحداثيات والتفضيلات محليًا، ولا تُباع بيانات المستخدم. يستخدم التطبيق الإنترنت فقط للخدمات التي تحتاجه مثل فحص التحديثات.'
-  :'AlofoK uses device location while the app is running to calculate prayer times and show the nearby area. Coordinates and preferences are stored locally and user data is not sold. Internet access is used only for features that need it, such as update checks.';
- return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}><Header title={t('privacy')} t={t} rtl={rtl} onBack={onBack}/><SectionCard title={t('privacy')} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{text}</Text></SectionCard></ScrollView></SafeAreaView>
-}
-
 function SettingsScreen({t,rtl,adhan,onNavigate,location,onBack}){
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('settings')} t={t} rtl={rtl} onBack={onBack}/>
@@ -377,7 +371,9 @@ export default function AppV3(){
  if(screen==='plus')return <PlusScreen t={t} rtl={rtl} isPlus={IS_PLUS} onBack={goHome}/>;
  if(screen==='languages')return <LanguageScreen t={t} rtl={rtl} language={language} onChoose={chooseLanguage} onBack={goHome}/>;
  if(screen==='about')return <AboutScreen t={t} rtl={rtl} onBack={goHome}/>;
- if(screen==='privacy')return <PrivacyScreen t={t} rtl={rtl} onBack={goHome}/>;
+ if(screen==='privacy')return <PrivacyScreen rtl={rtl} onBack={goHome} onNavigate={navigate}/>;
+ if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={()=>setScreen('privacy')}/>;
+ if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={()=>setScreen('privacy')} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
  if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} onNavigate={navigate} location={location} onBack={goHome}/>;
  if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={()=>setScreen('settings')}/>;
  if(screen==='calendarHijri'||screen==='calendarGregorian')setTimeout(()=>setScreen('home'),0);

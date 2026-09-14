@@ -95,3 +95,15 @@ assert(!iraq.some(x=>String(x.name_ar||'').includes('البعث')||String(x.name
 
 if(process.exitCode)process.exit(process.exitCode);
 console.log('Release QA passed for AlofoK V3',version);
+
+// Legal, privacy and authenticity verification guards
+assert(app.includes("from './LegalScreens';"),'legal/authenticity screens must be wired');
+assert(app.includes("screen==='copyright'")&&app.includes("screen==='authenticity'"),'copyright and authenticity routes must exist');
+const legal=read('src/app/LegalScreens.js');
+assert(legal.includes('سياسة الخصوصية')&&legal.includes('حقوق الطبع والنشر'),'full Arabic privacy and copyright screens required');
+assert(legal.includes('react-native-qrcode-svg'),'authenticity screen must render QR codes');
+const authClient=read('src/app/authenticityClient.js');
+assert(authClient.includes('EXPO_PUBLIC_AUTH_API_URL')&&authClient.includes('/v1/authenticity/challenge'),'authenticity API contract missing');
+assert(authClient.includes("edition,version,installationId"),'authenticity challenge must bind edition, version and installation');
+const pkgLegal=JSON.parse(read('package.json'));
+assert(pkgLegal.dependencies['react-native-qrcode-svg']&&pkgLegal.dependencies['react-native-svg'],'QR dependencies must be installed');
