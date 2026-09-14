@@ -1,0 +1,40 @@
+name: Apply legal and authenticity integration
+
+on:
+  push:
+    paths:
+      - .github/legal-authenticity.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install QR dependencies
+        run: npm install --save-exact react-native-svg@15.12.1 react-native-qrcode-svg@6.3.24
+      - name: Apply privacy, copyright and authenticity integration
+        run: node scripts/apply-legal-authenticity.mjs
+      - name: Run release source QA
+        run: npm run check:release
+      - name: Commit source changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "AlofoK Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add package.json package-lock.json src/app/AppV3.js src/app/v3Strings.js scripts/release-qa.js
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "feat(legal): add privacy copyright and authenticity verification"
+          git push
