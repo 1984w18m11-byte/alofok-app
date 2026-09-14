@@ -322,6 +322,7 @@ function CitiesScreen({t,rtl,location,onBack}){
 export default function AppV3(){
  const [language,setLanguage]=useState('ar');
  const [screen,setScreen]=useState('home');
+ const [screenHistory,setScreenHistory]=useState([]);
  const [drawer,setDrawer]=useState(false);
  const [now,setNow]=useState(new Date());
  const [selectedTheme,setSelectedThemeState]=useState(IS_PLUS?'auto':'trial-fixed');
@@ -345,7 +346,7 @@ export default function AppV3(){
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
 
  const setSelectedTheme=useCallback(async id=>{
-  if(!IS_PLUS&&id!=='trial-fixed'){setScreen('plus');return}
+  if(!IS_PLUS&&id!=='trial-fixed'){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
   setSelectedThemeState(id);try{await AsyncStorage.setItem(THEME_KEY,id)}catch(e){}
  },[]);
  const chooseLanguage=useCallback(async id=>{setLanguage(id);try{await AsyncStorage.setItem(LANGUAGE_KEY,id)}catch(e){}},[]);
@@ -371,22 +372,31 @@ export default function AppV3(){
    Alert.alert(t('support'),SUPPORT_ACCOUNT?(rtl?`رقم الدعم: ${SUPPORT_ACCOUNT}`:`Support account: ${SUPPORT_ACCOUNT}`):(rtl?'سيُضاف رقم الدعم المعتمد داخل الإصدار النهائي.':'The verified support account will be added in the final release.'));return;
   }
   if(target==='update'){checkUpdate();return}
+  if(target===screen)return;
+  setScreenHistory(history=>[...history,screen]);
   setScreen(target);
- },[t,rtl,checkUpdate]);
- const goHome=()=>setScreen('home');
+ },[t,rtl,checkUpdate,screen]);
+ const goBack=useCallback(()=>{
+  setDrawer(false);
+  if(!screenHistory.length){setScreen('home');return}
+  const previous=screenHistory[screenHistory.length-1];
+  setScreenHistory(screenHistory.slice(0,-1));
+  setScreen(previous);
+ },[screenHistory]);
+ const goHome=useCallback(()=>{setDrawer(false);setScreenHistory([]);setScreen('home')},[]);
  const refreshGps=async()=>{const result=await location.refresh();if(!result&&location.error){const msg=location.error==='PERMISSION_DENIED'?t('locationDenied'):location.error==='SERVICES_OFF'?(rtl?'خدمة GPS متوقفة. فعّل الموقع ثم حاول مرة أخرى.':'GPS is off. Turn on location and try again.'):t('locationUnavailable');Alert.alert(t('location'),msg)}};
 
- if(screen==='adhan')return <AdhanScreen t={t} rtl={rtl} adhan={adhan} onBack={goHome}/>;
- if(screen==='themes')return <ThemesScreen t={t} rtl={rtl} isPlus={IS_PLUS} selectedTheme={selectedTheme} setSelectedTheme={setSelectedTheme} onBack={goHome}/>;
- if(screen==='plus')return <PlusScreen t={t} rtl={rtl} isPlus={IS_PLUS} onBack={goHome}/>;
- if(screen==='languages')return <LanguageScreen t={t} rtl={rtl} language={language} onChoose={chooseLanguage} onBack={goHome}/>;
- if(screen==='about')return <AboutScreen t={t} rtl={rtl} onBack={goHome}/>;
- if(screen==='privacy')return <PrivacyScreen rtl={rtl} onBack={goHome} onNavigate={navigate}/>;
- if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={()=>setScreen('privacy')}/>;
- if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={()=>setScreen('privacy')} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
- if(screen==='advertise')return <AdvertiseScreen rtl={rtl} language={language} country={location.country} onBack={goHome}/>;
- if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} onNavigate={navigate} location={location} onBack={goHome}/>;
- if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={()=>setScreen('settings')}/>;
+ if(screen==='adhan')return <AdhanScreen t={t} rtl={rtl} adhan={adhan} onBack={goBack}/>;
+ if(screen==='themes')return <ThemesScreen t={t} rtl={rtl} isPlus={IS_PLUS} selectedTheme={selectedTheme} setSelectedTheme={setSelectedTheme} onBack={goBack}/>;
+ if(screen==='plus')return <PlusScreen t={t} rtl={rtl} isPlus={IS_PLUS} onBack={goBack}/>;
+ if(screen==='languages')return <LanguageScreen t={t} rtl={rtl} language={language} onChoose={chooseLanguage} onBack={goBack}/>;
+ if(screen==='about')return <AboutScreen t={t} rtl={rtl} onBack={goBack}/>;
+ if(screen==='privacy')return <PrivacyScreen rtl={rtl} onBack={goBack} onNavigate={navigate}/>;
+ if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={goBack}/>;
+ if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={goBack} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
+ if(screen==='advertise')return <AdvertiseScreen rtl={rtl} language={language} country={location.country} onBack={goBack}/>;
+ if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} onNavigate={navigate} location={location} onBack={goBack}/>;
+ if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={goBack}/>;
  if(screen==='calendarHijri'||screen==='calendarGregorian')setTimeout(()=>setScreen('home'),0);
 
  return <View style={s.root}>
