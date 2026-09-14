@@ -61,7 +61,7 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Fetch, convert, and validate the ten licensed Adhan recordings
+      - name: Fetch, convert, and validate the six approved Adhan recordings
         shell: bash
         run: |
           set -euo pipefail
@@ -93,12 +93,8 @@ jobs:
           convert_source "Call to prayer.ogg" "adhan_nigeria_isaac"
           convert_source "33937 ejaz215 call-to-prayer-from-the-prophet-s-mo.ogg" "adhan_medina_ejaz215"
           convert_source "Adhan, Great Mosque of Mecca - Jan 21, 2013.webm" "adhan_mecca_2013"
-          convert_source "Maghrib Adhan at the Masjid al Haram, Mecca - 25 Feb, 2012.webm" "adhan_mecca_maghrib_2012"
-          convert_source "Hminsec150 Konya.webm" "adhan_konya_2012"
-          convert_source "Adhan During the Lebanese Protests in Tripoli 2019.webm" "adhan_tripoli_2019"
-          convert_source "Tour guide recite Adhan in the Shah mosque in Isfahan, Iran.webm" "adhan_isfahan_shah"
 
-          for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013 adhan_mecca_maghrib_2012 adhan_konya_2012 adhan_tripoli_2019 adhan_isfahan_shah; do
+          for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013; do
             for ext in ogg wav; do
               f="assets/adhan/${stem}.${ext}"
               test -s "$f"
@@ -163,5 +159,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.0 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.0 --repo 1984w18m11-byte/alofok-app --title "الأفق 1.0.0" --notes "أول إصدار عام لإعادة بناء الأفق الجديدة: النسخة التجريبية ونسخة Plus، الواجهة الجديدة، GPS ومواقيت الصلاة، اللغات، الثيمات، و10 أصوات أذان مرخصة."
+          gh release view v1.0.0 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.0 --repo 1984w18m11-byte/alofok-app --title "الأفق 1.0.0" --notes "أول إصدار عام لإعادة بناء الأفق الجديدة: النسخة التجريبية ونسخة Plus، الواجهة الجديدة، GPS ومواقيت الصلاة، اللغات، الثيمات، و6 أصوات أذان معتمدة."
           gh release upload v1.0.0 alofok-trial-1.0.0.apk alofok-plus-1.0.0.apk --repo 1984w18m11-byte/alofok-app --clobber
