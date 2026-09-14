@@ -20,11 +20,7 @@ module.exports = () => {
       ...base.android,
       package: packageId,
       versionCode: base.android.versionCode,
-      blockedPermissions: ['android.permission.RECORD_AUDIO'],
-      adaptiveIcon: {
-        foregroundImage: icon,
-        backgroundColor: '#061724'
-      }
+      blockedPermissions: ['android.permission.RECORD_AUDIO']
     },
     extra: {
       ...base.extra,
