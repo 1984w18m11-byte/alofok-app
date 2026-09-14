@@ -22,7 +22,7 @@ module.exports = () => {
       versionCode: base.android.versionCode,
       blockedPermissions: ['android.permission.RECORD_AUDIO'],
       adaptiveIcon: {
-        foregroundImage: isPaid ? './assets/icon-paid-foreground.png' : './assets/icon-trial-foreground.png',
+        foregroundImage: icon,
         backgroundColor: '#061724'
       }
     },
