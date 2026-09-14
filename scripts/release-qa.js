@@ -39,11 +39,13 @@ assert(new Set(standaloneThemeRequires).size===35,'standalone theme image paths 
 for(const name of standaloneThemeRequires)assert(fs.existsSync(`assets/themes/${name}`),`missing theme asset: ${name}`);
 
 const configuredSounds=(appJson.expo.plugins.find(x=>Array.isArray(x)&&x[0]==='expo-notifications')||[])[1]?.sounds||[];
-assert(configuredSounds.length===10,'ten notification Adhan sounds must be configured');
+assert(configuredSounds.length===6,'six notification Adhan sounds must be configured');
 assert(configuredSounds.every(x=>x.endsWith('.wav')),'notification sounds should use WAV');
 const playable=registry.filter(x=>x.status==='licensed'&&Array.isArray(x.available_in)&&x.available_in.length);
-assert(playable.length===10,'expected exactly ten licensed playable Adhan entries');
-assert(!registry.some(x=>['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez'].includes(x.id)),'rejected Adhan ids must stay removed');
+assert(playable.length===6,'expected exactly six licensed playable Adhan entries');
+const rejectedIds=['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez','commons-mecca-maghrib-2012','commons-konya-2012','commons-tripoli-2019','commons-isfahan-shah'];
+assert(!registry.some(x=>rejectedIds.includes(x.id)),'rejected Adhan ids must stay removed');
+for(const id of rejectedIds)assert(!adhans.includes(`'${id}'`),`${id}: rejected Adhan must not be bundled`);
 for(const x of playable){
  assert(Boolean(x.license),`${x.id}: license missing`);
  assert(Boolean(x.source),`${x.id}: source missing`);
