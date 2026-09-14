@@ -51,13 +51,15 @@ function mergeHolidayData(remote,fallback){
  return out.sort((a,b)=>String(a.date).localeCompare(String(b.date)));
 }
 function normalizeRemote(rows,country){
+ const code=String(country||'').toUpperCase();
  return (Array.isArray(rows)?rows:[])
   .filter(x=>x&&x.date&&x.nationalHoliday!==false&&(!Array.isArray(x.subdivisionCodes)||x.subdivisionCodes.length===0))
+  .filter(x=>!(code==='IQ'&&String(x.date).slice(5)==='03-16'))
   .map(x=>({
    date:x.date,
    name:x.name||'',
    name_en:x.name||'',
-   countryCode:x.countryCode||country,
+   countryCode:x.countryCode||code,
    nationalHoliday:x.nationalHoliday!==false,
    holidayTypes:Array.isArray(x.holidayTypes)?x.holidayTypes:[],
    source:'nager'
@@ -80,7 +82,7 @@ export function useCountryHolidays(country,year){
    let cached=[];
    try{
     const raw=await AsyncStorage.getItem(cacheKey);
-    if(raw){const parsed=JSON.parse(raw);if(Array.isArray(parsed))cached=parsed;}
+    if(raw){const parsed=JSON.parse(raw);if(Array.isArray(parsed))cached=normalizeRemote(parsed,code);}
    }catch(e){}
    if(alive&&cached.length)setState({items:mergeHolidayData(cached,fallback),loading:true,error:null,source:'cache'});
    try{
