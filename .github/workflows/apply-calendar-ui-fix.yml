@@ -1,0 +1,35 @@
+name: Apply calendar UI fix
+
+on:
+  push:
+    paths:
+      - .github/calendar-ui-fix.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Apply calendar UI and event fixes
+        run: node scripts/apply-calendar-ui-fix.mjs
+      - name: Commit fixes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "AlofoK Automation"
+          git config user.email "actions@users.noreply.github.com"
+          git add src/app/AppV3.js scripts/release-qa.js
+          if git diff --cached --quiet; then
+            echo "No changes needed"
+            exit 0
+          fi
+          git commit -m "fix(calendar): remove duplicate cards and wire events"
+          git push
