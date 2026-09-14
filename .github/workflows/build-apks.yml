@@ -48,7 +48,7 @@ jobs:
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg
+          sudo apt-get install -y -qq ffmpeg librsvg2-bin fonts-noto-core
           mkdir -p assets/adhan /tmp/alofok-adhan
 
           convert_source() {
@@ -89,14 +89,16 @@ jobs:
             done
           done
 
-      - name: Normalize approved launcher icons for Expo
+      - name: Render approved launcher icons
         shell: bash
         run: |
           set -euo pipefail
+          rsvg-convert -w 1024 -h 1024 assets/icons/icon-trial-approved.svg -o assets/icon-trial.png
+          rsvg-convert -w 1024 -h 1024 assets/icons/icon-paid-approved.svg -o assets/icon-paid.png
           for name in icon-trial icon-paid; do
-            ffmpeg -hide_banner -loglevel error -xerror -y -i "assets/${name}.png" -frames:v 1 -pix_fmt rgb24 "/tmp/${name}.png"
-            mv "/tmp/${name}.png" "assets/${name}.png"
             file "assets/${name}.png"
+            ffprobe -v error "assets/${name}.png" >/dev/null
+            ffmpeg -hide_banner -loglevel error -xerror -i "assets/${name}.png" -f null -
           done
 
       - name: Validate translation completeness
