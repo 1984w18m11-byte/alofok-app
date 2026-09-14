@@ -1,1 +1,1 @@
-apply legal privacy copyright authenticity v1
+apply legal privacy copyright authenticity v2
