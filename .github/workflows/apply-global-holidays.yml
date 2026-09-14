@@ -1,0 +1,60 @@
+name: Apply global holiday integration
+
+on:
+  push:
+    paths:
+      - .github/global-holidays.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch calendar holiday integration
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          p=Path('src/app/AppV3.js')
+          s=p.read_text()
+          s=s.replace("import nationalEvents from '../data/national-events.json';", "import nationalEvents from '../data/national-events.json';\nimport religiousEventsExtra from '../data/religious-events-extra.json';\nimport {useCountryHolidays} from './useCountryHolidays';")
+          old="""function religiousEventsFor(month,day){\n return religiousEvents.filter(item=>{\n  if(item.m===month&&item.d===day)return true;\n  return Array.isArray(item.dates)&&item.dates.some(x=>x.m===month&&x.d===day);\n });\n}"""
+          new="""function religiousEventsFor(month,day){\n return [...religiousEvents,...religiousEventsExtra].filter(item=>{\n  if(item.m===month&&item.d===day)return true;\n  return Array.isArray(item.dates)&&item.dates.some(x=>x.m===month&&x.d===day);\n });\n}"""
+          if old not in s: raise SystemExit('religiousEventsFor block not found')
+          s=s.replace(old,new)
+          s=s.replace("return rtl?(item.ar||item.name_ar||''):(item.en||item.name_en||item.ar||item.name_ar||'');", "return rtl?(item.ar||item.name_ar||item.name||item.name_en||''):(item.en||item.name_en||item.name||item.ar||item.name_ar||'');")
+          old="""function GregorianGrid({date,locale,t,rtl,onPrevious,onNext,onToday,country}){\n const year=date.getFullYear(),month=date.getMonth();\n const [selectedDay,setSelectedDay]=useState(null);"""
+          new="""function GregorianGrid({date,locale,t,rtl,onPrevious,onNext,onToday,country}){\n const year=date.getFullYear(),month=date.getMonth();\n const countryHolidays=useCountryHolidays(country,year);\n const [selectedDay,setSelectedDay]=useState(null);"""
+          if old not in s: raise SystemExit('GregorianGrid header not found')
+          s=s.replace(old,new)
+          old=" const eventsForDay=day=>nationalEventsFor(country,month+1,day);"
+          new=""" const eventsForDay=day=>{\n  const ymd=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;\n  return (countryHolidays.items||[]).filter(item=>item.date===ymd);\n };"""
+          if old not in s: raise SystemExit('eventsForDay line not found')
+          s=s.replace(old,new)
+          p.write_text(s)
+
+          q=Path('scripts/release-qa.js')
+          t=q.read_text()
+          needle="assert(app.includes('nationalEventsFor(country,month+1,day)'),'Gregorian national events must be enabled');"
+          repl="""assert(app.includes("import {useCountryHolidays} from './useCountryHolidays';"),'global country holiday hook must be wired into calendar');\nassert(app.includes('useCountryHolidays(country,year)'),'Gregorian calendar must load holidays for GPS country and visible year');\nassert(app.includes("import religiousEventsExtra from '../data/religious-events-extra.json';"),'expanded religious event data must be wired into Hijri calendar');\nconst holidayHook=read('src/app/useCountryHolidays.js');\nassert(holidayHook.includes('https://nagerholidays.com/api/v4/Holidays'),'global holiday API must remain configured');\nassert(holidayHook.includes('AsyncStorage'),'country holidays must be cached for offline fallback');\nconst iraq=JSON.parse(read('src/data/iraq-observances.json'));\nfor(const key of ['عيد الجيش العراقي','عيد الشرطة العراقية','عيد نوروز','اليوم الوطني العراقي','يوم النصر على داعش'])assert(iraq.some(x=>x.name_ar===key),`Iraq observance missing: ${key}`);"""
+          if needle not in t: raise SystemExit('QA holiday assertion not found')
+          t=t.replace(needle,repl)
+          q.write_text(t)
+          PY
+      - name: Validate patch syntax markers
+        run: |
+          grep -q "useCountryHolidays(country,year)" src/app/AppV3.js
+          grep -q "religiousEventsExtra" src/app/AppV3.js
+          grep -q "nagerholidays.com/api/v4/Holidays" src/app/useCountryHolidays.js
+      - name: Commit changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/AppV3.js scripts/release-qa.js
+          git diff --cached --quiet && exit 0
+          git commit -m "feat(calendar): show GPS country holidays globally"
+          git push
