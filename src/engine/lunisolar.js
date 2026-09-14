@@ -3,24 +3,31 @@ export const MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada
 export const INTERCALARY_MONTH_AR='شهر النسيء';
 
 // AlofoK research model.
-// The research hypothesis anchors 19 July 622 (proleptic Gregorian)
-// to 1 Rajab 1 AH, then keeps normal Arabic month order from that point.
-// This is deliberately separate from the conventional civil-Hijri epoch,
-// which labels that epoch around 1 Muharram. It is a research assumption,
-// not a claim that this reconstruction is historically established.
+// The conventional civil-Hijri epoch reference is around 19 July 622
+// in the proleptic Gregorian calendar. The AlofoK research reconstruction
+// currently uses a two-day earlier phase alignment (17 July 622) and labels
+// that point 1 Rajab 1 AH. This calibration makes 15 September 2026 align
+// with 4 Ramadan 1405 in the accumulated-Nasi model.
+// This is a research assumption, not a claim that this reconstruction is
+// the historically established Hijri calendar.
 export const SYNODIC_MONTH_DAYS=29.530588853;
 export const TROPICAL_YEAR_DAYS=365.24219;
 export const LUNAR_COMMON_YEAR_DAYS=12*SYNODIC_MONTH_DAYS;
 export const ANNUAL_SEASONAL_DRIFT_DAYS=TROPICAL_YEAR_DAYS-LUNAR_COMMON_YEAR_DAYS;
-export const HIJRI_EPOCH_GREGORIAN=new Date(Date.UTC(622,6,19,0,0,0));
+export const CONVENTIONAL_EPOCH_REFERENCE_GREGORIAN=new Date(Date.UTC(622,6,19,0,0,0));
+export const HIJRI_EPOCH_GREGORIAN=new Date(Date.UTC(622,6,17,0,0,0));
 export const RESEARCH_EPOCH_YEAR=1;
 export const RESEARCH_EPOCH_MONTH=7; // Rajab
+export const RESEARCH_CALIBRATION_DATE='2026-09-15';
+export const RESEARCH_CALIBRATION_HIJRI={year:1405,month:9,day:4};
 const EPOCH_ABSOLUTE_MONTH=RESEARCH_EPOCH_MONTH-1; // 6 months after Muharram 1 AH
 const DAY=86400000;
 
 export const SEASONAL_POLICY={
   anchor:'Research hypothesis: 1 Rajab 1 AH',
-  epochProlepticGregorian:'19 July 622',
+  epochProlepticGregorian:'17 July 622 (research phase alignment)',
+  conventionalEpochReference:'19 July 622 (civil-Hijri reference)',
+  calibration:'15 September 2026 = 4 Ramadan 1405 in the AlofoK research model.',
   intercalation:'Accumulate the difference between one tropical year and twelve mean synodic months. When the accumulated difference reaches one mean lunation, append شهر النسيء after ذو الحجة.',
   rule:'Research implementation: preserve the ordinary Arabic month order, use Rajab as the epoch month in year 1, and insert Nasi only when accumulated seasonal drift reaches one lunar month.',
   historicalStatus:'Research reconstruction; not presented as the conventional historical Hijri dating.'
@@ -82,7 +89,7 @@ export function proposedLunisolarDate(date=new Date()){
       monthsInYear:isLeapYear?13:12,
       intercalaryMonthAr:isLeapYear?INTERCALARY_MONTH_AR:null,
       leapMonthsBeforeYear:0,
-      model:'epoch-rajab-accumulated-nasi'
+      model:'epoch-rajab-accumulated-nasi-v2'
     };
   }
 
@@ -108,7 +115,7 @@ export function proposedLunisolarDate(date=new Date()){
     monthsInYear,
     intercalaryMonthAr:isLeapYear?INTERCALARY_MONTH_AR:null,
     leapMonthsBeforeYear:leapMonthsThroughYears(year-1),
-    model:'epoch-rajab-accumulated-nasi'
+    model:'epoch-rajab-accumulated-nasi-v2'
   };
 }
 
