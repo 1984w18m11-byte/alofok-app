@@ -1,5 +1,3 @@
-export const HOME_REFERENCE_BACKGROUND=require('../../assets/themes/trial-fixed.jpg');
-
 export const THEME_CATALOG=[
  {id:'trial-fixed',group:'fixed',labelKey:'themeFixed',plus:false,image:require('../../assets/themes/trial-fixed.jpg')},
  {id:'time-dawn',group:'atmospheres',labelKey:'dawn',plus:true,image:require('../../assets/themes/time-dawn.jpg')},
@@ -39,6 +37,7 @@ export const THEME_CATALOG=[
 ];
 
 export const THEME_BY_ID=Object.fromEntries(THEME_CATALOG.map(x=>[x.id,x]));
+export const HOME_REFERENCE_BACKGROUND=THEME_BY_ID['trial-fixed'].image;
 
 export function automaticThemeId(now=new Date()){
  const hour=now.getHours();
