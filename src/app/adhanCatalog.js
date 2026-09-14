@@ -6,11 +6,7 @@ const ASSETS={
  'commons-aishatu98-adhan':require('../../assets/adhan/adhan_aishatu98.ogg'),
  'commons-nigeria-isaac':require('../../assets/adhan/adhan_nigeria_isaac.ogg'),
  'commons-medina-ejaz215':require('../../assets/adhan/adhan_medina_ejaz215.ogg'),
- 'commons-mecca-2013':require('../../assets/adhan/adhan_mecca_2013.ogg'),
- 'commons-mecca-maghrib-2012':require('../../assets/adhan/adhan_mecca_maghrib_2012.ogg'),
- 'commons-konya-2012':require('../../assets/adhan/adhan_konya_2012.ogg'),
- 'commons-tripoli-2019':require('../../assets/adhan/adhan_tripoli_2019.ogg'),
- 'commons-isfahan-shah':require('../../assets/adhan/adhan_isfahan_shah.ogg')
+ 'commons-mecca-2013':require('../../assets/adhan/adhan_mecca_2013.ogg')
 };
 
 const NOTIFICATION_SOUNDS={
@@ -19,11 +15,7 @@ const NOTIFICATION_SOUNDS={
  'commons-aishatu98-adhan':'adhan_aishatu98.wav',
  'commons-nigeria-isaac':'adhan_nigeria_isaac.wav',
  'commons-medina-ejaz215':'adhan_medina_ejaz215.wav',
- 'commons-mecca-2013':'adhan_mecca_2013.wav',
- 'commons-mecca-maghrib-2012':'adhan_mecca_maghrib_2012.wav',
- 'commons-konya-2012':'adhan_konya_2012.wav',
- 'commons-tripoli-2019':'adhan_tripoli_2019.wav',
- 'commons-isfahan-shah':'adhan_isfahan_shah.wav'
+ 'commons-mecca-2013':'adhan_mecca_2013.wav'
 };
 
 const ENGLISH_NAMES={
@@ -32,11 +24,7 @@ const ENGLISH_NAMES={
  'commons-aishatu98-adhan':'Adhan — Aishatu98',
  'commons-nigeria-isaac':'Nigeria Adhan — Isaacayodele32',
  'commons-medina-ejaz215':"Madinah Adhan — Prophet's Mosque recording",
- 'commons-mecca-2013':'Makkah Adhan — Grand Mosque 2013',
- 'commons-mecca-maghrib-2012':'Maghrib Adhan — Grand Mosque 2012',
- 'commons-konya-2012':'Konya Adhan — Türkiye',
- 'commons-tripoli-2019':'Tripoli Adhan — Al-Nour Square',
- 'commons-isfahan-shah':'Isfahan Adhan — Shah Mosque'
+ 'commons-mecca-2013':'Makkah Adhan — Grand Mosque 2013'
 };
 
 export const ADHAN_CATALOG=registry
