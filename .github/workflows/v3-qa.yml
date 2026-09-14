@@ -8,24 +8,71 @@ on:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
       - name: Install dependencies
         run: npm ci
       - name: Translation checks
         run: npm run check:translations
-      - name: Existing release QA
+      - name: Release QA
         run: npm run check:release
-      - name: Bundle Android with Expo
+      - name: Fetch, convert and validate the ten licensed Adhan recordings
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+          mkdir -p assets/adhan /tmp/alofok-adhan
+
+          convert_source() {
+            local file_title="$1"
+            local stem="$2"
+            local encoded
+            encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$file_title")
+            local url="https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}"
+            local input="/tmp/alofok-adhan/${stem}.source"
+            echo "Downloading licensed source: ${file_title}"
+            curl -fL --retry 4 --retry-delay 2 -A "AlofoK-QA/0.5.8" "$url" -o "$input"
+            test -s "$input"
+            ffprobe -v error "$input" >/dev/null
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a pcm_s16le "assets/adhan/${stem}.wav"
+          }
+
+          test -s assets/adhan/beautiful_adhan.ogg
+          ffprobe -v error assets/adhan/beautiful_adhan.ogg >/dev/null
+          ffmpeg -hide_banner -loglevel error -xerror -y -i assets/adhan/beautiful_adhan.ogg -vn -ac 1 -ar 32000 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
+
+          convert_source "Azan.ogg" "adhan_andrewler"
+          convert_source "Adhan.ogg" "adhan_aishatu98"
+          convert_source "Call to prayer.ogg" "adhan_nigeria_isaac"
+          convert_source "33937 ejaz215 call-to-prayer-from-the-prophet-s-mo.ogg" "adhan_medina_ejaz215"
+          convert_source "Adhan, Great Mosque of Mecca - Jan 21, 2013.webm" "adhan_mecca_2013"
+          convert_source "Maghrib Adhan at the Masjid al Haram, Mecca - 25 Feb, 2012.webm" "adhan_mecca_maghrib_2012"
+          convert_source "Hminsec150 Konya.webm" "adhan_konya_2012"
+          convert_source "Adhan During the Lebanese Protests in Tripoli 2019.webm" "adhan_tripoli_2019"
+          convert_source "Tour guide recite Adhan in the Shah mosque in Isfahan, Iran.webm" "adhan_isfahan_shah"
+
+          for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013 adhan_mecca_maghrib_2012 adhan_konya_2012 adhan_tripoli_2019 adhan_isfahan_shah; do
+            for ext in ogg wav; do
+              f="assets/adhan/${stem}.${ext}"
+              test -s "$f"
+              ffprobe -v error -select_streams a:0 -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration -of default=noprint_wrappers=1 "$f"
+              ffmpeg -hide_banner -loglevel error -xerror -i "$f" -f null -
+            done
+          done
+      - name: Bundle trial Android with Expo
         env:
+          APP_VARIANT: trial
           EXPO_PUBLIC_APP_VARIANT: trial
         run: npx expo export --platform android --output-dir dist-v3-trial
-      - name: Bundle Plus variant with Expo
+      - name: Bundle Plus Android with Expo
         env:
+          APP_VARIANT: paid
           EXPO_PUBLIC_APP_VARIANT: paid
         run: npx expo export --platform android --output-dir dist-v3-plus
