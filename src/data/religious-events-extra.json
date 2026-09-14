@@ -1,0 +1,13 @@
+[
+  {"id":"isra_miraj","m":7,"d":27,"ar":"ذكرى الإسراء والمعراج — 27 رجب","en":"Isra and Mi'raj remembrance — 27 Rajab","pack":"common","sourceStatus":"traditional_date"},
+  {"id":"nisf_shaban","m":8,"d":15,"ar":"ليلة النصف من شعبان","en":"Mid-Sha'ban observance","pack":"common","sourceStatus":"traditional_date"},
+  {"id":"qadr19","m":9,"d":19,"ar":"ليلة من ليالي القدر المحتملة — 19 رمضان","en":"Possible Laylat al-Qadr observance — 19 Ramadan","pack":"common","sourceStatus":"tradition_specific"},
+  {"id":"qadr21","m":9,"d":21,"ar":"ليلة من ليالي القدر المحتملة — 21 رمضان","en":"Possible Laylat al-Qadr observance — 21 Ramadan","pack":"common","sourceStatus":"tradition_specific"},
+  {"id":"qadr23","m":9,"d":23,"ar":"ليلة من ليالي القدر المحتملة — 23 رمضان","en":"Possible Laylat al-Qadr observance — 23 Ramadan","pack":"common","sourceStatus":"tradition_specific"},
+  {"id":"eidfitr2","m":10,"d":2,"ar":"عطلة عيد الفطر المبارك — اليوم الثاني","en":"Eid al-Fitr holiday — day 2","pack":"common"},
+  {"id":"eidfitr3","m":10,"d":3,"ar":"عطلة عيد الفطر المبارك — اليوم الثالث","en":"Eid al-Fitr holiday — day 3","pack":"common"},
+  {"id":"eidadha2","m":12,"d":11,"ar":"عطلة عيد الأضحى المبارك — اليوم الثاني","en":"Eid al-Adha holiday — day 2","pack":"common"},
+  {"id":"eidadha3","m":12,"d":12,"ar":"عطلة عيد الأضحى المبارك — اليوم الثالث","en":"Eid al-Adha holiday — day 3","pack":"common"},
+  {"id":"eidadha4","m":12,"d":13,"ar":"عطلة عيد الأضحى المبارك — اليوم الرابع","en":"Eid al-Adha holiday — day 4","pack":"common"},
+  {"id":"ghadeer","m":12,"d":18,"ar":"عيد الغدير — 18 ذي الحجة","en":"Eid al-Ghadir — 18 Dhu al-Hijjah","pack":"historical","sourceStatus":"tradition_specific"}
+]
