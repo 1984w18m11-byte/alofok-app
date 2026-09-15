@@ -1,0 +1,86 @@
+name: Apply AlofoK Trial refresh
+
+on:
+  push:
+    paths:
+      - .github/trial-refresh.trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install audio tools
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg
+
+      - name: Restore four additional approved Trial Adhan assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p assets/adhan /tmp/alofok-restore
+          convert_source() {
+            local file_title="$1"
+            local stem="$2"
+            local encoded
+            encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$file_title")
+            local url="https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}"
+            local input="/tmp/alofok-restore/${stem}.source"
+            curl -fL --retry 4 --retry-delay 2 -A "AlofoK-Trial-Restore/1.0.1" "$url" -o "$input"
+            test -s "$input"
+            ffprobe -v error "$input" >/dev/null
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
+            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a pcm_s16le "assets/adhan/${stem}.wav"
+          }
+          convert_source "Adhan.ogg" "adhan_aishatu98"
+          convert_source "Call to prayer.ogg" "adhan_nigeria_isaac"
+          convert_source "33937 ejaz215 call-to-prayer-from-the-prophet-s-mo.ogg" "adhan_medina_ejaz215"
+          convert_source "Adhan, Great Mosque of Mecca - Jan 21, 2013.webm" "adhan_mecca_2013"
+          for stem in adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013; do
+            test -s "assets/adhan/${stem}.ogg"
+            test -s "assets/adhan/${stem}.wav"
+            ffprobe -v error "assets/adhan/${stem}.ogg" >/dev/null
+            ffprobe -v error "assets/adhan/${stem}.wav" >/dev/null
+          done
+
+      - name: Apply Trial source changes
+        run: python3 scripts/apply-trial-refresh-20260916.py
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate translations and release contract
+        run: |
+          npm run check:translations
+          npm run check:release
+
+      - name: Trigger fresh APK build
+        run: |
+          printf 'trial-refresh-%s\n' "$(date -u +%Y%m%dT%H%M%SZ)" > .github/build-apks.trigger
+
+      - name: Commit applied refresh
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/AppV3.js src/app/LegalScreens.js src/app/themeCatalog.js src/app/adhanCatalog.js src/data/adhan-registry.json app.config.js scripts/release-qa.js ADHAN_LICENSES_AR.md ASSET_PROVENANCE_AR.md assets/adhan/adhan_aishatu98.ogg assets/adhan/adhan_aishatu98.wav assets/adhan/adhan_nigeria_isaac.ogg assets/adhan/adhan_nigeria_isaac.wav assets/adhan/adhan_medina_ejaz215.ogg assets/adhan/adhan_medina_ejaz215.wav assets/adhan/adhan_mecca_2013.ogg assets/adhan/adhan_mecca_2013.wav .github/build-apks.trigger
+          if git diff --cached --quiet; then
+            echo "No source changes to commit."
+          else
+            git commit -m "feat: restore Trial six Adhans seasonal themes and activation copy event"
+            git push origin HEAD:main
+          fi
