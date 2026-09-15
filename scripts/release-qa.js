@@ -5,6 +5,7 @@ const entry=read('App.js');
 const app=read('src/app/AppV3.js');
 const themes=read('src/app/themeCatalog.js');
 const adhans=read('src/app/adhanCatalog.js');
+const adhanHook=read('src/app/useAdhanAudio.js');
 const gps=read('src/app/useDeviceLocation.js');
 const strings=read('src/app/v3Strings.js');
 const config=read('app.config.js');
@@ -40,23 +41,31 @@ assert(standaloneThemeRequires.length===35,'expected 35 standalone theme images 
 assert(new Set(standaloneThemeRequires).size===35,'standalone theme image paths must be unique');
 for(const name of standaloneThemeRequires)assert(fs.existsSync(`assets/themes/${name}`),`missing theme asset: ${name}`);
 
-const configuredSounds=(appJson.expo.plugins.find(x=>Array.isArray(x)&&x[0]==='expo-notifications')||[])[1]?.sounds||[];
-assert(configuredSounds.length===6,'six notification Adhan sounds must be configured');
-assert(configuredSounds.every(x=>x.endsWith('.wav')),'notification sounds should use WAV');
+const configuredBaseSounds=(appJson.expo.plugins.find(x=>Array.isArray(x)&&x[0]==='expo-notifications')||[])[1]?.sounds||[];
+assert(configuredBaseSounds.length===1&&configuredBaseSounds[0].endsWith('beautiful_adhan.wav'),'Trial base config must contain exactly one stable Adhan sound');
+assert(config.includes("const trialSounds = ['./assets/adhan/beautiful_adhan.wav']"),'Trial notification sound list must contain only the stable base Adhan');
+assert(config.includes("'./assets/adhan/adhan_andrewler.wav'")&&config.includes("'./assets/adhan/adhan_maahur.wav'"),'Plus notification sounds must include the two full premium Adhans');
 const playable=registry.filter(x=>x.status==='licensed'&&Array.isArray(x.available_in)&&x.available_in.length);
-assert(playable.length===6,'expected exactly six licensed playable Adhan entries');
-const rejectedIds=['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez','commons-mecca-maghrib-2012','commons-konya-2012','commons-tripoli-2019','commons-isfahan-shah'];
-assert(!registry.some(x=>rejectedIds.includes(x.id)),'rejected Adhan ids must stay removed');
+const trialPlayable=playable.filter(x=>x.available_in.includes('trial'));
+const plusPlayable=playable.filter(x=>x.available_in.includes('paid'));
+assert(playable.length===3,'expected exactly three approved Adhan entries total');
+assert(trialPlayable.length===1&&trialPlayable[0].id==='commons-beautiful-adhan','Trial must expose only the stable base Adhan');
+assert(plusPlayable.length===3,'Plus must expose the base Adhan plus two full premium Adhans');
+assert(plusPlayable.some(x=>x.id==='commons-andrewler-azan'),'full Arabic Plus Adhan missing');
+assert(plusPlayable.some(x=>x.id==='commons-maahur-saeed'),'Mahur-mode Plus Adhan missing');
+const rejectedIds=['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez','commons-mecca-maghrib-2012','commons-konya-2012','commons-tripoli-2019','commons-isfahan-shah','commons-aishatu98-adhan','commons-nigeria-isaac','commons-medina-ejaz215','commons-mecca-2013'];
+assert(!registry.some(x=>rejectedIds.includes(x.id)),'rejected or lower-quality Adhan ids must stay removed');
 for(const id of rejectedIds)assert(!adhans.includes(`'${id}'`),`${id}: rejected Adhan must not be bundled`);
 for(const x of playable){
  assert(Boolean(x.license),`${x.id}: license missing`);
  assert(Boolean(x.source),`${x.id}: source missing`);
  assert(Boolean(x.source_url),`${x.id}: source URL missing`);
  assert(Boolean(x.asset),`${x.id}: asset path missing`);
- assert(x.available_in.includes('trial')&&x.available_in.includes('paid'),`${x.id}: must be enabled in both editions`);
  assert(adhans.includes(`'${x.id}':require(`),`${x.id}: preview asset not bundled in adhanCatalog.js`);
  assert(adhans.includes(`'${x.id}':'`)&&adhans.includes('.wav'),`${x.id}: notification sound map missing`);
 }
+assert(adhanHook.includes('availableAdhanForVariant'),'Adhan hook must filter voices by Trial/Plus variant');
+assert(adhanHook.includes('VARIANT_BY_ID'),'Adhan selection must be restricted to the active build variant');
 
 assert(gps.includes('Location.Accuracy.Highest'),'GPS must request highest available accuracy');
 assert(gps.includes('watchPositionAsync'),'GPS must briefly watch for a better fix');
@@ -64,7 +73,6 @@ assert(gps.includes('nearestCity'),'GPS label must support nearest seeded locali
 assert(app.includes("calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon"),'prayer times must use current coordinates');
 assert(app.includes("method:'MWL'"),'MWL prayer calculation default missing');
 assert(app.includes('schedulePrayerAlerts'),'background prayer notification scheduling missing');
-const adhanHook=read('src/app/useAdhanAudio.js');
 assert(adhanHook.includes("const VOLUME_KEY='alofok_v3_adhan_volume';"),'Adhan volume persistence missing');
 assert(adhanHook.includes('player.volume=volume'),'Adhan preview must use the selected volume');
 assert(adhanHook.includes('setVolumeState(next)')&&adhanHook.includes('playerRef.current.volume=next'),'Adhan volume must update live while audio is playing');
@@ -98,9 +106,6 @@ const iraq=JSON.parse(read('src/data/iraq-observances.json'));
 for(const key of ['عيد الجيش العراقي','عيد الشرطة العراقية','عيد نوروز','اليوم الوطني العراقي','يوم النصر على داعش'])assert(iraq.some(x=>x.name_ar===key),`Iraq observance missing: ${key}`);
 assert(!iraq.some(x=>String(x.name_ar||'').includes('البعث')||String(x.name_en||'').toLowerCase().includes("ba'ath")),'political Baath-era commemoration must stay excluded from Iraq observances');
 
-if(process.exitCode)process.exit(process.exitCode);
-console.log('Release QA passed for AlofoK V3',version);
-
 // Legal, privacy and authenticity verification guards
 assert(app.includes("from './LegalScreens';"),'legal/authenticity screens must be wired');
 assert(app.includes("screen==='copyright'")&&app.includes("screen==='authenticity'"),'copyright and authenticity routes must exist');
@@ -118,9 +123,12 @@ const trialAds=read('src/app/TrialAds.js');
 assert(app.includes("from './TrialAds';"),'trial advertising client must be wired into V3');
 assert(app.includes('useTrialAd({enabled:!IS_PLUS'),'ads must be disabled in Plus at the app boundary');
 assert(app.includes("...(!IS_PLUS?[['▣','advertise','advertise']]:[])"),'Advertise menu entry must exist only in Trial');
-assert(trialAds.includes('MAX_WEEKLY_ADS=2'),'Trial must cap advertising at two impressions per week');
+assert(trialAds.includes('MAX_WEEKLY_ADS=1'),'Trial must cap advertising at one impression per week');
 assert(trialAds.includes('/v1/ads/approved/next'),'users must fetch only approved ads');
 assert(trialAds.includes("item.status!=='approved'"),'client must reject any ad that is not approved');
 assert(trialAds.includes('/v1/ads/submissions'),'advertisers need a moderated submission endpoint');
 assert(trialAds.includes("status:'pending_review'"),'new ad submissions must remain pending until manual approval');
 assert(trialAds.includes('EXPO_PUBLIC_AD_PAYMENT_URL'),'ad payment must use configurable provider routing, never a hardcoded card number');
+
+if(process.exitCode)process.exit(process.exitCode);
+console.log('Release QA passed for AlofoK V3',version);
