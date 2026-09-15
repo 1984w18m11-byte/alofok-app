@@ -93,15 +93,11 @@ jobs:
           npm run check:translations
           npm run check:release
 
-      - name: Trigger fresh APK build
-        run: |
-          printf 'trial-refresh-%s\n' "$(date -u +%Y%m%dT%H%M%SZ)" > .github/build-apks.trigger
-
-      - name: Commit applied refresh
+      - name: Commit applied refresh without building APK
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/app/AppV3.js src/app/LegalScreens.js src/app/themeCatalog.js src/app/adhanCatalog.js src/data/adhan-registry.json app.config.js package-lock.json scripts/release-qa.js ADHAN_LICENSES_AR.md ASSET_PROVENANCE_AR.md assets/adhan/adhan_aishatu98.ogg assets/adhan/adhan_aishatu98.wav assets/adhan/adhan_nigeria_isaac.ogg assets/adhan/adhan_nigeria_isaac.wav assets/adhan/adhan_medina_ejaz215.ogg assets/adhan/adhan_medina_ejaz215.wav assets/adhan/adhan_mecca_2013.ogg assets/adhan/adhan_mecca_2013.wav .github/build-apks.trigger
+          git add src/app/AppV3.js src/app/LegalScreens.js src/app/themeCatalog.js src/app/adhanCatalog.js src/data/adhan-registry.json app.config.js package-lock.json scripts/release-qa.js ADHAN_LICENSES_AR.md ASSET_PROVENANCE_AR.md assets/adhan/adhan_aishatu98.ogg assets/adhan/adhan_aishatu98.wav assets/adhan/adhan_nigeria_isaac.ogg assets/adhan/adhan_nigeria_isaac.wav assets/adhan/adhan_medina_ejaz215.ogg assets/adhan/adhan_medina_ejaz215.wav assets/adhan/adhan_mecca_2013.ogg assets/adhan/adhan_mecca_2013.wav
           if git diff --cached --quiet; then
             echo "No source changes to commit."
           else
