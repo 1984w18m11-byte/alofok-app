@@ -3,19 +3,23 @@ import {Platform} from 'react-native';
 import {createAudioPlayer} from 'expo-audio';
 import * as Notifications from 'expo-notifications';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {ADHAN_BY_ID,ADHAN_CATALOG,DEFAULT_ADHAN_ID} from './adhanCatalog';
+import {availableAdhanForVariant} from './adhanCatalog';
 
 const SELECTED_KEY='alofok_v3_adhan_id';
 const ALERTS_KEY='alofok_v3_prayer_alerts';
 const VOLUME_KEY='alofok_v3_adhan_volume';
 const DEFAULT_VOLUME=0.9;
+const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
+const VARIANT_CATALOG=availableAdhanForVariant(IS_PLUS);
+const VARIANT_BY_ID=Object.fromEntries(VARIANT_CATALOG.map(x=>[x.id,x]));
+const DEFAULT_VARIANT_ADHAN_ID=VARIANT_CATALOG[0]?.id||null;
 
 Notifications.setNotificationHandler({
  handleNotification:async()=>({shouldShowBanner:true,shouldShowList:true,shouldPlaySound:true,shouldSetBadge:false})
 });
 
 export function useAdhanAudio(){
- const [selectedId,setSelectedId]=useState(DEFAULT_ADHAN_ID);
+ const [selectedId,setSelectedId]=useState(DEFAULT_VARIANT_ADHAN_ID);
  const [alertsEnabled,setAlertsEnabled]=useState(false);
  const [volume,setVolumeState]=useState(DEFAULT_VOLUME);
  const [playingId,setPlayingId]=useState(null);
@@ -24,7 +28,7 @@ export function useAdhanAudio(){
 
  useEffect(()=>{
   Promise.all([AsyncStorage.getItem(SELECTED_KEY),AsyncStorage.getItem(ALERTS_KEY),AsyncStorage.getItem(VOLUME_KEY)]).then(([id,alerts,savedVolume])=>{
-   if(id&&ADHAN_BY_ID[id])setSelectedId(id);
+   if(id&&VARIANT_BY_ID[id])setSelectedId(id);else setSelectedId(DEFAULT_VARIANT_ADHAN_ID);
    setAlertsEnabled(alerts==='1');
    const parsed=Number(savedVolume);
    if(Number.isFinite(parsed)&&parsed>=0&&parsed<=1)setVolumeState(parsed);
@@ -48,7 +52,7 @@ export function useAdhanAudio(){
  },[]);
 
  const preview=useCallback(async id=>{
-  const item=ADHAN_BY_ID[id];
+  const item=VARIANT_BY_ID[id];
   if(!item?.audio){setError('ASSET_MISSING');return false;}
   try{
    stop();setError(null);
@@ -62,7 +66,7 @@ export function useAdhanAudio(){
  },[stop,volume]);
 
  const select=useCallback(async id=>{
-  if(!ADHAN_BY_ID[id])return false;
+  if(!VARIANT_BY_ID[id])return false;
   setSelectedId(id);setError(null);
   try{await AsyncStorage.setItem(SELECTED_KEY,id)}catch(e){}
   return true;
@@ -81,7 +85,7 @@ export function useAdhanAudio(){
 
  const schedulePrayerAlerts=useCallback(async ({dates,names,bodyPrefix='Adhan',language='en'})=>{
   try{
-   const selected=ADHAN_BY_ID[selectedId];
+   const selected=VARIANT_BY_ID[selectedId];
    if(!alertsEnabled||!selected)return;
    const permission=await Notifications.getPermissionsAsync();
    if(permission.status!=='granted')return;
@@ -112,5 +116,5 @@ export function useAdhanAudio(){
   }catch(e){setError(e?.message||'SCHEDULE_ERROR')}
  },[alertsEnabled,selectedId]);
 
- return useMemo(()=>({catalog:ADHAN_CATALOG,selectedId,selected:ADHAN_BY_ID[selectedId],alertsEnabled,volume,playingId,error,preview,stop,select,setVolume,setPrayerAlerts,schedulePrayerAlerts}),[selectedId,alertsEnabled,volume,playingId,error,preview,stop,select,setVolume,setPrayerAlerts,schedulePrayerAlerts]);
+ return useMemo(()=>({catalog:VARIANT_CATALOG,selectedId,selected:VARIANT_BY_ID[selectedId],alertsEnabled,volume,playingId,error,preview,stop,select,setVolume,setPrayerAlerts,schedulePrayerAlerts}),[selectedId,alertsEnabled,volume,playingId,error,preview,stop,select,setVolume,setPrayerAlerts,schedulePrayerAlerts]);
 }
