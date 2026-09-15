@@ -5,7 +5,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const ADS_API_BASE=(process.env.EXPO_PUBLIC_ADS_API_URL||'').replace(/\/$/,'');
 const AD_PAYMENT_URL=process.env.EXPO_PUBLIC_AD_PAYMENT_URL||'';
-export const MAX_WEEKLY_ADS=2;
+export const MAX_WEEKLY_ADS=1;
 const MIN_GAP_MS=48*60*60*1000;
 const LEDGER_KEY='alofok_trial_ads_ledger_v1';
 
