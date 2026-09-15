@@ -5,8 +5,15 @@ module.exports = () => {
   const variant = isPaid ? 'paid' : 'trial';
   const icon = isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png';
   const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
-  const trialSounds = ['./assets/adhan/beautiful_adhan.wav'];
-  const paidSounds = [...trialSounds, './assets/adhan/adhan_andrewler.wav', './assets/adhan/adhan_maahur.wav'];
+  const trialSounds = [
+    './assets/adhan/beautiful_adhan.wav',
+    './assets/adhan/adhan_andrewler.wav',
+    './assets/adhan/adhan_aishatu98.wav',
+    './assets/adhan/adhan_nigeria_isaac.wav',
+    './assets/adhan/adhan_medina_ejaz215.wav',
+    './assets/adhan/adhan_mecca_2013.wav'
+  ];
+  const paidSounds = ['./assets/adhan/beautiful_adhan.wav', './assets/adhan/adhan_andrewler.wav', './assets/adhan/adhan_maahur.wav'];
   const plugins = (base.plugins || []).map(plugin => {
     if (Array.isArray(plugin) && plugin[0] === 'expo-notifications') {
       return [plugin[0], {...(plugin[1] || {}), sounds: isPaid ? paidSounds : trialSounds}];

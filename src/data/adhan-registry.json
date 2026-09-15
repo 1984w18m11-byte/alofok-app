@@ -11,14 +11,16 @@
     "source": "Wikimedia Commons — Beautiful adhan.ogg",
     "source_url": "https://commons.wikimedia.org/wiki/File:Beautiful_adhan.ogg",
     "asset": "assets/adhan/beautiful_adhan.ogg",
-    "available_in": ["trial", "paid"],
-    "modification_note": "Original OGG retained for preview; PCM WAV derivative generated for Android notification playback."
+    "available_in": [
+      "trial",
+      "paid"
+    ]
   },
   {
     "id": "commons-andrewler-azan",
     "country": "*",
     "city": "*",
-    "display_ar": "أذان عربي كامل — Andrewler",
+    "display_ar": "أذان — Andrewler",
     "performer": "Andrewler",
     "status": "licensed",
     "license_required": true,
@@ -26,8 +28,74 @@
     "source": "Wikimedia Commons — Azan.ogg",
     "source_url": "https://commons.wikimedia.org/wiki/File:Azan.ogg",
     "asset": "assets/adhan/adhan_andrewler.ogg",
-    "available_in": ["paid"],
-    "modification_note": "Full-length source; converted to OGG/WAV for Plus. Attribution and ShareAlike terms preserved."
+    "available_in": [
+      "trial",
+      "paid"
+    ]
+  },
+  {
+    "id": "commons-aishatu98-adhan",
+    "country": "*",
+    "city": "*",
+    "display_ar": "أذان — Aishatu98",
+    "performer": "Aishatu98",
+    "status": "licensed",
+    "license_required": false,
+    "license": "CC0 1.0 Universal",
+    "source": "Wikimedia Commons — Adhan.ogg",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Adhan.ogg",
+    "asset": "assets/adhan/adhan_aishatu98.ogg",
+    "available_in": [
+      "trial"
+    ]
+  },
+  {
+    "id": "commons-nigeria-isaac",
+    "country": "NG",
+    "city": "*",
+    "display_ar": "أذان نيجيريا — Isaacayodele32",
+    "performer": "Isaacayodele32",
+    "status": "licensed",
+    "license_required": true,
+    "license": "CC BY-SA 4.0",
+    "source": "Wikimedia Commons — Call to prayer.ogg",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Call_to_prayer.ogg",
+    "asset": "assets/adhan/adhan_nigeria_isaac.ogg",
+    "available_in": [
+      "trial"
+    ]
+  },
+  {
+    "id": "commons-medina-ejaz215",
+    "country": "SA",
+    "city": "Medina",
+    "display_ar": "أذان المدينة — المسجد النبوي",
+    "performer": "ejaz215",
+    "status": "licensed",
+    "license_required": true,
+    "license": "CC BY 3.0",
+    "source": "Wikimedia Commons — call to prayer from the Prophet's Mosque",
+    "source_url": "https://commons.wikimedia.org/wiki/File:33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg",
+    "asset": "assets/adhan/adhan_medina_ejaz215.ogg",
+    "available_in": [
+      "trial"
+    ]
+  },
+  {
+    "id": "commons-mecca-2013",
+    "country": "SA",
+    "city": "Mecca",
+    "display_ar": "أذان مكة — المسجد الحرام 2013",
+    "performer": "Seyfula Islam",
+    "status": "licensed",
+    "license_required": true,
+    "license": "CC BY 3.0",
+    "source": "Wikimedia Commons — Adhan, Great Mosque of Mecca - Jan 21, 2013.webm",
+    "source_url": "https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm",
+    "asset": "assets/adhan/adhan_mecca_2013.ogg",
+    "available_in": [
+      "trial"
+    ]
   },
   {
     "id": "commons-maahur-saeed",
@@ -41,7 +109,8 @@
     "source": "Wikimedia Commons — AzaanMaahur.ogg",
     "source_url": "https://commons.wikimedia.org/wiki/File:AzaanMaahur.ogg",
     "asset": "assets/adhan/adhan_maahur.ogg",
-    "available_in": ["paid"],
-    "modification_note": "Full-length Mahur-mode Adhan; converted to OGG/WAV for Plus. Attribution and ShareAlike terms preserved."
+    "available_in": [
+      "paid"
+    ]
   }
 ]

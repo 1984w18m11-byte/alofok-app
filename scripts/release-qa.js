@@ -31,8 +31,8 @@ assert(config.includes("isPaid ? './assets/icon-paid.png' : './assets/icon-trial
 assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork inside adaptiveIcon; it causes the icon to render too small');
 
 assert(app.includes("const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';"),'Plus features must be gated by paid build variant');
-assert(app.includes("if(!IS_PLUS&&id!=='trial-fixed')"),'trial build must reject Plus theme selection');
-assert(app.includes("if(!IS_PLUS)return HOME_REFERENCE_BACKGROUND"),'trial home background must stay fixed');
+assert(app.includes("['season-spring','season-summer','season-autumn','season-winter'].includes(id)"),'trial build must allow only the four seasonal themes');
+assert(app.includes("if(!IS_PLUS)return THEME_BY_ID[selectedTheme]?.image"),'trial home background must use the selected seasonal theme');
 assert(app.includes('automaticThemeId(now)'),'Plus automatic theme rotation missing');
 assert(!app.includes('THEME_ATLAS')&&!themes.includes('THEME_ATLAS'),'legacy atlas code must stay removed');
 assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must stay deleted');
@@ -42,19 +42,19 @@ assert(new Set(standaloneThemeRequires).size===35,'standalone theme image paths 
 for(const name of standaloneThemeRequires)assert(fs.existsSync(`assets/themes/${name}`),`missing theme asset: ${name}`);
 
 const configuredBaseSounds=(appJson.expo.plugins.find(x=>Array.isArray(x)&&x[0]==='expo-notifications')||[])[1]?.sounds||[];
-assert(configuredBaseSounds.length===1&&configuredBaseSounds[0].endsWith('beautiful_adhan.wav'),'Trial base config must contain exactly one stable Adhan sound');
-assert(config.includes("const trialSounds = ['./assets/adhan/beautiful_adhan.wav']"),'Trial notification sound list must contain only the stable base Adhan');
-assert(config.includes("'./assets/adhan/adhan_andrewler.wav'")&&config.includes("'./assets/adhan/adhan_maahur.wav'"),'Plus notification sounds must include the two full premium Adhans');
+assert(configuredBaseSounds.length===1&&configuredBaseSounds[0].endsWith('beautiful_adhan.wav'),'base app.json config keeps the stable fallback Adhan');
+for(const name of ['beautiful_adhan.wav','adhan_andrewler.wav','adhan_aishatu98.wav','adhan_nigeria_isaac.wav','adhan_medina_ejaz215.wav','adhan_mecca_2013.wav'])assert(config.includes(`'./assets/adhan/${name}'`),`Trial notification sound missing: ${name}`);
+assert(config.includes("const paidSounds = ['./assets/adhan/beautiful_adhan.wav', './assets/adhan/adhan_andrewler.wav', './assets/adhan/adhan_maahur.wav']"),'Plus notification set must remain unchanged');
 const playable=registry.filter(x=>x.status==='licensed'&&Array.isArray(x.available_in)&&x.available_in.length);
 const trialPlayable=playable.filter(x=>x.available_in.includes('trial'));
 const plusPlayable=playable.filter(x=>x.available_in.includes('paid'));
-assert(playable.length===3,'expected exactly three approved Adhan entries total');
-assert(trialPlayable.length===1&&trialPlayable[0].id==='commons-beautiful-adhan','Trial must expose only the stable base Adhan');
-assert(plusPlayable.length===3,'Plus must expose the base Adhan plus two full premium Adhans');
-assert(plusPlayable.some(x=>x.id==='commons-andrewler-azan'),'full Arabic Plus Adhan missing');
-assert(plusPlayable.some(x=>x.id==='commons-maahur-saeed'),'Mahur-mode Plus Adhan missing');
-const rejectedIds=['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez','commons-mecca-maghrib-2012','commons-konya-2012','commons-tripoli-2019','commons-isfahan-shah','commons-aishatu98-adhan','commons-nigeria-isaac','commons-medina-ejaz215','commons-mecca-2013'];
-assert(!registry.some(x=>rejectedIds.includes(x.id)),'rejected or lower-quality Adhan ids must stay removed');
+assert(playable.length===7,'expected six restored Trial voices plus the existing Plus-only Mahur voice');
+assert(trialPlayable.length===6,'Trial must expose exactly the six restored approved Adhan voices');
+for(const id of ['commons-beautiful-adhan','commons-andrewler-azan','commons-aishatu98-adhan','commons-nigeria-isaac','commons-medina-ejaz215','commons-mecca-2013'])assert(trialPlayable.some(x=>x.id===id),`restored Trial Adhan missing: ${id}`);
+assert(plusPlayable.length===3,'Plus must remain on its current three-voice set');
+for(const id of ['commons-beautiful-adhan','commons-andrewler-azan','commons-maahur-saeed'])assert(plusPlayable.some(x=>x.id===id),`Plus Adhan missing: ${id}`);
+const rejectedIds=['commons-morocco-hassan-ii','commons-kazakhstan-shalqar','commons-aaqib-azeez','commons-mecca-maghrib-2012','commons-konya-2012','commons-tripoli-2019','commons-isfahan-shah'];
+assert(!registry.some(x=>rejectedIds.includes(x.id)),'rejected Adhan ids must stay removed');
 for(const id of rejectedIds)assert(!adhans.includes(`'${id}'`),`${id}: rejected Adhan must not be bundled`);
 for(const x of playable){
  assert(Boolean(x.license),`${x.id}: license missing`);
@@ -111,6 +111,11 @@ assert(app.includes("from './LegalScreens';"),'legal/authenticity screens must b
 assert(app.includes("screen==='copyright'")&&app.includes("screen==='authenticity'"),'copyright and authenticity routes must exist');
 const legal=read('src/app/LegalScreens.js');
 assert(legal.includes('سياسة الخصوصية')&&legal.includes('حقوق الطبع والنشر'),'full Arabic privacy and copyright screens required');
+assert(legal.includes('وسام محمد')&&legal.includes('Wissam Digital'),'owner identity must appear in privacy/copyright screens');
+const activation=read('src/app/TrialPlusActivation.js');
+assert(app.includes("from './TrialPlusActivation';"),'Trial Plus activation screen must be wired');
+assert(activation.includes('payment_data_copied')&&activation.includes('EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK'),'copy-payment event must be ready for secure admin notification');
+assert(activation.includes("const inIraq=country==='IQ'"),'Plus activation must be restricted to Iraq');
 assert(legal.includes('react-native-qrcode-svg'),'authenticity screen must render QR codes');
 const authClient=read('src/app/authenticityClient.js');
 assert(authClient.includes('EXPO_PUBLIC_AUTH_API_URL')&&authClient.includes('/v1/authenticity/challenge'),'authenticity API contract missing');

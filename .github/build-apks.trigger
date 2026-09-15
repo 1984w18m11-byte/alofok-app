@@ -1,1 +1,1 @@
-Build final AlofoK 1.0.1 Trial and Plus APKs on 2026-09-15. Trial: stable base Adhan only and one moderated ad per week. Plus: base Adhan plus full Arabic and Mahur-mode licensed recordings. Run final release QA and publish both APKs to v1.0.1.
+trial-refresh-20260915T231435Z

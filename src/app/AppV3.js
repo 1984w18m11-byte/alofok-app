@@ -15,6 +15,7 @@ import religiousEventsExtra from '../data/religious-events-extra.json';
 import {useCountryHolidays} from './useCountryHolidays';
 import {AuthenticityScreen,CopyrightScreen,PrivacyScreen} from './LegalScreens';
 import {AdvertiseScreen,TrialAdOverlay,useTrialAd} from './TrialAds';
+import {TrialPlusActivation} from './TrialPlusActivation';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -25,7 +26,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.0.0';
+const VERSION='1.0.1';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -263,25 +264,22 @@ function AdhanScreen({t,rtl,adhan,onBack}){
 const GROUP_ORDER=['seasons','atmospheres','weekdays','months','special'];
 function ThemesScreen({t,rtl,isPlus,selectedTheme,setSelectedTheme,onBack}){
  const [group,setGroup]=useState('seasons');
+ const groups=isPlus?GROUP_ORDER:['seasons'];
  const themes=THEME_CATALOG.filter(x=>x.group===group&&(isPlus||!x.plus));
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('themes')} t={t} rtl={rtl} onBack={onBack}/><Text style={[s.screenHint,textDir(rtl)]}>{t('themesHint')}</Text>
-  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>{GROUP_ORDER.map(g=><Pressable key={g} onPress={()=>setGroup(g)} style={[s.tabPill,group===g&&s.tabPillActive]}><Text style={[s.tabPillText,group===g&&{color:GOLD}]}>{t(g)}</Text></Pressable>)}</ScrollView>
-  {!isPlus&&<View style={s.plusGate}><Text style={[s.note,textDir(rtl)]}>{t('plusOnly')}</Text></View>}
+  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>{groups.map(g=><Pressable key={g} onPress={()=>setGroup(g)} style={[s.tabPill,group===g&&s.tabPillActive]}><Text style={[s.tabPillText,group===g&&{color:GOLD}]}>{t(g)}</Text></Pressable>)}</ScrollView>
   <View style={s.themeGrid}>{themes.map(item=><Pressable key={item.id} onPress={()=>setSelectedTheme(item.id)} style={[s.themeCard,selectedTheme===item.id&&s.selectedGold]}><Image source={item.image} style={s.themeImage}/><View style={s.themeCaption}><Text style={s.themeCaptionText}>{t(item.labelKey)}</Text></View></Pressable>)}</View>
   {isPlus&&<Pressable onPress={()=>setSelectedTheme('auto')} style={[s.autoThemeButton,selectedTheme==='auto'&&s.selectedGold]}><Text style={s.autoThemeButtonText}>↻ {t('automatic')}</Text></Pressable>}
  </ScrollView></SafeAreaView>
 }
 
-function PlusScreen({t,rtl,isPlus,onBack}){
- const free=[t('freePrayer'),t('freeCalendars'),t('freeThemes'),t('freeCore')];
+function PlusScreen({t,rtl,isPlus,country,onBack}){
+ if(!isPlus)return <TrialPlusActivation t={t} rtl={rtl} country={country} onBack={onBack}/>;
  const plus=[t('plusAllFree'),t('plusThemes'),t('plusAdhan'),t('plusSeasons'),t('plusSupport')];
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('chooseExperience')} t={t} rtl={rtl} onBack={onBack}/>
-  <View style={[s.planCards,rowDir(rtl)]}>
-   <View style={s.freePlan}><Text style={s.planTitle}>{t('free')}</Text><Text style={s.planSubtitle}>{t('allEssentials')}</Text>{free.map(x=><CheckRow key={x} text={x} rtl={rtl}/>) }<View style={s.currentPlanButton}><Text style={s.currentPlanText}>{!isPlus?t('currentPlan'):t('free')}</Text></View></View>
-   <View style={s.plusPlan}><Text style={s.crown}>♛</Text><Text style={[s.planTitle,{color:GOLD}]}>{t('plus')}</Text><Text style={s.planSubtitle}>{t('plusExperience')}</Text>{plus.map(x=><CheckRow key={x} text={x} rtl={rtl} gold/>)}<Pressable style={s.subscribeButton}><Text style={s.subscribeText}>{isPlus?t('currentPlan'):t('subscribeNow')} ›</Text></Pressable></View>
-  </View>
+  <View style={s.plusPlan}><Text style={s.crown}>♛</Text><Text style={[s.planTitle,{color:GOLD}]}>{t('plus')}</Text><Text style={s.planSubtitle}>{t('plusExperience')}</Text>{plus.map(x=><CheckRow key={x} text={x} rtl={rtl} gold/>)}<View style={s.currentPlanButton}><Text style={s.currentPlanText}>{t('currentPlan')}</Text></View></View>
  </ScrollView></SafeAreaView>
 }
 
@@ -325,7 +323,7 @@ export default function AppV3(){
  const [screenHistory,setScreenHistory]=useState([]);
  const [drawer,setDrawer]=useState(false);
  const [now,setNow]=useState(new Date());
- const [selectedTheme,setSelectedThemeState]=useState(IS_PLUS?'auto':'trial-fixed');
+ const [selectedTheme,setSelectedThemeState]=useState(IS_PLUS?'auto':'season-autumn');
  const [hijriDate,setHijriDate]=useState(new Date());
  const [gregDate,setGregDate]=useState(new Date());
  const rtl=v3IsRtl(language),locale=v3LocaleTag(language),t=useMemo(()=>makeV3Translator(language),[language]);
@@ -346,12 +344,12 @@ export default function AppV3(){
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
 
  const setSelectedTheme=useCallback(async id=>{
-  if(!IS_PLUS&&id!=='trial-fixed'){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
+  if(!IS_PLUS&&!['season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
   setSelectedThemeState(id);try{await AsyncStorage.setItem(THEME_KEY,id)}catch(e){}
  },[]);
  const chooseLanguage=useCallback(async id=>{setLanguage(id);try{await AsyncStorage.setItem(LANGUAGE_KEY,id)}catch(e){}},[]);
  const themeSource=useMemo(()=>{
-  if(!IS_PLUS)return HOME_REFERENCE_BACKGROUND;
+  if(!IS_PLUS)return THEME_BY_ID[selectedTheme]?.image||THEME_BY_ID['season-autumn']?.image||HOME_REFERENCE_BACKGROUND;
   if(selectedTheme==='auto')return THEME_BY_ID[automaticThemeId(now)]?.image||HOME_REFERENCE_BACKGROUND;
   return THEME_BY_ID[selectedTheme]?.image||HOME_REFERENCE_BACKGROUND;
  },[selectedTheme,now]);
@@ -388,7 +386,7 @@ export default function AppV3(){
 
  if(screen==='adhan')return <AdhanScreen t={t} rtl={rtl} adhan={adhan} onBack={goBack}/>;
  if(screen==='themes')return <ThemesScreen t={t} rtl={rtl} isPlus={IS_PLUS} selectedTheme={selectedTheme} setSelectedTheme={setSelectedTheme} onBack={goBack}/>;
- if(screen==='plus')return <PlusScreen t={t} rtl={rtl} isPlus={IS_PLUS} onBack={goBack}/>;
+ if(screen==='plus')return <PlusScreen t={t} rtl={rtl} isPlus={IS_PLUS} country={location.country} onBack={goBack}/>;
  if(screen==='languages')return <LanguageScreen t={t} rtl={rtl} language={language} onChoose={chooseLanguage} onBack={goBack}/>;
  if(screen==='about')return <AboutScreen t={t} rtl={rtl} onBack={goBack}/>;
  if(screen==='privacy')return <PrivacyScreen rtl={rtl} onBack={goBack} onNavigate={navigate}/>;
