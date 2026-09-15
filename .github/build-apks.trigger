@@ -1,1 +1,1 @@
-Build AlofoK Plus APK only for preview after calendar calibration: 15 September 2026 = 4 Ramadan 1405 in the AlofoK accumulated-Nasi research model. Do not build Trial in this run.
+Build final AlofoK 1.0.1 Trial and Plus APKs on 2026-09-15. Trial: stable base Adhan only and one moderated ad per week. Plus: base Adhan plus full Arabic and Mahur-mode licensed recordings. Run final release QA and publish both APKs to v1.0.1.
