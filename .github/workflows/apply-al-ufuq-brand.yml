@@ -1,0 +1,80 @@
+name: Apply Al-Ufuq brand rename
+
+on:
+  push:
+    paths:
+      - '.github/al-ufuq-brand.trigger'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  rename-brand:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Replace old visible brand spellings
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          allowed = {
+              '.js','.jsx','.ts','.tsx','.json','.md','.html','.css','.yml','.yaml',
+              '.txt','.xml','.svg','.mjs','.cjs','.properties','.gradle'
+          }
+          replacements = [
+              ('AlofoK','Al-Ufuq'),
+              ('AlofoQ','Al-Ufuq'),
+              ('Alofoq','Al-Ufuq'),
+              ('ALOFOK','AL-UFUQ'),
+              ('ALOFOQ','AL-UFUQ'),
+          ]
+
+          skip_parts = {'.git','node_modules','.expo','android','ios','dist','build'}
+          changed=[]
+          for p in Path('.').rglob('*'):
+              if not p.is_file():
+                  continue
+              if any(part in skip_parts for part in p.parts):
+                  continue
+              if p.suffix.lower() not in allowed:
+                  continue
+              try:
+                  s=p.read_text(encoding='utf-8')
+              except Exception:
+                  continue
+              new=s
+              for old,repl in replacements:
+                  new=new.replace(old,repl)
+              if new!=s:
+                  p.write_text(new,encoding='utf-8')
+                  changed.append(str(p))
+          print('Changed files:')
+          for f in changed:
+              print(f)
+
+          # Guardrails: keep technical install/update identity unchanged so existing users
+          # can update the same Android/iOS app instead of installing a second app.
+          app=Path('app.json')
+          if app.exists():
+              txt=app.read_text(encoding='utf-8')
+              assert 'com.alofok.trial' in txt, 'Technical package identifier unexpectedly changed'
+          PY
+
+      - name: Commit Al-Ufuq branding
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "brand: adopt Al-Ufuq across app and site"
+            git push origin main
+          fi
