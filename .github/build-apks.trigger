@@ -1,1 +1,1 @@
-build-alaufuq-final-v34
+build-alaufuq-final-v34-direct
