@@ -21,8 +21,12 @@ function makeDeviceCode(){
  const rand=Math.random().toString(36).slice(2,6).toUpperCase();
  return `AFK-${stamp}-${rand}`;
 }
-function formatCard(value){return String(value||'').replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim()}
 function digits(value){return String(value||'').replace(/\D/g,'')}
+function maskedCard(value){
+ const clean=digits(value);
+ if(!clean)return '•••• •••• •••• ••••';
+ return `•••• •••• •••• ${clean.slice(-4)}`;
+}
 
 export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amountIqd=null,eventName='payment_data_copied',notificationEndpoint=ADMIN_EVENT_ENDPOINT}){
  const [deviceCode,setDeviceCode]=useState('…');
@@ -69,8 +73,8 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
  return <View style={s.wrap}>
   <View style={s.card}>
    <Text style={[s.optionTitle,dir(rtl)]}>{rtl?'التحويلات المالية':'Money transfer'}</Text>
-   <Text style={[s.label,dir(rtl)]}>{rtl?'رقم التحويل — 16 رقم':'Transfer number — 16 digits'}</Text>
-   <Text selectable style={s.number}>{CARD_NUMBER?formatCard(CARD_NUMBER):'•••• •••• •••• ••••'}</Text>
+   <Text style={[s.label,dir(rtl)]}>{rtl?'رقم التحويل — يظهر آخر 4 أرقام فقط':'Transfer number — last 4 digits only'}</Text>
+   <Text selectable={false} style={s.number}>{maskedCard(CARD_NUMBER)}</Text>
    <Pressable disabled={!!busy} onPress={()=>copyDestination('money_transfer_16',CARD_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='money_transfer_16'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم التحويل':'Copy transfer number')}</Text></Pressable>
   </View>
 
