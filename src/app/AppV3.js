@@ -175,7 +175,7 @@ function HijriGrid({date,currentDate,locale,t,rtl,onPrevious,onNext,onToday}){
 
 function Drawer({t,rtl,onClose,onNavigate,onUpdate}){
  const items=[
-  ['⚙','settings','settings'],['⟳','checkUpdate','update'],['♛','subscription','plus'],['◉','support','support'],...(!IS_PLUS?[['▣','advertise','advertise']]:[]),['◎','languages','languages'],['ⓘ','about','about'],['◇','privacy','privacy']
+  ['⚙','settings','settings'],['⟳','checkUpdate','update'],['♛','subscription','plus'],['◉','support','support'],...(!IS_PLUS?[['▣','advertise','advertise']]:[]),['◎','languages','languages'],['ⓘ','about','about'],['©','copyright','copyright'],['◇','privacy','privacy']
  ];
  return <View style={s.drawerBackdrop}>
   <Pressable style={s.drawerDismiss} onPress={onClose}/>
@@ -291,7 +291,8 @@ function AboutScreen({t,rtl,onBack}){
   <View style={s.aboutLogo}><Text style={s.aboutLogoMark}>◩</Text><Text style={s.aboutLogoName}>{t('appName')}</Text><Text style={s.aboutLogoTag}>{t('tagline')}</Text></View>
   <View style={s.disclaimer}><Text style={[s.disclaimerText,textDir(rtl)]}>{t('researchDisclaimer')}</Text></View>
   <SectionCard title={t('research')} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{t('researchBody')}</Text></SectionCard>
-  <Text style={s.versionText}>v{VERSION}</Text>
+  <SectionCard title={rtl?'حقوق الطبع والنشر والملكية الفكرية':'Copyright & intellectual property'} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{rtl?'© 2026 وسام محمد — Wissam Digital. جميع حقوق الطبع والنشر والملكية الفكرية الخاصة بالشفرة الأصلية، الواجهات، الشعارات، الأيقونات، النصوص والمواد المنشأة خصيصًا لتطبيق الأفق محفوظة لصاحب المشروع وسام محمد، مع بقاء المواد المرخصة من جهات أخرى خاضعة لحقوق أصحابها وتراخيصها.':'© 2026 Wissam Mohammed — Wissam Digital. Copyright and intellectual-property rights in the original source code, interfaces, original logos, icons, text and project-specific materials of AlofoK are reserved to project owner Wissam Mohammed. Third-party licensed materials remain subject to their owners and license terms.'}</Text></SectionCard>
+  <Text style={s.versionText}>© 2026 وسام محمد — Wissam Digital · v{VERSION}</Text>
  </ScrollView></SafeAreaView>
 }
 
