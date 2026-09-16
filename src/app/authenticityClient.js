@@ -32,7 +32,7 @@ export async function requestAuthenticityChallenge({edition,version}){
  const response=await fetch(`${AUTH_API_BASE}/v1/authenticity/challenge`,{
   method:'POST',
   headers:{'Content-Type':'application/json','Accept':'application/json'},
-  body:JSON.stringify({app:'AlofoK',edition,version,installationId})
+  body:JSON.stringify({app:'Al-Ufuq',edition,version,installationId})
  });
  if(!response.ok)throw new Error(`AUTH_HTTP_${response.status}`);
  const data=await response.json();

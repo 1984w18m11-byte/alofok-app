@@ -1,6 +1,6 @@
-# AlofoK — Verified Adhan Sources (2026)
+# Al-Ufuq — Verified Adhan Sources (2026)
 
-Only recordings with an explicit reusable license are eligible for inclusion in AlofoK / AlofoK Plus.
+Only recordings with an explicit reusable license are eligible for inclusion in Al-Ufuq / Al-Ufuq Plus.
 
 ## Approved candidates
 
@@ -72,7 +72,7 @@ Only recordings with an explicit reusable license are eligible for inclusion in 
 ### Cairo Collection (Cambridge)
 - License: CC BY-NC-ND 3.0
 - Status: REJECTED_FOR_COMMERCIAL_PLUS_RELEASE
-- Reason: NonCommercial + NoDerivatives restrictions are unsuitable for the paid AlofoK Plus distribution workflow.
+- Reason: NonCommercial + NoDerivatives restrictions are unsuitable for the paid Al-Ufuq Plus distribution workflow.
 
 ### Unverified 'Makkah' recordings
 - Status: REJECTED/HOLD

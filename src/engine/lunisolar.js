@@ -2,9 +2,9 @@ export const MONTHS_AR=['محرم','صفر','ربيع الأول','ربيع ال
 export const MONTHS_EN=['Muharram','Safar','Rabi I','Rabi II','Jumada I','Jumada II','Rajab',"Sha'ban",'Ramadan','Shawwal','Dhu al-Qidah','Dhu al-Hijjah','Nasi Month'];
 export const INTERCALARY_MONTH_AR='شهر النسيء';
 
-// AlofoK research model.
+// Al-Ufuq research model.
 // The conventional civil-Hijri epoch reference is around 19 July 622
-// in the proleptic Gregorian calendar. The AlofoK research reconstruction
+// in the proleptic Gregorian calendar. The Al-Ufuq research reconstruction
 // currently uses a two-day earlier phase alignment (17 July 622) and labels
 // that point 1 Rajab 1 AH. This calibration makes 15 September 2026 align
 // with 4 Ramadan 1405 in the accumulated-Nasi model.
@@ -27,7 +27,7 @@ export const SEASONAL_POLICY={
   anchor:'Research hypothesis: 1 Rajab 1 AH',
   epochProlepticGregorian:'17 July 622 (research phase alignment)',
   conventionalEpochReference:'19 July 622 (civil-Hijri reference)',
-  calibration:'15 September 2026 = 4 Ramadan 1405 in the AlofoK research model.',
+  calibration:'15 September 2026 = 4 Ramadan 1405 in the Al-Ufuq research model.',
   intercalation:'Accumulate the difference between one tropical year and twelve mean synodic months. When the accumulated difference reaches one mean lunation, append شهر النسيء after ذو الحجة.',
   rule:'Research implementation: preserve the ordinary Arabic month order, use Rajab as the epoch month in year 1, and insert Nasi only when accumulated seasonal drift reaches one lunar month.',
   historicalStatus:'Research reconstruction; not presented as the conventional historical Hijri dating.'

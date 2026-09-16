@@ -93,7 +93,7 @@ export function useAdhanAudio(){
    const channelId=`alofok-v3-${selected.id.replace(/[^a-z0-9-]/gi,'-')}`;
    if(Platform.OS==='android'){
     await Notifications.setNotificationChannelAsync(channelId,{
-     name:`AlofoK — ${selected.performer||'Adhan'}`,
+     name:`Al-Ufuq — ${selected.performer||'Adhan'}`,
      importance:Notifications.AndroidImportance.MAX,
      vibrationPattern:[0,250,180,250],sound
     });

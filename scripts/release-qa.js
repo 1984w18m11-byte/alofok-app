@@ -80,7 +80,7 @@ assert(app.includes("t('adhanVolume')")&&app.includes('adhan.setVolume(level)'),
 assert(app.includes("return <View style={[s.prayerStrip,rowDir(rtl)]}>"),'prayer strip must show all six times without horizontal scrolling');
 assert(app.includes("prayerItem:{flex:1,minWidth:0,minHeight:72"),'prayer items must share the available width');
 
-assert(strings.includes("appName:'الأفق'")&&strings.includes("appName:'AlofoK'"),'Arabic and English V3 packs are required');
+assert(strings.includes("appName:'الأفق'")&&strings.includes("appName:'Al-Ufuq'"),'Arabic and English V3 packs are required');
 assert(strings.includes("languageTitle:'Interface language'")&&strings.includes("languageTitle:'لغة الواجهة'"),'language screen strings missing');
 assert(app.includes('makeV3Translator(language)'),'all V3 screens must use centralized translations');
 assert(app.includes('v3IsRtl(language)'),'interface direction must follow selected language');
@@ -136,4 +136,4 @@ assert(trialAds.includes("status:'pending_review'"),'new ad submissions must rem
 assert(trialAds.includes('EXPO_PUBLIC_AD_PAYMENT_URL'),'ad payment must use configurable provider routing, never a hardcoded card number');
 
 if(process.exitCode)process.exit(process.exitCode);
-console.log('Release QA passed for AlofoK V3',version);
+console.log('Release QA passed for Al-Ufuq V3',version);
