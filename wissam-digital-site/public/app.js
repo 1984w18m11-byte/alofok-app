@@ -86,7 +86,7 @@ if(requestImages&&imageSelection){
   requestImages.addEventListener('change',()=>{
     const files=Array.from(requestImages.files||[]);
     if(!files.length){
-      imageSelection.innerHTML='<span data-ar>يمكنك اختيار صور أو PDF أو Word أو ملف نصي. تبقى الملفات على جهازك إلى أن تختار إرسالها.</span><span data-en>You can select images, PDF, Word, or text files. Files stay on your device until you choose to send them.</span>';
+      imageSelection.innerHTML='<span data-ar>يمكنك اختيار صور أو مستندات PDF أو Word أو ملفات نصية وإرسالها مع طلبك.</span><span data-en>You can select images, PDF, Word or text documents and send them with your request.</span>';
       return;
     }
     const names=files.slice(0,4).map(file=>file.name).join('، ');
