@@ -18,14 +18,14 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Apply payment and support source changes
+      - name: Apply payment support drawer and theme source changes
         run: python3 scripts/apply_payment_support_update.py
 
       - name: Commit prepared source only
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/app/AppV3.js
+          git add src/app/AppV3.js src/app/PaymentTransfer.js src/app/SupportScreen.js src/app/themeCatalog.js wissam-digital-site/src/index.js
           git diff --cached --quiet && exit 0
-          git commit -m "feat: connect support and Plus transfer screens"
+          git commit -m "ui: finalize support matching drawer and fixed theme"
           git push origin main
