@@ -1,0 +1,72 @@
+name: Apply authenticity QR
+
+on:
+  push:
+    paths:
+      - '.github/authenticity-qr.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Add always-visible authenticity QR
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/app/LegalScreens.js')
+          s=p.read_text(encoding='utf-8')
+
+          old=""" const copyCode=async()=>{if(challenge?.token)await Clipboard.setStringAsync(challenge.token)};
+ const openVerify=async()=>{if(challenge?.verifyUrl)await Linking.openURL(challenge.verifyUrl)};
+ const configured=Boolean(challenge?.configured);
+ return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content}>"""
+          new=""" const copyCode=async()=>{if(challenge?.token)await Clipboard.setStringAsync(challenge.token)};
+ const openVerify=async()=>{if(challenge?.verifyUrl)await Linking.openURL(challenge.verifyUrl)};
+ const configured=Boolean(challenge?.configured);
+ const localQrValue=challenge?.installationId?`AlofoK|owner=Wissam Mohammed - Wissam Digital|edition=${edition}|version=${version}|installation=${challenge.installationId}|type=official-copy-identity`:'';
+ const qrValue=challenge?.verifyUrl||localQrValue;
+ return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content}>"""
+          if old not in s:
+              raise SystemExit('Authenticity setup block not found')
+          s=s.replace(old,new,1)
+
+          old2="""  {!challenge?.configured&&!loading&&!error&&<View style={s.notice}><Text style={[s.noticeText,dir(rtl)]}>{ar?'نظام التحقق داخل التطبيق جاهز، لكنه ينتظر ربط عنوان خادم التحقق وصفحة الويب الرسمية. بعد الربط سيُصدر الخادم رمزًا جديدًا وQR قصير العمر كل مرة.':'The in-app verification flow is ready, but it is waiting for the official verification API and web page addresses. Once connected, the server will issue a fresh short-lived code and QR each time.'}</Text></View>}
+  {loading&&<Text style={[s.status,dir(rtl)]}>{ar?'جاري طلب رمز جديد…':'Requesting a new code…'}</Text>}
+  {!!error&&<Text style={[s.error,dir(rtl)]}>{error}</Text>}
+  {configured&&challenge?.token&&<>
+   {!!challenge.verifyUrl&&<View style={s.qrWrap}><QRCode value={challenge.verifyUrl} size={210} backgroundColor=\"#FFFFFF\" color=\"#06182B\"/></View>}
+"""
+          new2="""  {!challenge?.configured&&!loading&&!error&&<View style={s.notice}><Text style={[s.noticeText,dir(rtl)]}>{ar?'هذا الباركود يعرّف النسخة الحالية محليًا باسم الأفق، مالك المشروع، نوع النسخة، رقم الإصدار ومعرّف التثبيت. عند ربط خادم التحقق الرسمي يتحول إلى باركود تحقق قصير العمر يمكن التحقق منه عبر الويب.':'This QR locally identifies the current AlofoK copy with the project owner, edition, version and installation ID. When the official verification server is connected, it becomes a short-lived web-verifiable authenticity QR.'}</Text></View>}
+  {loading&&<Text style={[s.status,dir(rtl)]}>{ar?'جاري تجهيز بيانات التحقق…':'Preparing verification data…'}</Text>}
+  {!!error&&<Text style={[s.error,dir(rtl)]}>{error}</Text>}
+  {!!qrValue&&<>
+   <Text style={[s.codeLabel,dir(rtl)]}>{configured?(ar?'باركود التحقق من أصالة النسخة':'Authenticity verification QR'):(ar?'باركود تعريف النسخة الرسمية':'Official-copy identity QR')}</Text>
+   <View style={s.qrWrap}><QRCode value={qrValue} size={210} backgroundColor=\"#FFFFFF\" color=\"#06182B\"/></View>
+   <Text style={[s.expiry,dir(rtl)]}>{ar?'المحتوى: الأفق / AlofoK — وسام محمد — Wissam Digital — نوع النسخة — رقم الإصدار — معرّف التثبيت.':'Contains: AlofoK — Wissam Mohammed — Wissam Digital — edition — version — installation ID.'}</Text>
+  </>}
+  {configured&&challenge?.token&&<>
+"""
+          if old2 not in s:
+              raise SystemExit('Authenticity QR display block not found')
+          s=s.replace(old2,new2,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit authenticity QR
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/LegalScreens.js
+          git diff --cached --quiet && exit 0
+          git commit -m "ui: always show authenticity QR with verification explanation"
+          git push origin main
