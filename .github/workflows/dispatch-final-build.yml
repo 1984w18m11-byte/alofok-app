@@ -1,0 +1,19 @@
+name: Dispatch final Android build
+
+on:
+  push:
+    paths:
+      - .github/dispatch-final-build.trigger
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start existing Android build workflow on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh workflow run build-apks.yml --repo 1984w18m11-byte/alofok-app --ref main
