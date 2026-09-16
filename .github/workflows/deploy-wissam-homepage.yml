@@ -1,0 +1,80 @@
+name: Deploy Wissam Digital homepage
+
+on:
+  push:
+    paths:
+      - '.github/deploy-wissam-homepage.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply exact requested homepage changes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p=Path('wissam-digital-site/public/index.html')
+          s=p.read_text(encoding='utf-8')
+
+          old='''            <div class="crescent">🌙</div>\n            <div class="app-name">الأفق</div>\n            <div data-ar style="font-weight:900;color:#f5c86a;margin-top:2px">تقويم عربي ثابت</div>\n            <div data-en style="font-weight:900;color:#f5c86a;margin-top:2px">Fixed Arabic calendar</div>\n            <p>AlofoK<br><span data-ar>تقويم عربي ثابت • مواقيت الصلاة</span><span data-en>Fixed Arabic calendar • Prayer times</span></p>'''
+          new='''            <div class="crescent">🌙</div>\n            <div class="app-name">الأفق</div>\n            <div data-ar style="font-weight:900;color:#f5c86a;margin-top:6px;font-size:18px">التقويم العربي الثابت</div>\n            <div data-en style="font-weight:900;color:#f5c86a;margin-top:6px;font-size:18px">Fixed Arabic Calendar</div>\n            <p><span data-ar>مواقيت الصلاة • تقويم عربي</span><span data-en>Prayer times • Arabic calendar</span></p>'''
+          if old in s:
+              s=s.replace(old,new,1)
+          else:
+              s=s.replace('<div class="app-name">الأفق</div>','<div class="app-name">الأفق</div>\n            <div data-ar style="font-weight:900;color:#f5c86a;margin-top:6px;font-size:18px">التقويم العربي الثابت</div>\n            <div data-en style="font-weight:900;color:#f5c86a;margin-top:6px;font-size:18px">Fixed Arabic Calendar</div>',1)
+
+          import re
+          pattern=re.compile(r'<div style="position:relative;z-index:3;text-align:center;margin-top:16px;width:100%">.*?</div>\s*</div>\s*</div>\s*</section>',re.S)
+          replacement='''<div style="position:relative;z-index:3;text-align:center;margin-top:16px;width:100%">\n          <a class="btn primary" data-download-app="alofok" href="https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk" rel="noopener" style="display:flex;justify-content:center;align-items:center;width:min(100%,360px);margin:0 auto;font-size:18px;padding:15px 20px">\n            <span data-ar>⬇ تحميل البرنامج من هنا</span><span data-en>⬇ Download the app here</span>\n          </a>\n          <div class="hint" style="margin-top:8px"><span data-ar>الأفق — النسخة التجريبية للأندرويد APK</span><span data-en>AlofoK — Android Trial APK</span></div>\n        </div>\n      </div>\n    </div>\n  </section>'''
+          s2,n=pattern.subn(replacement,s,count=1)
+          if n:
+              s=s2
+          else:
+              s=s.replace('<span data-ar>⬇ تحميل تطبيق الأفق الآن</span>','<span data-ar>⬇ تحميل البرنامج من هنا</span>',1)
+              s=s.replace('<span data-en>⬇ Download AlofoK now</span>','<span data-en>⬇ Download the app here</span>',1)
+
+          s=s.replace('<label data-ar>تحميل الصور المطلوبة (اختياري)</label><label data-en>Add required images (optional)</label>','<label data-ar>إرفاق مستندات أو صور (اختياري)</label><label data-en>Attach documents or images (optional)</label>')
+          s=s.replace('<label data-ar>إرفاق ملفات أو صور (اختياري)</label><label data-en>Attach files or images (optional)</label>','<label data-ar>إرفاق مستندات أو صور (اختياري)</label><label data-en>Attach documents or images (optional)</label>')
+          s=s.replace('accept="image/*" multiple','accept="image/*,.pdf,.doc,.docx,.txt" multiple')
+          s=s.replace('يمكنك اختيار عدة صور. تبقى الصور على جهازك إلى أن تختار إرسالها.','يمكنك اختيار صور أو مستندات PDF أو Word أو ملفات نصية وإرسالها مع طلبك.')
+          s=s.replace('You can select multiple images. They stay on your device until you choose to send them.','You can select images, PDF, Word or text documents and send them with your request.')
+          s=s.replace('يمكنك اختيار صور أو PDF أو Word أو ملف نصي. تبقى الملفات على جهازك إلى أن تختار إرسالها.','يمكنك اختيار صور أو مستندات PDF أو Word أو ملفات نصية وإرسالها مع طلبك.')
+          s=s.replace('You can select images, PDF, Word, or text files. Files stay on your device until you choose to send them.','You can select images, PDF, Word or text documents and send them with your request.')
+          p.write_text(s,encoding='utf-8')
+
+          p=Path('wissam-digital-site/public/app.js')
+          s=p.read_text(encoding='utf-8')
+          s=s.replace('يمكنك اختيار صور أو PDF أو Word أو ملف نصي. تبقى الملفات على جهازك إلى أن تختار إرسالها.','يمكنك اختيار صور أو مستندات PDF أو Word أو ملفات نصية وإرسالها مع طلبك.')
+          s=s.replace('You can select images, PDF, Word, or text files. Files stay on your device until you choose to send them.','You can select images, PDF, Word or text documents and send them with your request.')
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit homepage changes
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add wissam-digital-site/public/index.html wissam-digital-site/public/app.js
+          if ! git diff --cached --quiet; then
+            git commit -m "site: show AlofoK download and document attachments"
+            git push origin main
+          fi
+
+      - name: Deploy to Cloudflare Workers
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: wissam-digital-site
+          command: deploy
