@@ -1,11 +1,11 @@
 {
   "channel": "plus",
   "version": "1.0.2",
-  "versionCode": 32,
+  "versionCode": 33,
   "title_ar": "تحديث الأفق Plus",
   "notes_ar": "الإصدار 1.0.2: إزالة تفعيل Plus من نسخة Plus والإبقاء على الدعم فقط، تحديث شاشة الدعم والتحويل، إخفاء رمز المطابقة عن المستخدم مع تسجيله داخليًا عند النسخ، تصغير رأس القائمة، إبقاء الخلفية الأصلية ضمن الثيمات، وتحسينات الحقوق والتحقق من أصالة النسخة.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-plus-1.0.2.apk",
   "mandatory": false,
-  "published_at": "2026-09-16",
+  "published_at": "2026-09-17",
   "notes_en": "1.0.2: Plus activation removed from the paid build while Support remains, with payment-flow refinements, hidden internal matching code, smaller drawer header, fixed original theme preserved, plus legal and authenticity improvements."
 }
