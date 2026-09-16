@@ -1,0 +1,53 @@
+name: Update Wissam Digital AlofoK download
+
+on:
+  push:
+    paths:
+      - '.github/site-release.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  update-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Point Trial downloads to AlofoK 1.0.2
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          old='https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.1/alofok-trial-1.0.1.apk'
+          new='https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk'
+          files=[
+            Path('wissam-digital-site/public/index.html'),
+            Path('wissam-digital-site/public/apps/alofok.html'),
+            Path('wissam-digital-site/src/index.js'),
+          ]
+          for p in files:
+            s=p.read_text(encoding='utf-8')
+            if old not in s and new not in s:
+              raise SystemExit(f'Expected AlofoK download URL not found in {p}')
+            s=s.replace(old,new)
+            p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Mark Cloudflare source refresh
+        shell: bash
+        run: |
+          printf '%s\n' 'Wissam Digital AlofoK Trial updated to 1.0.2 on 2026-09-16.' > wissam-digital-site/.release-1.0.2.txt
+
+      - name: Commit website update
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add wissam-digital-site/public/index.html wissam-digital-site/public/apps/alofok.html wissam-digital-site/src/index.js wissam-digital-site/.release-1.0.2.txt
+          git diff --cached --quiet && exit 0
+          git commit -m "site: publish AlofoK Trial 1.0.2"
+          git push origin main
