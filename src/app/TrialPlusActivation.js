@@ -10,11 +10,13 @@ const WHITE='#F7F8FB';
 const GOLD='#F4C45D';
 const MUTED='#B9C4D1';
 const PLUS_PRICE_IQD=8000;
+const PAYMENT_COPY_EVENT='payment_data_copied';
+const PAYMENT_COPY_WEBHOOK=process.env.EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK||'';
 
 function dir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl':'ltr'}}
 
 export function TrialPlusActivation({rtl,country,onBack,alreadyActive=false}){
- const inIraq=!country||country==='IQ';
+ const inIraq=country==='IQ';
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content}>
   <View style={s.header}>
    <Pressable onPress={onBack} style={s.back}><Text style={s.backText}>‹</Text></Pressable>
@@ -33,7 +35,7 @@ export function TrialPlusActivation({rtl,country,onBack,alreadyActive=false}){
     <Text style={s.price}>{rtl?'8,000 دينار عراقي':'8,000 IQD'}</Text>
     <Text style={[s.body,dir(rtl)]}>{rtl?'اختر إحدى وسيلتي التحويل أدناه. يظهر رقم البطاقة المكوّن من 16 رقمًا ورقم الحساب المكوّن من 10 أرقام معًا، ولكل واحد زر نسخ مستقل.':'Choose either transfer method below. The 16-digit card number and the 10-digit account number are shown together, each with its own copy button.'}</Text>
    </View>
-   <PaymentTransferPanel rtl={rtl} purpose='plus' edition={alreadyActive?'plus':'trial'} amountIqd={PLUS_PRICE_IQD}/>
+   <PaymentTransferPanel rtl={rtl} purpose='plus' edition={alreadyActive?'plus':'trial'} amountIqd={PLUS_PRICE_IQD} eventName={PAYMENT_COPY_EVENT} notificationEndpoint={PAYMENT_COPY_WEBHOOK}/>
    <Text style={[s.footerNote,dir(rtl)]}>{rtl?'بعد التحويل تتم مطابقة الحوالة مع رمز الجهاز لتأكيد التفعيل، حتى لو تم الدفع من بطاقة أو حساب باسم شخص آخر.':'After transfer, the payment is matched to the device code for activation, even if payment was made from a card or account under another name.'}</Text>
   </>}
  </ScrollView></SafeAreaView>
