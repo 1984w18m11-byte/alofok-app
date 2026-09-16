@@ -1,0 +1,42 @@
+name: Apply Adhan preview cleanup
+
+on:
+  push:
+    paths:
+      - '.github/adhan-preview-cleanup.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Remove static preview waveform
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/app/AppV3.js')
+          s=p.read_text(encoding='utf-8')
+          old="<View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text><Text style={s.wave}>▂▅▃▇▆▂▅▃▂▁</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>"
+          new="<View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>"
+          if old not in s:
+              raise SystemExit('Static waveform block not found; source changed unexpectedly')
+          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          PY
+
+      - name: Commit cleanup
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/AppV3.js
+          git diff --cached --quiet && exit 0
+          git commit -m "ui: remove static Adhan preview waveform"
+          git push origin main
