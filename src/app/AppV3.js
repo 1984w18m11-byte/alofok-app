@@ -248,7 +248,7 @@ function AdhanScreen({t,rtl,adhan,onBack}){
     </View>
    </Pressable>
   })}
-  <View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text><Text style={s.wave}>▂▅▃▇▆▂▅▃▂▁</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>
+  <View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>
   <View style={s.volumeBox}>
    <View style={[s.volumeHeader,rowDir(rtl)]}><Text style={[s.volumeTitle,textDir(rtl)]}>{t('adhanVolume')}</Text><Text style={s.volumePercent}>{Math.round(adhan.volume*100)}%</Text></View>
    <View style={s.volumeControls}>
