@@ -66,26 +66,13 @@ function trackEvent(event,extra={}){
 
 trackEvent('page_view');
 
-// قاعدة الموقع: أي تطبيق قابل للتحميل يجب أن يظهر بجانبه زر "شرح عن البرنامج".
-let alofokDownload=document.getElementById('alofokTrialDownload') || document.querySelector('a[href*="alofok-trial-1.0.1.apk"]');
-if(alofokDownload){
-  alofokDownload.id='alofokTrialDownload';
+// كل زر تحميل للأفق يمر عبر نفس المسار حتى يُقاس عدد ضغطات التحميل.
+document.querySelectorAll('[data-download-app="alofok"]').forEach(link=>{
   const q=new URLSearchParams({sid:analyticsSessionId,src:analyticsSource});
-  alofokDownload.href=`/download/alofok-trial?${q.toString()}`;
+  link.href=`/download/alofok-trial?${q.toString()}`;
+});
 
-  const projectBody=alofokDownload.closest('.project-body');
-  if(projectBody && !projectBody.querySelector('.app-explainer-link')){
-    const explain=document.createElement('a');
-    explain.className='btn secondary app-explainer-link';
-    explain.href='/apps/alofok.html';
-    explain.dataset.track='app_explainer_open';
-    explain.dataset.app='alofok';
-    explain.dataset.edition='trial';
-    explain.innerHTML='<span data-ar>شرح عن البرنامج</span><span data-en>About the app</span>';
-    projectBody.appendChild(explain);
-  }
-}
-
+// قاعدة الموقع: أي تطبيق قابل للتحميل يجب أن يكون بجانبه زر "شرح عن البرنامج".
 document.querySelectorAll('[data-track="app_explainer_open"]').forEach(link=>{
   link.addEventListener('click',()=>trackEvent('app_explainer_open',{
     app:link.dataset.app||'',
@@ -93,21 +80,61 @@ document.querySelectorAll('[data-track="app_explainer_open"]').forEach(link=>{
   }));
 });
 
+const requestImages=document.getElementById('requestImages');
+const imageSelection=document.getElementById('imageSelection');
+if(requestImages&&imageSelection){
+  requestImages.addEventListener('change',()=>{
+    const files=Array.from(requestImages.files||[]).filter(file=>file.type.startsWith('image/'));
+    if(!files.length){
+      imageSelection.innerHTML='<span data-ar>يمكنك اختيار عدة صور. تبقى الصور على جهازك إلى أن تختار إرسالها.</span><span data-en>You can select multiple images. They stay on your device until you choose to send them.</span>';
+      return;
+    }
+    const names=files.slice(0,4).map(file=>file.name).join('، ');
+    const extra=files.length>4?` +${files.length-4}`:'';
+    imageSelection.textContent=`تم اختيار ${files.length} صورة: ${names}${extra}`;
+  });
+}
+
 const requestForm=document.getElementById('requestForm');
 if(requestForm){
-  requestForm.addEventListener('submit',e=>{
+  requestForm.addEventListener('submit',async e=>{
     e.preventDefault();
     const subject=document.getElementById('subject').value.trim();
     const details=document.getElementById('details').value.trim();
     const source=detectSource();
-    const msg=`مرحباً وسام ديجيتال 👋\nلدي طلب جديد\nالموضوع: ${subject}\nالمطلوب: ${details}\nالمصدر: ${source}`;
-    const target=WHATSAPP_NUMBER
-      ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`
-      : `https://wa.me/?text=${encodeURIComponent(msg)}`;
+    const files=Array.from(requestImages?.files||[]).filter(file=>file.type.startsWith('image/'));
+
+    if(files.length>8){
+      alert('يمكنك اختيار 8 صور كحد أقصى في كل طلب.');
+      return;
+    }
+
+    const imageLine=files.length?`\nالصور المرفقة: ${files.length}`:'';
+    const msg=`مرحباً وسام ديجيتال 👋\nلدي طلب جديد\nموضوع الطلب: ${subject}\nالشرح: ${details}${imageLine}\nالمصدر: ${source}`;
     const notice=document.getElementById('contactNotice');
+
+    // على الهواتف الداعمة للمشاركة، نمرّر الصور نفسها إلى قائمة المشاركة حتى يختار المستخدم واتساب.
+    if(files.length&&navigator.share&&navigator.canShare&&navigator.canShare({files})){
+      try{
+        if(notice){
+          notice.style.display='block';
+          notice.textContent='سيظهر خيار المشاركة. اختر واتساب لإرسال النص والصور معًا.';
+        }
+        await navigator.share({title:'Wissam Digital',text:msg,files});
+        return;
+      }catch(err){
+        if(err?.name==='AbortError')return;
+      }
+    }
+
+    // إذا لم يدعم المتصفح مشاركة الملفات، نفتح واتساب بالنص ونطلب إرفاق الصور المختارة يدويًا.
+    const fallbackMsg=files.length?`${msg}\nملاحظة: يرجى إرفاق الصور المختارة داخل واتساب.`:msg;
+    const target=WHATSAPP_NUMBER
+      ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(fallbackMsg)}`
+      : `https://wa.me/?text=${encodeURIComponent(fallbackMsg)}`;
     if(notice){
       notice.style.display='block';
-      notice.textContent='سيتم فتح واتساب لإرسال رسالة نصية فقط.';
+      notice.textContent=files.length?'سيتم فتح واتساب. إذا لم تنتقل الصور تلقائيًا، أرفق الصور المختارة داخل المحادثة.':'سيتم فتح واتساب لإرسال الطلب.';
     }
     location.href=target;
   });
