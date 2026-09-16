@@ -1,4 +1,4 @@
-name: Apply Adhan preview cleanup
+name: Apply Adhan preview removal
 
 on:
   push:
@@ -18,18 +18,32 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Remove static preview waveform
+      - name: Remove stopped preview section and keep volume controls
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p=Path('src/app/AppV3.js')
           s=p.read_text(encoding='utf-8')
-          old="<View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text><Text style={s.wave}>▂▅▃▇▆▂▅▃▂▁</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>"
-          new="<View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>"
-          if old not in s:
-              raise SystemExit('Static waveform block not found; source changed unexpectedly')
-          p.write_text(s.replace(old,new,1),encoding='utf-8')
+          preview="  <View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>\n"
+          if preview in s:
+              s=s.replace(preview,'',1)
+          elif "t('previewSound')" in s:
+              raise SystemExit('Preview section shape changed; refusing unsafe edit')
+
+          style="previewBox:{marginTop:18,padding:16,borderRadius:18,backgroundColor:CARD_2,borderWidth:1,borderColor:LINE},wave:{color:MUTED,fontSize:21,letterSpacing:2},"
+          s=s.replace(style,'',1)
+
+          required=[
+              "adhan.setVolume(Math.max(0,Math.round((adhan.volume-0.1)*10)/10))",
+              "adhan.setVolume(Math.min(1,Math.round((adhan.volume+0.1)*10)/10))",
+              "t('adhanVolume')"
+          ]
+          missing=[x for x in required if x not in s]
+          if missing:
+              raise SystemExit('Volume controls missing: '+', '.join(missing))
+
+          p.write_text(s,encoding='utf-8')
           PY
 
       - name: Commit cleanup
@@ -38,5 +52,5 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/app/AppV3.js
           git diff --cached --quiet && exit 0
-          git commit -m "ui: remove static Adhan preview waveform"
+          git commit -m "ui: remove stopped Adhan preview section"
           git push origin main
