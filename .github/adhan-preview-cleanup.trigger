@@ -1,1 +1,1 @@
-remove-static-waveform-20260916
+apply full Adhan preview removal and retain volume controls - 2026-09-17
