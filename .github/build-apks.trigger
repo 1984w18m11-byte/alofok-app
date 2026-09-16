@@ -1,1 +1,1 @@
-build-authenticity-qr-20260916-2006
+build-alofok-1.0.2-20260916
