@@ -84,14 +84,14 @@ const requestImages=document.getElementById('requestImages');
 const imageSelection=document.getElementById('imageSelection');
 if(requestImages&&imageSelection){
   requestImages.addEventListener('change',()=>{
-    const files=Array.from(requestImages.files||[]).filter(file=>file.type.startsWith('image/'));
+    const files=Array.from(requestImages.files||[]);
     if(!files.length){
-      imageSelection.innerHTML='<span data-ar>يمكنك اختيار عدة صور. تبقى الصور على جهازك إلى أن تختار إرسالها.</span><span data-en>You can select multiple images. They stay on your device until you choose to send them.</span>';
+      imageSelection.innerHTML='<span data-ar>يمكنك اختيار صور أو PDF أو Word أو ملف نصي. تبقى الملفات على جهازك إلى أن تختار إرسالها.</span><span data-en>You can select images, PDF, Word, or text files. Files stay on your device until you choose to send them.</span>';
       return;
     }
     const names=files.slice(0,4).map(file=>file.name).join('، ');
     const extra=files.length>4?` +${files.length-4}`:'';
-    imageSelection.textContent=`تم اختيار ${files.length} صورة: ${names}${extra}`;
+    imageSelection.textContent=`تم اختيار ${files.length} ملف: ${names}${extra}`;
   });
 }
 
@@ -102,14 +102,14 @@ if(requestForm){
     const subject=document.getElementById('subject').value.trim();
     const details=document.getElementById('details').value.trim();
     const source=detectSource();
-    const files=Array.from(requestImages?.files||[]).filter(file=>file.type.startsWith('image/'));
+    const files=Array.from(requestImages?.files||[]);
 
     if(files.length>8){
-      alert('يمكنك اختيار 8 صور كحد أقصى في كل طلب.');
+      alert('يمكنك اختيار 8 ملفات كحد أقصى في كل طلب.');
       return;
     }
 
-    const imageLine=files.length?`\nالصور المرفقة: ${files.length}`:'';
+    const imageLine=files.length?`\nالملفات المرفقة: ${files.length}`:'';
     const msg=`مرحباً وسام ديجيتال 👋\nلدي طلب جديد\nموضوع الطلب: ${subject}\nالشرح: ${details}${imageLine}\nالمصدر: ${source}`;
     const notice=document.getElementById('contactNotice');
 
@@ -118,7 +118,7 @@ if(requestForm){
       try{
         if(notice){
           notice.style.display='block';
-          notice.textContent='سيظهر خيار المشاركة. اختر واتساب لإرسال النص والصور معًا.';
+          notice.textContent='سيظهر خيار المشاركة. اختر واتساب لإرسال النص والملفات معًا.';
         }
         await navigator.share({title:'Wissam Digital',text:msg,files});
         return;
@@ -128,13 +128,13 @@ if(requestForm){
     }
 
     // إذا لم يدعم المتصفح مشاركة الملفات، نفتح واتساب بالنص ونطلب إرفاق الصور المختارة يدويًا.
-    const fallbackMsg=files.length?`${msg}\nملاحظة: يرجى إرفاق الصور المختارة داخل واتساب.`:msg;
+    const fallbackMsg=files.length?`${msg}\nملاحظة: يرجى إرفاق الملفات المختارة داخل واتساب إذا لم تنتقل تلقائيًا.`:msg;
     const target=WHATSAPP_NUMBER
       ? `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(fallbackMsg)}`
       : `https://wa.me/?text=${encodeURIComponent(fallbackMsg)}`;
     if(notice){
       notice.style.display='block';
-      notice.textContent=files.length?'سيتم فتح واتساب. إذا لم تنتقل الصور تلقائيًا، أرفق الصور المختارة داخل المحادثة.':'سيتم فتح واتساب لإرسال الطلب.';
+      notice.textContent=files.length?'سيتم فتح واتساب. إذا لم تنتقل الملفات تلقائيًا، أرفقها داخل المحادثة.':'سيتم فتح واتساب لإرسال الطلب.';
     }
     location.href=target;
   });

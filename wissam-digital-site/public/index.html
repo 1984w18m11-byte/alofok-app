@@ -62,9 +62,9 @@
             <div class="project-symbols"><span>▦</span><span>◷</span><span>⌖</span><span>♪</span></div>
           </div>
         </div>
-        <div style="position:relative;z-index:3;text-align:center;margin-top:16px">
-          <a class="btn primary" data-download-app="alofok" href="https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk" rel="noopener"><span data-ar>⬇ اضغط لتحميل البرنامج</span><span data-en>⬇ Tap to download the app</span></a>
-          <div class="hint" style="margin-top:8px"><span data-ar>النسخة التجريبية للأندرويد — APK</span><span data-en>Android Trial — APK</span></div>
+        <div style="position:relative;z-index:3;text-align:center;margin-top:16px;width:100%">
+          <a class="btn primary" data-download-app="alofok" href="https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk" rel="noopener" style="display:flex;justify-content:center;align-items:center;width:min(100%,360px);margin:0 auto;font-size:17px;padding:15px 20px"><span data-ar>⬇ تحميل تطبيق الأفق الآن</span><span data-en>⬇ Download AlofoK now</span></a>
+          <div class="hint" style="margin-top:8px"><span data-ar>النسخة التجريبية للأندرويد — APK — الإصدار 1.0.2</span><span data-en>Android Trial — APK — version 1.0.2</span></div>
         </div>
       </div>
     </div>
@@ -135,9 +135,9 @@
             <div class="field"><label data-ar>موضوع الطلب</label><label data-en>Request subject</label><input id="subject" required placeholder="مثال: تصميم إعلان لمطعم" /></div>
             <div class="field"><label data-ar>الشرح</label><label data-en>Description</label><textarea id="details" required placeholder="اشرح المطلوب باختصار..."></textarea></div>
             <div class="field">
-              <label data-ar>تحميل الصور المطلوبة (اختياري)</label><label data-en>Add required images (optional)</label>
-              <input id="requestImages" type="file" accept="image/*" multiple />
-              <div id="imageSelection" class="hint"><span data-ar>يمكنك اختيار عدة صور. تبقى الصور على جهازك إلى أن تختار إرسالها.</span><span data-en>You can select multiple images. They stay on your device until you choose to send them.</span></div>
+              <label data-ar>إرفاق ملفات أو صور (اختياري)</label><label data-en>Attach files or images (optional)</label>
+              <input id="requestImages" type="file" accept="image/*,.pdf,.doc,.docx,.txt" multiple />
+              <div id="imageSelection" class="hint"><span data-ar>يمكنك اختيار صور أو PDF أو Word أو ملف نصي. تبقى الملفات على جهازك إلى أن تختار إرسالها.</span><span data-en>You can select images, PDF, Word, or text files. Files stay on your device until you choose to send them.</span></div>
             </div>
             <button class="btn primary" type="submit">💬 <span data-ar>إرسال الطلب</span><span data-en>Send request</span></button>
             <div class="notice" id="contactNotice"></div>
