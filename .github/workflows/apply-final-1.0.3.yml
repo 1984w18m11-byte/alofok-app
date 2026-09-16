@@ -1,0 +1,81 @@
+name: Apply final ALAUFUQ 1.0.3 fixes
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-final-1.0.3.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Apply final source fixes
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          # Remove the Adhan preview/play control while preserving selection and volume controls.
+          p=Path('src/app/AppV3.js')
+          s=p.read_text(encoding='utf-8')
+          old="""  {adhan.catalog.map(item=>{\n   const selected=adhan.selectedId===item.id,playing=adhan.playingId===item.id;\n   return <Pressable key={item.id} onPress={()=>adhan.select(item.id)} style={[s.adhanCard,selected&&s.selectedGold]}>\n    <View style={[s.adhanRow,rowDir(rtl)]}>\n     <Pressable onPress={()=>playing?adhan.stop():adhan.preview(item.id)} style={s.playCircle}><Text style={s.playCircleText}>{playing?'Ⅱ':'▶'}</Text></Pressable>\n     <View style={s.adhanTextWrap}>"""
+          new="""  {adhan.catalog.map(item=>{\n   const selected=adhan.selectedId===item.id;\n   return <Pressable key={item.id} onPress={()=>adhan.select(item.id)} style={[s.adhanCard,selected&&s.selectedGold]}>\n    <View style={[s.adhanRow,rowDir(rtl)]}>\n     <View style={s.adhanTextWrap}>"""
+          if old not in s:
+              raise SystemExit('Adhan preview UI block not found')
+          s=s.replace(old,new,1)
+          s=s.replace("playCircle:{width:49,height:49,borderRadius:25,borderWidth:1.5,borderColor:WHITE,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(0,0,0,.25)'},playCircleText:{color:WHITE,fontSize:18},",'',1)
+          p.write_text(s,encoding='utf-8')
+
+          # Add a regression guard so preview UI cannot accidentally return.
+          p=Path('scripts/release-qa.js')
+          q=p.read_text(encoding='utf-8')
+          marker="assert(app.includes(\"t('adhanVolume')\")&&app.includes('adhan.setVolume(level)'),'Adhan volume control UI missing');"
+          guard="assert(!app.includes('adhan.preview(item.id)'),'Adhan preview/play control must stay removed from the Adhan screen');"
+          if guard not in q:
+              if marker not in q: raise SystemExit('QA volume marker not found')
+              q=q.replace(marker,marker+'\n'+guard,1)
+          p.write_text(q,encoding='utf-8')
+
+          # Publish as 1.0.3 / versionCode 34 so phones can distinguish this corrected build.
+          appj=json.loads(Path('app.json').read_text(encoding='utf-8'))
+          appj['expo']['version']='1.0.3'
+          appj['expo']['android']['versionCode']=34
+          Path('app.json').write_text(json.dumps(appj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          pkg=json.loads(Path('package.json').read_text(encoding='utf-8'))
+          pkg['version']='1.0.3'
+          Path('package.json').write_text(json.dumps(pkg,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          for name,channel in [('update-trial.json','trial'),('update-plus.json','plus')]:
+              obj=json.loads(Path(name).read_text(encoding='utf-8'))
+              obj['version']='1.0.3'
+              obj['versionCode']=34
+              obj['download_url']=f"https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.3/alofok-{'plus' if channel=='plus' else 'trial'}-1.0.3.apk"
+              obj['published_at']='2026-09-17'
+              Path(name).write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          # Retarget the build workflow/release names to 1.0.3.
+          p=Path('.github/workflows/build-apks.yml')
+          w=p.read_text(encoding='utf-8').replace('1.0.2','1.0.3')
+          p.write_text(w,encoding='utf-8')
+
+          Path('.github/build-apks.trigger').write_text('build-alaufuq-final-1.0.3-v34\n',encoding='utf-8')
+          PY
+
+      - name: Commit final fixes
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/AppV3.js scripts/release-qa.js app.json package.json update-trial.json update-plus.json .github/workflows/build-apks.yml .github/build-apks.trigger
+          git commit -m "release: finalize ALAUFUQ 1.0.3 UI and build"
+          git push origin main
