@@ -1,0 +1,50 @@
+name: Apply copyright visibility
+
+on:
+  push:
+    paths:
+      - '.github/rights-visibility.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Add visible ownership notices
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p=Path('src/app/AppV3.js')
+          s=p.read_text(encoding='utf-8')
+
+          old="['◎','languages','languages'],['ⓘ','about','about'],['◇','privacy','privacy']"
+          new="['◎','languages','languages'],['ⓘ','about','about'],['©','copyright','copyright'],['◇','privacy','privacy']"
+          if old not in s:
+              raise SystemExit('Drawer marker not found')
+          s=s.replace(old,new,1)
+
+          old_about="<SectionCard title={t('research')} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{t('researchBody')}</Text></SectionCard>\n  <Text style={s.versionText}>v{VERSION}</Text>"
+          new_about="<SectionCard title={t('research')} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{t('researchBody')}</Text></SectionCard>\n  <SectionCard title={rtl?'حقوق الطبع والنشر والملكية الفكرية':'Copyright & intellectual property'} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{rtl?'© 2026 وسام محمد — Wissam Digital. جميع حقوق الطبع والنشر والملكية الفكرية الخاصة بالشفرة الأصلية، الواجهات، الشعارات، الأيقونات، النصوص والمواد المنشأة خصيصًا لتطبيق الأفق محفوظة لصاحب المشروع وسام محمد، مع بقاء المواد المرخصة من جهات أخرى خاضعة لحقوق أصحابها وتراخيصها.':'© 2026 Wissam Mohammed — Wissam Digital. Copyright and intellectual-property rights in the original source code, interfaces, original logos, icons, text and project-specific materials of AlofoK are reserved to project owner Wissam Mohammed. Third-party licensed materials remain subject to their owners and license terms.'}</Text></SectionCard>\n  <Text style={s.versionText}>© 2026 وسام محمد — Wissam Digital · v{VERSION}</Text>"
+          if old_about not in s:
+              raise SystemExit('About marker not found')
+          s=s.replace(old_about,new_about,1)
+          p.write_text(s,encoding='utf-8')
+          PY
+
+      - name: Commit rights visibility
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/app/AppV3.js
+          git diff --cached --quiet && exit 0
+          git commit -m "legal: show Wissam Mohammed copyright and IP notices"
+          git push origin main
