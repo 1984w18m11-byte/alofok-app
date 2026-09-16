@@ -1,5 +1,5 @@
 import React,{useCallback,useEffect,useMemo,useState} from 'react';
-import {Alert,Image,ImageBackground,Linking,Pressable,ScrollView,StyleSheet,Switch,Text,View} from 'react-native';
+import {Alert,BackHandler,Image,ImageBackground,Linking,Pressable,ScrollView,StyleSheet,Switch,Text,View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {calculatePrayerTimes} from '../engine/prayer';
@@ -27,7 +27,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.0.1';
+const VERSION='1.0.2';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -80,7 +80,7 @@ function IconButton({label,onPress,children,accent=false}){
 }
 function Header({title,t,rtl,onBack}){
  return <View style={[s.screenHeader,rowDir(rtl)]}>
-  <IconButton label={t('back')} onPress={onBack}>‹</IconButton>
+  <IconButton label={t('back')} onPress={onBack}>{rtl?'›':'‹'}</IconButton>
   <Text style={[s.screenTitle,textDir(rtl)]}>{title}</Text>
   <View style={s.headerSpacer}/>
  </View>
@@ -181,7 +181,7 @@ function Drawer({t,rtl,onClose,onNavigate,onUpdate}){
   <Pressable style={s.drawerDismiss} onPress={onClose}/>
   <View style={[s.drawer,rtl?{right:0}:{left:0}]}>
    <SafeAreaView style={s.drawerSafe}>
-    <Pressable onPress={onClose} style={s.drawerClose}><Text style={s.drawerCloseText}>×</Text></Pressable>
+    <IconButton label={t('back')} onPress={onClose}>{rtl?'›':'‹'}</IconButton>
     <View style={s.drawerBrand}><View style={s.logoTile}><Text style={s.logoTileText}>◩</Text></View><Text style={s.drawerAppName}>{t('appName')}</Text><Text style={s.drawerTagline}>{t('tagline')}</Text></View>
     <View style={s.drawerLine}/>
     {items.map(([icon,key,target])=><Pressable key={target} onPress={()=>target==='update'?onUpdate():onNavigate(target)} style={[s.drawerItem,rowDir(rtl)]}><Text style={s.drawerItemIcon}>{icon}</Text><Text style={[s.drawerItemText,textDir(rtl)]}>{t(key)}</Text></Pressable>)}
@@ -291,7 +291,7 @@ function AboutScreen({t,rtl,onBack}){
   <View style={s.aboutLogo}><Text style={s.aboutLogoMark}>◩</Text><Text style={s.aboutLogoName}>{t('appName')}</Text><Text style={s.aboutLogoTag}>{t('tagline')}</Text></View>
   <View style={s.disclaimer}><Text style={[s.disclaimerText,textDir(rtl)]}>{t('researchDisclaimer')}</Text></View>
   <SectionCard title={t('research')} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{t('researchBody')}</Text></SectionCard>
-  <SectionCard title={rtl?'حقوق الطبع والنشر والملكية الفكرية':'Copyright & intellectual property'} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{rtl?'© 2026 وسام محمد — Wissam Digital. جميع حقوق الطبع والنشر والملكية الفكرية الخاصة بالشفرة الأصلية، الواجهات، الشعارات، الأيقونات، النصوص والمواد المنشأة خصيصًا لتطبيق الأفق محفوظة لصاحب المشروع وسام محمد، مع بقاء المواد المرخصة من جهات أخرى خاضعة لحقوق أصحابها وتراخيصها.':'© 2026 Wissam Mohammed — Wissam Digital. Copyright and intellectual-property rights in the original source code, interfaces, original logos, icons, text and project-specific materials of Al-Ufuq are reserved to project owner Wissam Mohammed. Third-party licensed materials remain subject to their owners and license terms.'}</Text></SectionCard>
+  <SectionCard title={rtl?'حقوق الطبع والنشر والملكية الفكرية':'Copyright & intellectual property'} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{rtl?'© 2026 وسام محمد — Wissam Digital. جميع حقوق الطبع والنشر والملكية الفكرية الخاصة بالشفرة الأصلية، الواجهات، الشعارات، الأيقونات، النصوص والمواد المنشأة خصيصًا لتطبيق الأفق محفوظة لصاحب المشروع وسام محمد، مع بقاء المواد المرخصة من جهات أخرى خاضعة لحقوق أصحابها وتراخيصها.':'© 2026 Wissam Mohammed — Wissam Digital. Copyright and intellectual-property rights in the original source code, interfaces, original logos, icons, text and project-specific materials of ALAUFUQ are reserved to project owner Wissam Mohammed. Third-party licensed materials remain subject to their owners and license terms.'}</Text></SectionCard>
   <Text style={s.versionText}>© 2026 وسام محمد — Wissam Digital · v{VERSION}</Text>
  </ScrollView></SafeAreaView>
 }
@@ -322,7 +322,14 @@ export default function AppV3(){
  const [selectedTheme,setSelectedThemeState]=useState(IS_PLUS?'auto':'season-autumn');
  const [hijriDate,setHijriDate]=useState(new Date());
  const [gregDate,setGregDate]=useState(new Date());
- const rtl=v3IsRtl(language),locale=v3LocaleTag(language),t=useMemo(()=>makeV3Translator(language),[language]);
+ const rtl=v3IsRtl(language),locale=v3LocaleTag(language);
+ const t=useMemo(()=>{
+  const base=makeV3Translator(language);
+  return key=>{
+   const value=base(key);
+   return typeof value==='string'&&!v3IsRtl(language)?value.replace(/Al-Ufuq/g,'ALAUFUQ'):value;
+  };
+ },[language]);
  const location=useDeviceLocation({rtl});
  const adhan=useAdhanAudio();
  const trialAds=useTrialAd({enabled:!IS_PLUS,country:location.country,language});
@@ -366,14 +373,25 @@ export default function AppV3(){
   if(target===screen)return;
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
- },[t,rtl,checkUpdate,screen]);
+ },[checkUpdate,screen]);
  const goBack=useCallback(()=>{
   setDrawer(false);
-  if(!screenHistory.length){setScreen('home');return}
-  const previous=screenHistory[screenHistory.length-1];
-  setScreenHistory(screenHistory.slice(0,-1));
-  setScreen(previous);
- },[screenHistory]);
+  setScreenHistory(history=>{
+   if(!history.length){setScreen('home');return []}
+   const previous=history[history.length-1];
+   setScreen(previous);
+   return history.slice(0,-1);
+  });
+ },[]);
+ useEffect(()=>{
+  const onHardwareBack=()=>{
+   if(drawer){setDrawer(false);return true}
+   if(screen!=='home'){goBack();return true}
+   return false;
+  };
+  const subscription=BackHandler.addEventListener('hardwareBackPress',onHardwareBack);
+  return()=>subscription.remove();
+ },[drawer,screen,goBack]);
  const goHome=useCallback(()=>{setDrawer(false);setScreenHistory([]);setScreen('home')},[]);
  const refreshGps=async()=>{const result=await location.refresh();if(!result&&location.error){const msg=location.error==='PERMISSION_DENIED'?t('locationDenied'):location.error==='SERVICES_OFF'?(rtl?'خدمة GPS متوقفة. فعّل الموقع ثم حاول مرة أخرى.':'GPS is off. Turn on location and try again.'):t('locationUnavailable');Alert.alert(t('location'),msg)}};
 
