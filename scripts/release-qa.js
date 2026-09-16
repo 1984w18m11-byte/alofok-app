@@ -77,6 +77,7 @@ assert(adhanHook.includes("const VOLUME_KEY='alofok_v3_adhan_volume';"),'Adhan v
 assert(adhanHook.includes('player.volume=volume'),'Adhan preview must use the selected volume');
 assert(adhanHook.includes('setVolumeState(next)')&&adhanHook.includes('playerRef.current.volume=next'),'Adhan volume must update live while audio is playing');
 assert(app.includes("t('adhanVolume')")&&app.includes('adhan.setVolume(level)'),'Adhan volume control UI missing');
+assert(!app.includes('adhan.preview(item.id)'),'Adhan preview/play control must stay removed from the Adhan screen');
 assert(app.includes("return <View style={[s.prayerStrip,rowDir(rtl)]}>"),'prayer strip must show all six times without horizontal scrolling');
 assert(app.includes("prayerItem:{flex:1,minWidth:0,minHeight:72"),'prayer items must share the available width');
 

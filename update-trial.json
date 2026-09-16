@@ -1,7 +1,7 @@
 {
   "channel": "trial",
   "version": "1.0.2",
-  "versionCode": 33,
+  "versionCode": 34,
   "title_ar": "تحديث الأفق التجريبي",
   "notes_ar": "الإصدار 1.0.2: تحديث شاشة الدعم والتحويل، إخفاء رمز المطابقة عن المستخدم مع تسجيله داخليًا عند النسخ، تصغير رأس القائمة، إبقاء الخلفية الأصلية ضمن الثيمات، وتحسينات الحقوق والتحقق من أصالة النسخة.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk",
