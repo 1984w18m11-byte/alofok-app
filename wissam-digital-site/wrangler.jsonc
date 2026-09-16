@@ -10,11 +10,5 @@
       "/api/*",
       "/download/*"
     ]
-  },
-  "analytics_engine_datasets": [
-    {
-      "binding": "SITE_ANALYTICS",
-      "dataset": "wissam_digital_site_events"
-    }
-  ]
+  }
 }
