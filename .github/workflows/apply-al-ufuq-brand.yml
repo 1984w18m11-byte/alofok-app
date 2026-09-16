@@ -37,7 +37,7 @@ jobs:
               ('ALOFOQ','AL-UFUQ'),
           ]
 
-          skip_parts = {'.git','node_modules','.expo','android','ios','dist','build'}
+          skip_parts = {'.git','.github','node_modules','.expo','android','ios','dist','build'}
           changed=[]
           for p in Path('.').rglob('*'):
               if not p.is_file():
@@ -60,8 +60,8 @@ jobs:
           for f in changed:
               print(f)
 
-          # Guardrails: keep technical install/update identity unchanged so existing users
-          # can update the same Android/iOS app instead of installing a second app.
+          # Keep technical install/update identity unchanged so existing users can update
+          # the same app. Only visible branding changes to Al-Ufuq.
           app=Path('app.json')
           if app.exists():
               txt=app.read_text(encoding='utf-8')
