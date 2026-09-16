@@ -25,7 +25,7 @@ function makeDeviceCode(){
 function formatCard(value){return String(value||'').replace(/\D/g,'').replace(/(.{4})/g,'$1 ').trim()}
 function digits(value){return String(value||'').replace(/\D/g,'')}
 
-export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amountIqd=null}){
+export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amountIqd=null,eventName='payment_data_copied',notificationEndpoint=ADMIN_EVENT_ENDPOINT}){
  const [deviceCode,setDeviceCode]=useState('…');
  const [busy,setBusy]=useState('');
 
@@ -42,13 +42,13 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
  },[]);
 
  const postCopyEvent=async(destinationKind,copiedAt)=>{
-  if(!ADMIN_EVENT_ENDPOINT)return false;
+  if(!notificationEndpoint)return false;
   try{
-   const response=await fetch(ADMIN_EVENT_ENDPOINT,{
+   const response=await fetch(notificationEndpoint,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
     body:JSON.stringify({
-     event:'payment_destination_copied',
+     event:eventName,
      channel:'whatsapp_admin',
      purpose,
      edition,
