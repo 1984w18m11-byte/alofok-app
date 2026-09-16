@@ -47,17 +47,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
    const response=await fetch(notificationEndpoint,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({
-     event:eventName,
-     channel:'whatsapp_admin',
-     purpose,
-     edition,
-     deviceCode,
-     destinationKind,
-     amountIqd:purpose==='plus'?amountIqd:null,
-     copiedAt,
-     timezoneOffsetMinutes:-new Date().getTimezoneOffset()
-    })
+    body:JSON.stringify({event:eventName,purpose,edition,deviceCode,destinationKind,amountIqd:purpose==='plus'?amountIqd:null,copiedAt,timezoneOffsetMinutes:-new Date().getTimezoneOffset()})
    });
    return response.ok;
   }catch(e){return false}
@@ -66,50 +56,34 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
  const copyDestination=async(kind,value)=>{
   const clean=digits(value);
   if(!clean){
-   Alert.alert(rtl?'بيانات التحويل غير مكتملة':'Transfer data incomplete',rtl?'رقم التحويل المكوّن من 16 رقمًا غير مضاف بعد إلى الإصدار الحالي.':'The 16-digit transfer number is not yet included in this build.');
+   Alert.alert(rtl?'بيانات التحويل غير مكتملة':'Transfer data incomplete',rtl?'رقم التحويل غير متوفر في هذا الإصدار.':'The transfer number is unavailable in this build.');
    return;
   }
   setBusy(kind);
   const copiedAt=new Date().toISOString();
   await Clipboard.setStringAsync(clean);
-  const notified=await postCopyEvent(kind,copiedAt);
+  await postCopyEvent(kind,copiedAt);
   setBusy('');
-  Alert.alert(rtl?'تم النسخ':'Copied',rtl?`تم نسخ الرقم بنجاح.\nرمزك: ${deviceCode}${notified?'\nتم تسجيل إشعار الإدارة.':'\nتم حفظ رمز المطابقة، وإشعار واتساب يعمل عند ربط خدمة الإدارة.'}`:`Number copied successfully.\nYour code: ${deviceCode}${notified?'\nAdmin event recorded.':'\nThe matching code is ready; WhatsApp notification starts when the admin service is connected.'}`);
- };
-
- const openWhatsApp=async()=>{
-  const wa=digits(ADMIN_WHATSAPP);
-  if(!wa)return;
-  const message=rtl
-   ?`الأفق — تم إرسال حوالة\nالرمز: ${deviceCode}\nالعملية: ${purpose==='plus'?'تفعيل Plus':'دعم'}${purpose==='plus'&&amountIqd?`\nالمبلغ: ${amountIqd.toLocaleString('en-US')} د.ع`:''}`
-   :`AlofoK — transfer sent\nCode: ${deviceCode}\nPurpose: ${purpose==='plus'?'Plus activation':'Support'}${purpose==='plus'&&amountIqd?`\nAmount: ${amountIqd.toLocaleString('en-US')} IQD`:''}`;
-  try{await Linking.openURL(`https://wa.me/${wa}?text=${encodeURIComponent(message)}`)}catch(e){}
+  Alert.alert(rtl?'تم النسخ':'Copied',rtl?'تم نسخ الرقم بنجاح. أكمل عملية التحويل من تطبيق الدفع.':'Number copied successfully. Complete the transfer in your payment app.');
  };
 
  return <View style={s.wrap}>
-  <View style={s.codeCard}>
-   <Text style={[s.label,dir(rtl)]}>{rtl?'رمز المطابقة الخاص بهذا الجهاز':'This device matching code'}</Text>
-   <Text selectable style={s.code}>{deviceCode}</Text>
-   <Text style={[s.note,dir(rtl)]}>{rtl?'احتفظ بهذا الرمز. نستخدمه لمطابقة الحوالة مع طلب التفعيل حتى لو كان اسم صاحب البطاقة أو الحساب مختلفًا.':'Keep this code. It is used to match the transfer to the activation request even when the payer name is different.'}</Text>
-  </View>
-
   <View style={s.card}>
    <Text style={[s.optionTitle,dir(rtl)]}>{rtl?'التحويلات المالية':'Money transfer'}</Text>
    <Text style={[s.label,dir(rtl)]}>{rtl?'رقم التحويل — 16 رقم':'Transfer number — 16 digits'}</Text>
    <Text selectable style={s.number}>{CARD_NUMBER?formatCard(CARD_NUMBER):'•••• •••• •••• ••••'}</Text>
-   <Pressable disabled={!!busy} onPress={()=>copyDestination('card_16',CARD_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='card_16'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم التحويل':'Copy transfer number')}</Text></Pressable>
+   <Pressable disabled={!!busy} onPress={()=>copyDestination('money_transfer_16',CARD_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='money_transfer_16'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم التحويل':'Copy transfer number')}</Text></Pressable>
   </View>
 
   <View style={s.card}>
    <Text style={[s.optionTitle,dir(rtl)]}>{rtl?'الشراء عن طريق الموبايل':'Purchase by mobile'}</Text>
    <Text style={[s.label,dir(rtl)]}>{rtl?'رقم الحساب — 10 أرقام':'Account number — 10 digits'}</Text>
    <Text selectable style={s.number}>{ACCOUNT_NUMBER}</Text>
-   <Pressable disabled={!!busy} onPress={()=>copyDestination('account_10',ACCOUNT_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='account_10'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم الشراء':'Copy purchase number')}</Text></Pressable>
+   <Pressable disabled={!!busy} onPress={()=>copyDestination('mobile_purchase_10',ACCOUNT_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='mobile_purchase_10'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم الشراء':'Copy purchase number')}</Text></Pressable>
   </View>
 
-  <Text style={[s.note,dir(rtl)]}>{rtl?'اختر الطريقة المناسبة لك. يظهر رقما التحويل والشراء معًا، ولكل واحد زر نسخ مستقل.':'Choose the method that suits you. Both transfer and purchase numbers are shown, each with its own copy button.'}</Text>
-  {!!ADMIN_WHATSAPP&&<Pressable onPress={openWhatsApp} style={s.sentButton}><Text style={s.sentText}>{rtl?'أرسلت الحوالة — إرسال الرمز عبر واتساب':'Transfer sent — send code on WhatsApp'}</Text></Pressable>}
+  <Text style={[s.note,dir(rtl)]}>{rtl?'اختر الطريقة المناسبة لك ثم انسخ الرقم.':'Choose the method that suits you, then copy the number.'}</Text>
  </View>
 }
 
-const s=StyleSheet.create({wrap:{marginTop:4},card:{backgroundColor:CARD,borderRadius:18,borderWidth:1,borderColor:LINE,padding:16,marginTop:14},codeCard:{backgroundColor:'rgba(244,196,93,.09)',borderRadius:18,borderWidth:1,borderColor:'rgba(244,196,93,.35)',padding:16,marginTop:14},label:{color:MUTED,fontSize:12,marginTop:4},optionTitle:{color:GOLD,fontSize:16,fontWeight:'900'},number:{color:WHITE,fontSize:20,fontWeight:'900',textAlign:'center',letterSpacing:.7,marginVertical:14},code:{color:GOLD,fontSize:19,fontWeight:'900',textAlign:'center',letterSpacing:1,marginVertical:10},copyButton:{backgroundColor:GOLD,borderRadius:14,paddingVertical:14,alignItems:'center'},copyText:{color:NAVY,fontSize:15,fontWeight:'900'},disabled:{opacity:.6},note:{color:MUTED,fontSize:12,lineHeight:19,marginTop:10},sentButton:{marginTop:14,borderRadius:14,borderWidth:1,borderColor:GOLD,paddingVertical:13,alignItems:'center'},sentText:{color:GOLD,fontSize:14,fontWeight:'900'}});
+const s=StyleSheet.create({wrap:{marginTop:4},card:{backgroundColor:CARD,borderRadius:18,borderWidth:1,borderColor:LINE,padding:16,marginTop:14},label:{color:MUTED,fontSize:12,marginTop:4},optionTitle:{color:GOLD,fontSize:16,fontWeight:'900'},number:{color:WHITE,fontSize:20,fontWeight:'900',textAlign:'center',letterSpacing:.7,marginVertical:14},copyButton:{backgroundColor:GOLD,borderRadius:14,paddingVertical:14,alignItems:'center'},copyText:{color:NAVY,fontSize:15,fontWeight:'900'},disabled:{opacity:.6},note:{color:MUTED,fontSize:12,lineHeight:19,marginTop:10}});

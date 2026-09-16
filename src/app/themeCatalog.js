@@ -1,5 +1,5 @@
 export const THEME_CATALOG=[
- {id:'trial-fixed',group:'fixed',labelKey:'themeFixed',plus:false,image:require('../../assets/themes/trial-fixed.jpg')},
+ {id:'trial-fixed',group:'seasons',labelKey:'themeFixed',plus:false,image:require('../../assets/themes/trial-fixed.jpg')},
  {id:'time-dawn',group:'atmospheres',labelKey:'dawn',plus:true,image:require('../../assets/themes/time-dawn.jpg')},
  {id:'time-morning',group:'atmospheres',labelKey:'morning',plus:true,image:require('../../assets/themes/time-morning.jpg')},
  {id:'time-midday',group:'atmospheres',labelKey:'day',plus:true,image:require('../../assets/themes/time-midday.jpg')},

@@ -42,6 +42,25 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    if (url.pathname === '/api/payment-copy') {
+      if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
+      let payload = {};
+      try { payload = await request.json(); } catch (_) {}
+      const destinationKind = clean(payload.destinationKind || '', 60);
+      const deviceCode = clean(payload.deviceCode || '', 80);
+      const purpose = clean(payload.purpose || '', 40);
+      const edition = clean(payload.edition || '', 40);
+      const copiedAt = clean(payload.copiedAt || '', 60);
+      if (env.SITE_ANALYTICS) {
+        env.SITE_ANALYTICS.writeDataPoint({
+          indexes: ['payment_copy'],
+          blobs: [destinationKind, deviceCode, purpose, edition, copiedAt, clean(request.cf?.country || 'Unknown', 8)],
+          doubles: [1]
+        });
+      }
+      return new Response(null, { status: 204, headers: { 'Cache-Control': 'no-store' } });
+    }
+
     if (url.pathname === '/api/track') {
       if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
       let payload = {};
