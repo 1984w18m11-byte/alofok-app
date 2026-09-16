@@ -1,4 +1,4 @@
-name: Apply final ALAUFUQ 1.0.3 fixes
+name: Apply final ALAUFUQ fixes
 
 on:
   push:
@@ -44,34 +44,23 @@ jobs:
           p.write_text(q,encoding='utf-8')
 
           appj=json.loads(Path('app.json').read_text(encoding='utf-8'))
-          appj['expo']['version']='1.0.3'
           appj['expo']['android']['versionCode']=34
           Path('app.json').write_text(json.dumps(appj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
-          pkg=json.loads(Path('package.json').read_text(encoding='utf-8'))
-          pkg['version']='1.0.3'
-          Path('package.json').write_text(json.dumps(pkg,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-
-          for name,channel in [('update-trial.json','trial'),('update-plus.json','plus')]:
+          for name in ('update-trial.json','update-plus.json'):
               obj=json.loads(Path(name).read_text(encoding='utf-8'))
-              obj['version']='1.0.3'
               obj['versionCode']=34
-              suffix='plus' if channel=='plus' else 'trial'
-              obj['download_url']=f'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.3/alofok-{suffix}-1.0.3.apk'
               obj['published_at']='2026-09-17'
               Path(name).write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
 
-          p=Path('.github/workflows/build-apks.yml')
-          w=p.read_text(encoding='utf-8').replace('1.0.2','1.0.3')
-          p.write_text(w,encoding='utf-8')
-          Path('.github/build-apks.trigger').write_text('build-alaufuq-final-1.0.3-v34\n',encoding='utf-8')
+          Path('.github/build-apks.trigger').write_text('build-alaufuq-final-v34\n',encoding='utf-8')
           PY
 
       - name: Commit final changes
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/app/AppV3.js scripts/release-qa.js app.json package.json update-trial.json update-plus.json .github/workflows/build-apks.yml .github/build-apks.trigger
+          git add src/app/AppV3.js scripts/release-qa.js app.json update-trial.json update-plus.json .github/build-apks.trigger
           git diff --cached --quiet && exit 0
-          git commit -m "release: finalize ALAUFUQ 1.0.3 UI and build"
+          git commit -m "release: finalize ALAUFUQ build 34"
           git push origin main
