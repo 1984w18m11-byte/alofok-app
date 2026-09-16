@@ -2,7 +2,7 @@ const DOWNLOADS = {
   '/download/alofok-trial': {
     app: 'alofok',
     edition: 'trial',
-    url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.1/alofok-trial-1.0.1.apk'
+    url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk'
   }
 };
 
