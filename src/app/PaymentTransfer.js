@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {Alert,Linking,Pressable,StyleSheet,Text,View} from 'react-native';
+import {Alert,Pressable,StyleSheet,Text,View} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Clipboard from 'expo-clipboard';
 
@@ -12,8 +12,7 @@ const MUTED='#B9C4D1';
 
 const CARD_NUMBER=process.env.EXPO_PUBLIC_PAYMENT_CARD||process.env.EXPO_PUBLIC_PAYMENT_ACCOUNT||'';
 const ACCOUNT_NUMBER=process.env.EXPO_PUBLIC_PAYMENT_BANK_ACCOUNT||'5490910105';
-const ADMIN_EVENT_ENDPOINT=process.env.EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK||'';
-const ADMIN_WHATSAPP=process.env.EXPO_PUBLIC_ADMIN_WHATSAPP||'';
+const ADMIN_EVENT_ENDPOINT=process.env.EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK||'https://wispy-salad-438b.wissamdigital11.workers.dev/api/payment-copy';
 const DEVICE_CODE_KEY='alofok_payment_device_code_v1';
 
 function dir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl':'ltr'}}
