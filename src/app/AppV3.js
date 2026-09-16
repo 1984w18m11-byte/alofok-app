@@ -16,6 +16,7 @@ import {useCountryHolidays} from './useCountryHolidays';
 import {AuthenticityScreen,CopyrightScreen,PrivacyScreen} from './LegalScreens';
 import {AdvertiseScreen,TrialAdOverlay,useTrialAd} from './TrialAds';
 import {TrialPlusActivation} from './TrialPlusActivation';
+import {SupportScreen} from './SupportScreen';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -33,7 +34,6 @@ const UPDATE_URL=IS_PLUS
  :'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
 const LANGUAGE_KEY='alofok_v3_language';
 const THEME_KEY='alofok_v3_theme';
-const SUPPORT_ACCOUNT=process.env.EXPO_PUBLIC_SUPPORT_ACCOUNT||'';
 
 function civilDateForTimeZone(date,timeZone){
  try{
@@ -275,12 +275,7 @@ function ThemesScreen({t,rtl,isPlus,selectedTheme,setSelectedTheme,onBack}){
 }
 
 function PlusScreen({t,rtl,isPlus,country,onBack}){
- if(!isPlus)return <TrialPlusActivation t={t} rtl={rtl} country={country} onBack={onBack}/>;
- const plus=[t('plusAllFree'),t('plusThemes'),t('plusAdhan'),t('plusSeasons'),t('plusSupport')];
- return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
-  <Header title={t('chooseExperience')} t={t} rtl={rtl} onBack={onBack}/>
-  <View style={s.plusPlan}><Text style={s.crown}>♛</Text><Text style={[s.planTitle,{color:GOLD}]}>{t('plus')}</Text><Text style={s.planSubtitle}>{t('plusExperience')}</Text>{plus.map(x=><CheckRow key={x} text={x} rtl={rtl} gold/>)}<View style={s.currentPlanButton}><Text style={s.currentPlanText}>{t('currentPlan')}</Text></View></View>
- </ScrollView></SafeAreaView>
+ return <TrialPlusActivation t={t} rtl={rtl} country={country} onBack={onBack} alreadyActive={isPlus}/>;
 }
 
 function LanguageScreen({t,rtl,language,onChoose,onBack}){
@@ -366,9 +361,6 @@ export default function AppV3(){
 
  const navigate=useCallback(target=>{
   setDrawer(false);
-  if(target==='support'){
-   Alert.alert(t('support'),SUPPORT_ACCOUNT?(rtl?`رقم الدعم: ${SUPPORT_ACCOUNT}`:`Support account: ${SUPPORT_ACCOUNT}`):(rtl?'سيُضاف رقم الدعم المعتمد داخل الإصدار النهائي.':'The verified support account will be added in the final release.'));return;
-  }
   if(target==='update'){checkUpdate();return}
   if(target===screen)return;
   setScreenHistory(history=>[...history,screen]);
@@ -387,6 +379,7 @@ export default function AppV3(){
  if(screen==='adhan')return <AdhanScreen t={t} rtl={rtl} adhan={adhan} onBack={goBack}/>;
  if(screen==='themes')return <ThemesScreen t={t} rtl={rtl} isPlus={IS_PLUS} selectedTheme={selectedTheme} setSelectedTheme={setSelectedTheme} onBack={goBack}/>;
  if(screen==='plus')return <PlusScreen t={t} rtl={rtl} isPlus={IS_PLUS} country={location.country} onBack={goBack}/>;
+ if(screen==='support')return <SupportScreen rtl={rtl} edition={IS_PLUS?'plus':'trial'} onBack={goBack}/>;
  if(screen==='languages')return <LanguageScreen t={t} rtl={rtl} language={language} onChoose={chooseLanguage} onBack={goBack}/>;
  if(screen==='about')return <AboutScreen t={t} rtl={rtl} onBack={goBack}/>;
  if(screen==='privacy')return <PrivacyScreen rtl={rtl} onBack={goBack} onNavigate={navigate}/>;
