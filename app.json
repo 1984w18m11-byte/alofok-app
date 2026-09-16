@@ -23,7 +23,7 @@
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"
       ],
-      "versionCode": 32
+      "versionCode": 33
     },
     "plugins": [
       "expo-location",
