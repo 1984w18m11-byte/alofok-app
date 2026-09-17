@@ -1,1 +1,1 @@
-adhan-preview-restored-1.0.4-v36-run2
+channel-separated-trial-plus-1.0.5-20260917
