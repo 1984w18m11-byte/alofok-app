@@ -1,11 +1,11 @@
 {
   "channel": "plus",
-  "version": "1.0.3",
-  "versionCode": 35,
+  "version": "1.0.4",
+  "versionCode": 36,
   "title_ar": "تحديث الأفق Plus",
-  "notes_ar": "الإصدار 1.0.3: إعادة أصوات الأذان الستة المعتمدة إلى نسخة Plus والتأكد من عملها جميعًا مع التحكم بمستوى الصوت، مع الحفاظ على تحسينات الإصدار السابق.",
-  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.3/alofok-plus-1.0.3.apk",
+  "notes_ar": "الإصدار 1.0.4: إعادة زر تشغيل/إيقاف معاينة الأذان لكل واحد من الأصوات الستة في النسختين التجريبية وPlus، مع بقاء التحكم بمستوى الصوت.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.4/alofok-plus-1.0.4.apk",
   "mandatory": false,
   "published_at": "2026-09-17",
-  "notes_en": "1.0.3: restores the six approved Adhan voices to Plus and keeps the shared volume control working across all of them."
+  "notes_en": "1.0.4: restores per-voice Adhan preview/play-stop controls for all six voices in Trial and Plus while keeping volume controls."
 }
