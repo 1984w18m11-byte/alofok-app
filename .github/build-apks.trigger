@@ -1,1 +1,1 @@
-adhan-preview-restored-1.0.4-v36
+adhan-preview-restored-1.0.4-v36-run2
