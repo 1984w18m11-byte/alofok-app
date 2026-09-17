@@ -6,7 +6,9 @@ const ENFORCEMENT_REQUIRED=process.env.EXPO_PUBLIC_LICENSE_ENFORCEMENT==='requir
 const INSTALL_ID_KEY='alofok_install_id_v1';
 const LICENSE_TOKEN_KEY='alofok_license_token_v1';
 const BUILD_VARIANT=process.env.EXPO_PUBLIC_APP_VARIANT==='paid'?'paid':'trial';
-const PACKAGE_ID=BUILD_VARIANT==='paid'?'com.alofok.plus':'com.alofok.trial';
+// Trial and Plus share the same Android package so the paid APK can replace Trial in place.
+// Entitlement separation remains bound to appVariant/tier, not to a second package id.
+const PACKAGE_ID='com.alofok.trial';
 
 function randomPart(){return Math.floor(Math.random()*0x100000000).toString(16).padStart(8,'0')}
 function newInstallId(){return `afk-${Date.now().toString(36)}-${randomPart()}${randomPart()}${randomPart()}`}
