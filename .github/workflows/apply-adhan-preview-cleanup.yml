@@ -28,12 +28,16 @@ jobs:
           app_path=Path('src/app/AppV3.js')
           s=app_path.read_text(encoding='utf-8')
 
-          marker="     <View style={[s.adhanRow,rowDir(rtl)]}>\n     <View style={s.adhanTextWrap}><Text style={[s.adhanName,textDir(rtl)]}>{rtl?item.display_ar:item.display_en}</Text><Text style={[s.adhanMeta,textDir(rtl)]}>{item.license} • {t('licensed')}</Text></View>\n"
-          replacement="     <View style={s.adhanRow}>\n     <Pressable accessibilityLabel={rtl?'معاينة الأذان':'Preview Adhan'} onPress={event=>{event?.stopPropagation?.();adhan.playingId===item.id?adhan.stop():adhan.preview(item.id)}} style={[s.adhanPreviewButton,adhan.playingId===item.id&&s.adhanPreviewButtonPlaying]}><Text style={s.adhanPreviewIcon}>{adhan.playingId===item.id?'■':'▶'}</Text></Pressable>\n     <View style={s.adhanTextWrap}><Text style={[s.adhanName,textDir(rtl)]}>{rtl?item.display_ar:item.display_en}</Text><Text style={[s.adhanMeta,textDir(rtl)]}>{item.license} • {t('licensed')}</Text></View>\n"
-          if 'adhan.preview(item.id)' not in s:
-              if marker not in s:
-                  raise SystemExit('Adhan card layout changed; refusing unsafe preview restore')
-              s=s.replace(marker,replacement,1)
+          if 'function AdhanScreen' not in s:
+              raise SystemExit('AdhanScreen not found')
+          head,tail=s.split('function AdhanScreen',1)
+          if 'adhan.preview(item.id)' not in tail:
+              target="<View style={[s.adhanRow,rowDir(rtl)]}>"
+              if target not in tail:
+                  raise SystemExit('Adhan row not found inside AdhanScreen')
+              preview="<View style={s.adhanRow}>\n     <Pressable accessibilityLabel={rtl?'معاينة الأذان':'Preview Adhan'} onPress={event=>{event?.stopPropagation?.();adhan.playingId===item.id?adhan.stop():adhan.preview(item.id)}} style={[s.adhanPreviewButton,adhan.playingId===item.id&&s.adhanPreviewButtonPlaying]}><Text style={s.adhanPreviewIcon}>{adhan.playingId===item.id?'■':'▶'}</Text></Pressable>"
+              tail=tail.replace(target,preview,1)
+              s=head+'function AdhanScreen'+tail
 
           old_style="adhanRow:{alignItems:'center',gap:12},adhanTextWrap:{flex:1}"
           new_style="adhanRow:{flexDirection:'row',alignItems:'center',gap:12},adhanPreviewButton:{width:46,height:46,borderRadius:23,borderWidth:1.8,borderColor:WHITE,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(255,255,255,.03)'},adhanPreviewButtonPlaying:{borderColor:GOLD,backgroundColor:'rgba(244,196,93,.12)'},adhanPreviewIcon:{color:WHITE,fontSize:20,marginLeft:2},adhanTextWrap:{flex:1}"
@@ -51,7 +55,7 @@ jobs:
           new="assert(app.includes('adhan.preview(item.id)')&&app.includes('adhan.playingId===item.id'),'Adhan preview/play control must be present for every Adhan row in Trial and Plus');\nassert(app.includes('adhanPreviewButton:{')&&app.includes('adhanPreviewIcon:{'),'Adhan preview button styles missing');"
           if old in q:
               q=q.replace(old,new,1)
-          elif new.split('\n')[0] not in q:
+          elif "Adhan preview/play control must be present for every Adhan row" not in q:
               raise SystemExit('Adhan preview QA guard shape changed')
           qa_path.write_text(q,encoding='utf-8')
 
