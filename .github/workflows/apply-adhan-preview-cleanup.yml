@@ -1,4 +1,4 @@
-name: Apply Adhan preview removal
+name: Restore Adhan preview controls
 
 on:
   push:
@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  cleanup:
+  restore:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -18,39 +18,81 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Remove stopped preview section and keep volume controls
+      - name: Restore per-row Adhan preview and prepare 1.0.4
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p=Path('src/app/AppV3.js')
-          s=p.read_text(encoding='utf-8')
-          preview="  <View style={s.previewBox}><View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('previewSound')}</Text></View><Text style={[s.adhanMeta,textDir(rtl)]}>{adhan.selected?(rtl?adhan.selected.display_ar:adhan.selected.display_en):t('notAvailable')}</Text></View>\n"
-          if preview in s:
-              s=s.replace(preview,'',1)
-          elif "t('previewSound')" in s:
-              raise SystemExit('Preview section shape changed; refusing unsafe edit')
+          import json, re
 
-          style="previewBox:{marginTop:18,padding:16,borderRadius:18,backgroundColor:CARD_2,borderWidth:1,borderColor:LINE},wave:{color:MUTED,fontSize:21,letterSpacing:2},"
-          s=s.replace(style,'',1)
+          app_path=Path('src/app/AppV3.js')
+          s=app_path.read_text(encoding='utf-8')
 
-          required=[
-              "adhan.setVolume(Math.max(0,Math.round((adhan.volume-0.1)*10)/10))",
-              "adhan.setVolume(Math.min(1,Math.round((adhan.volume+0.1)*10)/10))",
-              "t('adhanVolume')"
-          ]
-          missing=[x for x in required if x not in s]
-          if missing:
-              raise SystemExit('Volume controls missing: '+', '.join(missing))
+          marker="     <View style={[s.adhanRow,rowDir(rtl)]}>\n     <View style={s.adhanTextWrap}><Text style={[s.adhanName,textDir(rtl)]}>{rtl?item.display_ar:item.display_en}</Text><Text style={[s.adhanMeta,textDir(rtl)]}>{item.license} • {t('licensed')}</Text></View>\n"
+          replacement="     <View style={s.adhanRow}>\n     <Pressable accessibilityLabel={rtl?'معاينة الأذان':'Preview Adhan'} onPress={event=>{event?.stopPropagation?.();adhan.playingId===item.id?adhan.stop():adhan.preview(item.id)}} style={[s.adhanPreviewButton,adhan.playingId===item.id&&s.adhanPreviewButtonPlaying]}><Text style={s.adhanPreviewIcon}>{adhan.playingId===item.id?'■':'▶'}</Text></Pressable>\n     <View style={s.adhanTextWrap}><Text style={[s.adhanName,textDir(rtl)]}>{rtl?item.display_ar:item.display_en}</Text><Text style={[s.adhanMeta,textDir(rtl)]}>{item.license} • {t('licensed')}</Text></View>\n"
+          if 'adhan.preview(item.id)' not in s:
+              if marker not in s:
+                  raise SystemExit('Adhan card layout changed; refusing unsafe preview restore')
+              s=s.replace(marker,replacement,1)
 
-          p.write_text(s,encoding='utf-8')
+          old_style="adhanRow:{alignItems:'center',gap:12},adhanTextWrap:{flex:1}"
+          new_style="adhanRow:{flexDirection:'row',alignItems:'center',gap:12},adhanPreviewButton:{width:46,height:46,borderRadius:23,borderWidth:1.8,borderColor:WHITE,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(255,255,255,.03)'},adhanPreviewButtonPlaying:{borderColor:GOLD,backgroundColor:'rgba(244,196,93,.12)'},adhanPreviewIcon:{color:WHITE,fontSize:20,marginLeft:2},adhanTextWrap:{flex:1}"
+          if 'adhanPreviewButton:{' not in s:
+              if old_style not in s:
+                  raise SystemExit('Adhan style layout changed; refusing unsafe style edit')
+              s=s.replace(old_style,new_style,1)
+
+          s=re.sub(r"const VERSION='[^']+';","const VERSION='1.0.4';",s,count=1)
+          app_path.write_text(s,encoding='utf-8')
+
+          qa_path=Path('scripts/release-qa.js')
+          q=qa_path.read_text(encoding='utf-8')
+          old="assert(!app.includes('adhan.preview(item.id)'),'Adhan preview/play control must stay removed from the Adhan screen');"
+          new="assert(app.includes('adhan.preview(item.id)')&&app.includes('adhan.playingId===item.id'),'Adhan preview/play control must be present for every Adhan row in Trial and Plus');\nassert(app.includes('adhanPreviewButton:{')&&app.includes('adhanPreviewIcon:{'),'Adhan preview button styles missing');"
+          if old in q:
+              q=q.replace(old,new,1)
+          elif new.split('\n')[0] not in q:
+              raise SystemExit('Adhan preview QA guard shape changed')
+          qa_path.write_text(q,encoding='utf-8')
+
+          p=Path('app.json')
+          obj=json.loads(p.read_text(encoding='utf-8'))
+          obj['expo']['version']='1.0.4'
+          obj['expo']['android']['versionCode']=36
+          p.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          p=Path('package.json')
+          obj=json.loads(p.read_text(encoding='utf-8'))
+          obj['version']='1.0.4'
+          p.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          p=Path('package-lock.json')
+          obj=json.loads(p.read_text(encoding='utf-8'))
+          obj['version']='1.0.4'
+          if 'packages' in obj and '' in obj['packages']:
+              obj['packages']['']['version']='1.0.4'
+          p.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          for name,channel in [('update-trial.json','trial'),('update-plus.json','plus')]:
+              p=Path(name)
+              obj=json.loads(p.read_text(encoding='utf-8'))
+              obj['version']='1.0.4'
+              obj['versionCode']=36
+              suffix='plus' if channel=='plus' else 'trial'
+              obj['download_url']=f'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.4/alofok-{suffix}-1.0.4.apk'
+              obj['published_at']='2026-09-17'
+              obj['notes_ar']='الإصدار 1.0.4: إعادة زر تشغيل/إيقاف معاينة الأذان لكل واحد من الأصوات الستة في النسختين التجريبية وPlus، مع بقاء التحكم بمستوى الصوت.'
+              obj['notes_en']='1.0.4: restores per-voice Adhan preview/play-stop controls for all six voices in Trial and Plus while keeping volume controls.'
+              p.write_text(json.dumps(obj,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+
+          Path('.github/build-apks.trigger').write_text('adhan-preview-restored-1.0.4-v36\n',encoding='utf-8')
           PY
 
-      - name: Commit cleanup
+      - name: Commit restored preview controls
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add src/app/AppV3.js
+          git add src/app/AppV3.js scripts/release-qa.js app.json package.json package-lock.json update-trial.json update-plus.json .github/build-apks.trigger
           git diff --cached --quiet && exit 0
-          git commit -m "ui: remove stopped Adhan preview section"
+          git commit -m "fix: restore Adhan preview controls in Trial and Plus 1.0.4"
           git push origin main
