@@ -1,0 +1,143 @@
+name: Restore six Adhan voices in Plus
+
+on:
+  push:
+    paths:
+      - '.github/workflows/apply-restore-six-adhan-plus.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Restore six working Adhan voices and prepare 1.0.3
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import json
+
+          desired = [
+              'commons-beautiful-adhan',
+              'commons-andrewler-azan',
+              'commons-aishatu98-adhan',
+              'commons-nigeria-isaac',
+              'commons-medina-ejaz215',
+              'commons-mecca-2013',
+          ]
+
+          # 1) Registry: Trial and Plus must expose the same six restored voices.
+          p = Path('src/data/adhan-registry.json')
+          registry = json.loads(p.read_text(encoding='utf-8'))
+          registry = [x for x in registry if x.get('id') != 'commons-maahur-saeed']
+          by_id = {x.get('id'): x for x in registry}
+          missing = [x for x in desired if x not in by_id]
+          if missing:
+              raise SystemExit(f'Missing restored Adhan entries: {missing}')
+          for item in registry:
+              if item.get('id') in desired:
+                  item['status'] = 'licensed'
+                  item['available_in'] = ['trial', 'paid']
+          p.write_text(json.dumps(registry, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          # 2) Catalog: remove the temporary Plus-only Mahur entry; keep the six restored voices.
+          p = Path('src/app/adhanCatalog.js')
+          s = p.read_text(encoding='utf-8')
+          for line in [
+              " 'commons-maahur-saeed':require('../../assets/adhan/adhan_maahur.ogg')\n",
+              " 'commons-maahur-saeed':'adhan_maahur.wav'\n",
+              " 'commons-maahur-saeed':'Mahur-mode Adhan — Saeed Hatamzadeh-Varmazyar'\n",
+          ]:
+              s = s.replace(line, '')
+          # Repair commas left before closing braces if needed.
+          s = s.replace(" 'commons-mecca-2013':require('../../assets/adhan/adhan_mecca_2013.ogg'),\n};", " 'commons-mecca-2013':require('../../assets/adhan/adhan_mecca_2013.ogg')\n};")
+          s = s.replace(" 'commons-mecca-2013':'adhan_mecca_2013.wav',\n};", " 'commons-mecca-2013':'adhan_mecca_2013.wav'\n};")
+          s = s.replace(" 'commons-mecca-2013':'Mecca Adhan — Grand Mosque 2013',\n};", " 'commons-mecca-2013':'Mecca Adhan — Grand Mosque 2013'\n};")
+          p.write_text(s, encoding='utf-8')
+
+          # 3) Package all six notification sounds in Plus too.
+          p = Path('app.config.js')
+          s = p.read_text(encoding='utf-8')
+          old = "  const paidSounds = ['./assets/adhan/beautiful_adhan.wav', './assets/adhan/adhan_andrewler.wav', './assets/adhan/adhan_maahur.wav'];"
+          if old not in s:
+              raise SystemExit('Current paidSounds definition not found')
+          s = s.replace(old, '  const paidSounds = trialSounds;', 1)
+          p.write_text(s, encoding='utf-8')
+
+          # 4) Release QA: lock both variants to the same exact six voices.
+          p = Path('scripts/release-qa.js')
+          q = p.read_text(encoding='utf-8')
+          q = q.replace(
+              "assert(config.includes(\"const paidSounds = ['./assets/adhan/beautiful_adhan.wav', './assets/adhan/adhan_andrewler.wav', './assets/adhan/adhan_maahur.wav']\"),'Plus notification set must remain unchanged');",
+              "assert(config.includes('const paidSounds = trialSounds;'),'Plus notification set must match the six restored Adhan sounds');"
+          )
+          q = q.replace(
+              "assert(playable.length===7,'expected six restored Trial voices plus the existing Plus-only Mahur voice');",
+              "assert(playable.length===6,'expected exactly six restored approved Adhan voices');"
+          )
+          q = q.replace(
+              "assert(plusPlayable.length===3,'Plus must remain on its current three-voice set');\nfor(const id of ['commons-beautiful-adhan','commons-andrewler-azan','commons-maahur-saeed'])assert(plusPlayable.some(x=>x.id===id),`Plus Adhan missing: ${id}`);",
+              "assert(plusPlayable.length===6,'Plus must expose exactly the same six restored Adhan voices');\nfor(const id of ['commons-beautiful-adhan','commons-andrewler-azan','commons-aishatu98-adhan','commons-nigeria-isaac','commons-medina-ejaz215','commons-mecca-2013'])assert(plusPlayable.some(x=>x.id===id),`restored Plus Adhan missing: ${id}`);"
+          )
+          p.write_text(q, encoding='utf-8')
+
+          # 5) New Android update number so installed 1.0.2/v34 receives the corrected build cleanly.
+          p = Path('app.json')
+          obj = json.loads(p.read_text(encoding='utf-8'))
+          obj['expo']['version'] = '1.0.3'
+          obj['expo']['android']['versionCode'] = 35
+          p.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          p = Path('package.json')
+          obj = json.loads(p.read_text(encoding='utf-8'))
+          obj['version'] = '1.0.3'
+          p.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          for name, channel in [('update-trial.json','trial'), ('update-plus.json','plus')]:
+              p = Path(name)
+              obj = json.loads(p.read_text(encoding='utf-8'))
+              obj['version'] = '1.0.3'
+              obj['versionCode'] = 35
+              obj['download_url'] = f"https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.3/alofok-{'plus' if channel == 'plus' else 'trial'}-1.0.3.apk"
+              obj['published_at'] = '2026-09-17'
+              if channel == 'plus':
+                  obj['notes_ar'] = 'الإصدار 1.0.3: إعادة أصوات الأذان الستة المعتمدة إلى نسخة Plus والتأكد من عملها جميعًا مع التحكم بمستوى الصوت، مع الحفاظ على تحسينات الإصدار السابق.'
+                  obj['notes_en'] = '1.0.3: restores the six approved Adhan voices to Plus and keeps the shared volume control working across all of them.'
+              else:
+                  obj['notes_ar'] = 'الإصدار 1.0.3: صيانة توافق أصوات الأذان الستة المعتمدة مع تحسينات الإصدار السابق.'
+                  obj['notes_en'] = '1.0.3: maintenance release keeping the six approved Adhan voices aligned with the latest fixes.'
+              p.write_text(json.dumps(obj, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+
+          # 6) Build workflow: publish 1.0.3, generate only Andrewler dynamically, validate all six files.
+          p = Path('.github/workflows/build-apks.yml')
+          w = p.read_text(encoding='utf-8').replace('1.0.2', '1.0.3')
+          w = w.replace('          convert_source "AzaanMaahur.ogg" "adhan_maahur"\n', '')
+          w = w.replace(
+              '          for stem in beautiful_adhan adhan_andrewler adhan_maahur; do',
+              '          for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013; do'
+          )
+          w = w.replace(
+              'تحديث الأفق: إخفاء رمز مطابقة التحويل عن المستخدم مع تسجيله داخليًا عند النسخ، تبسيط شاشة الدعم، تصغير رأس القائمة، إبقاء الخلفية الأصلية ضمن الثيمات، وإزالة تفعيل Plus من نسخة Plus مع الإبقاء على الدعم.',
+              'تحديث الأفق 1.0.3: إعادة أصوات الأذان الستة المعتمدة إلى Plus مع التحكم بمستوى الصوت، مع الإبقاء على تحسينات الدعم والثيمات والحقوق.'
+          )
+          p.write_text(w, encoding='utf-8')
+
+          # Trigger the APK build after this commit lands.
+          Path('.github/build-apks.trigger').write_text('restore-six-adhan-plus-1.0.3-v35\n', encoding='utf-8')
+          PY
+
+      - name: Commit corrected Plus Adhan set
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add src/data/adhan-registry.json src/app/adhanCatalog.js app.config.js scripts/release-qa.js app.json package.json update-trial.json update-plus.json .github/workflows/build-apks.yml .github/build-apks.trigger
+          git commit -m "fix: restore six Adhan voices in Plus 1.0.3"
+          git push origin main
