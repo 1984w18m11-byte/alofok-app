@@ -3,8 +3,15 @@ const base = require('./app.json').expo;
 module.exports = () => {
   const isPaid = process.env.APP_VARIANT === 'paid';
   const variant = isPaid ? 'paid' : 'trial';
+  const updateChannel = isPaid ? 'plus' : 'trial';
   const icon = isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png';
-  const packageId = isPaid ? 'com.alofok.plus' : 'com.alofok.trial';
+
+  // Trial and Plus deliberately share one Android package so an approved Plus APK
+  // can replace an installed Trial APK in place. The edition stays separated by
+  // the baked APP_VARIANT and by non-overlapping Android versionCode ranges.
+  const packageId = 'com.alofok.trial';
+  const androidVersionCode = isPaid ? 2000105 : 1000105;
+
   const trialSounds = [
     './assets/adhan/beautiful_adhan.wav',
     './assets/adhan/adhan_andrewler.wav',
@@ -35,12 +42,14 @@ module.exports = () => {
     android: {
       ...base.android,
       package: packageId,
-      versionCode: base.android.versionCode,
+      versionCode: androidVersionCode,
       blockedPermissions: ['android.permission.RECORD_AUDIO']
     },
     extra: {
       ...base.extra,
-      appVariant: variant
+      appVariant: variant,
+      updateChannel,
+      androidVersionCode
     }
   };
 };
