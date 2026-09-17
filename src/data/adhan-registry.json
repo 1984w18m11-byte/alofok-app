@@ -46,7 +46,8 @@
     "source_url": "https://commons.wikimedia.org/wiki/File:Adhan.ogg",
     "asset": "assets/adhan/adhan_aishatu98.ogg",
     "available_in": [
-      "trial"
+      "trial",
+      "paid"
     ]
   },
   {
@@ -62,7 +63,8 @@
     "source_url": "https://commons.wikimedia.org/wiki/File:Call_to_prayer.ogg",
     "asset": "assets/adhan/adhan_nigeria_isaac.ogg",
     "available_in": [
-      "trial"
+      "trial",
+      "paid"
     ]
   },
   {
@@ -78,7 +80,8 @@
     "source_url": "https://commons.wikimedia.org/wiki/File:33937_ejaz215_call-to-prayer-from-the-prophet-s-mo.ogg",
     "asset": "assets/adhan/adhan_medina_ejaz215.ogg",
     "available_in": [
-      "trial"
+      "trial",
+      "paid"
     ]
   },
   {
@@ -94,22 +97,7 @@
     "source_url": "https://commons.wikimedia.org/wiki/File:Adhan,_Great_Mosque_of_Mecca_-_Jan_21,_2013.webm",
     "asset": "assets/adhan/adhan_mecca_2013.ogg",
     "available_in": [
-      "trial"
-    ]
-  },
-  {
-    "id": "commons-maahur-saeed",
-    "country": "IR",
-    "city": "*",
-    "display_ar": "أذان مقام ماهور — سعيد حاتم زاده",
-    "performer": "Saeed Hatamzadeh-Varmazyar",
-    "status": "licensed",
-    "license_required": true,
-    "license": "CC BY-SA 4.0",
-    "source": "Wikimedia Commons — AzaanMaahur.ogg",
-    "source_url": "https://commons.wikimedia.org/wiki/File:AzaanMaahur.ogg",
-    "asset": "assets/adhan/adhan_maahur.ogg",
-    "available_in": [
+      "trial",
       "paid"
     ]
   }

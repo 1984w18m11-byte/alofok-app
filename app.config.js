@@ -13,7 +13,7 @@ module.exports = () => {
     './assets/adhan/adhan_medina_ejaz215.wav',
     './assets/adhan/adhan_mecca_2013.wav'
   ];
-  const paidSounds = ['./assets/adhan/beautiful_adhan.wav', './assets/adhan/adhan_andrewler.wav', './assets/adhan/adhan_maahur.wav'];
+  const paidSounds = trialSounds;
   const plugins = (base.plugins || []).map(plugin => {
     if (Array.isArray(plugin) && plugin[0] === 'expo-notifications') {
       return [plugin[0], {...(plugin[1] || {}), sounds: isPaid ? paidSounds : trialSounds}];

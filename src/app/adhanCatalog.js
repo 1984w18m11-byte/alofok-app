@@ -6,8 +6,7 @@ const ASSETS={
  'commons-aishatu98-adhan':require('../../assets/adhan/adhan_aishatu98.ogg'),
  'commons-nigeria-isaac':require('../../assets/adhan/adhan_nigeria_isaac.ogg'),
  'commons-medina-ejaz215':require('../../assets/adhan/adhan_medina_ejaz215.ogg'),
- 'commons-mecca-2013':require('../../assets/adhan/adhan_mecca_2013.ogg'),
- 'commons-maahur-saeed':require('../../assets/adhan/adhan_maahur.ogg')
+ 'commons-mecca-2013':require('../../assets/adhan/adhan_mecca_2013.ogg')
 };
 
 const NOTIFICATION_SOUNDS={
@@ -16,8 +15,7 @@ const NOTIFICATION_SOUNDS={
  'commons-aishatu98-adhan':'adhan_aishatu98.wav',
  'commons-nigeria-isaac':'adhan_nigeria_isaac.wav',
  'commons-medina-ejaz215':'adhan_medina_ejaz215.wav',
- 'commons-mecca-2013':'adhan_mecca_2013.wav',
- 'commons-maahur-saeed':'adhan_maahur.wav'
+ 'commons-mecca-2013':'adhan_mecca_2013.wav'
 };
 
 const ENGLISH_NAMES={
@@ -26,8 +24,7 @@ const ENGLISH_NAMES={
  'commons-aishatu98-adhan':'Adhan — Aishatu98',
  'commons-nigeria-isaac':'Nigeria Adhan — Isaacayodele32',
  'commons-medina-ejaz215':'Medina Adhan — Prophet’s Mosque recording',
- 'commons-mecca-2013':'Mecca Adhan — Grand Mosque 2013',
- 'commons-maahur-saeed':'Mahur-mode Adhan — Saeed Hatamzadeh-Varmazyar'
+ 'commons-mecca-2013':'Mecca Adhan — Grand Mosque 2013'
 };
 
 export const ADHAN_CATALOG=registry
