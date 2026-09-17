@@ -1,0 +1,41 @@
+name: Apply Google site verification
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/apply-google-site-verification.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Insert Google Search Console verification tag
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('wissam-digital-site/public/index.html')
+          s = p.read_text(encoding='utf-8')
+          tag = '<meta name="google-site-verification" content="ICaWOluvCXg3h8ef7-8noU2SppDqSo0zNWrs5sGMbA0" />'
+          if tag not in s:
+              marker = '  <meta name="description" content="وسام ديجيتال — تطوير مواقع وتطبيقات، تصميم إعلانات وهوية رقمية، وحلول رقمية للأعمال." />'
+              if marker not in s:
+                  raise SystemExit('Expected head marker not found')
+              s = s.replace(marker, marker + '\n  ' + tag, 1)
+              p.write_text(s, encoding='utf-8')
+          PY
+      - name: Commit verification tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet; then
+            echo "Verification tag already present"
+            exit 0
+          fi
+          git add wissam-digital-site/public/index.html
+          git commit -m "site: add Google Search Console verification"
+          git push
