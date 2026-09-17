@@ -2,7 +2,7 @@
   "expo": {
     "name": "الأفق",
     "slug": "horizon-calendar-v2",
-    "version": "1.0.4",
+    "version": "1.0.5",
     "orientation": "portrait",
     "scheme": "horizoncalendar",
     "userInterfaceStyle": "dark",
@@ -23,7 +23,7 @@
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"
       ],
-      "versionCode": 36
+      "versionCode": 1000105
     },
     "plugins": [
       "expo-location",
