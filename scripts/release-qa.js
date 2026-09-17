@@ -24,13 +24,21 @@ assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.js
 assert(pkg.version===version,'package.json version mismatch');
 assert(lock.version===version&&lock.packages?.['']?.version===version,'package-lock version mismatch');
 assert(trial.version===version&&plus.version===version,'update manifests version mismatch');
-assert(trial.versionCode===appJson.expo.android.versionCode&&plus.versionCode===appJson.expo.android.versionCode,'manifest versionCode mismatch');
+assert(trial.channel==='trial'&&plus.channel==='plus','Trial and Plus update channels must stay distinct');
+assert(trial.build_variant==='trial'&&plus.build_variant==='paid','manifest build variants must stay distinct');
+assert(trial.package_id==='com.alofok.trial'&&plus.package_id==='com.alofok.trial','Trial and Plus must share the canonical Android package for in-place upgrade');
+assert(trial.versionCode===1000105,'Trial manifest must stay in the Trial versionCode range');
+assert(plus.versionCode===2000105,'Plus manifest must stay in the Plus versionCode range');
+assert(trial.versionCode<plus.versionCode,'Plus versionCode must stay above Trial so Trial cannot replace Plus');
+assert(trial.cross_channel_allowed===false&&plus.cross_channel_allowed===false,'cross-channel update manifests must stay disabled');
 assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must contain exactly one packageId declaration');
-assert(config.includes("'com.alofok.plus'")&&config.includes("'com.alofok.trial'"),'trial and Plus package IDs must be distinct');
+assert(config.includes("const packageId = 'com.alofok.trial';"),'Trial and Plus must share the canonical package id');
+assert(config.includes('const androidVersionCode = isPaid ? 2000105 : 1000105;'),'variant-specific Android versionCode ranges missing');
 assert(config.includes("isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png'"),'Trial and Plus must use their approved full launcher icons');
 assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork inside adaptiveIcon; it causes the icon to render too small');
 
 assert(app.includes("const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';"),'Plus features must be gated by paid build variant');
+assert(app.includes('update-plus.json')&&app.includes('update-trial.json'),'Trial and Plus must read different update manifests');
 assert(app.includes("['season-spring','season-summer','season-autumn','season-winter'].includes(id)"),'trial build must allow only the four seasonal themes');
 assert(app.includes("if(!IS_PLUS)return THEME_BY_ID[selectedTheme]?.image"),'trial home background must use the selected seasonal theme');
 assert(app.includes('automaticThemeId(now)'),'Plus automatic theme rotation missing');
