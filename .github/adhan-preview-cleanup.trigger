@@ -1,1 +1,1 @@
-apply full Adhan preview removal and retain volume controls - 2026-09-17
+restore per-voice Adhan preview controls for Trial and Plus - 2026-09-17
