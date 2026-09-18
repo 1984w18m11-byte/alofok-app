@@ -66,10 +66,15 @@ function trackEvent(event,extra={}){
 
 trackEvent('page_view');
 
-// كل زر تحميل للأفق يمر عبر نفس المسار حتى يُقاس عدد ضغطات التحميل.
+// رابط تنزيل ALAUFUQ المباشر هو المرجع الآمن على Cloudflare Pages.
+const ALAUFUQ_TRIAL_APK='https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.1.2/alaufuq-trial-1.1.2.apk';
 document.querySelectorAll('[data-download-app="alofok"]').forEach(link=>{
   const q=new URLSearchParams({sid:analyticsSessionId,src:analyticsSource});
-  link.href=`/download/alofok-trial?${q.toString()}`;
+  if(location.hostname.endsWith('.pages.dev')){
+    link.href=ALAUFUQ_TRIAL_APK;
+  }else{
+    link.href=`https://wispy-salad-438b.wissamdigital11.workers.dev/download/alofok-trial?${q.toString()}`;
+  }
 });
 
 // قاعدة الموقع: أي تطبيق قابل للتحميل يجب أن يكون بجانبه زر "شرح عن البرنامج".
