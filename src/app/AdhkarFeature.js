@@ -74,6 +74,7 @@ export function useAdhkar({now=new Date(),fajrDate=null,timeZone='Asia/Baghdad',
  const [eveningDone,setEveningDone]=useState('');
  const [openKind,setOpenKind]=useState(null);
  const [ready,setReady]=useState(false);
+ const [openedKind,setOpenedKind]=useState(null);
  const today=dateKey(now,timeZone);
 
  useEffect(()=>{
