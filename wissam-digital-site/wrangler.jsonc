@@ -10,5 +10,21 @@
       "/api/*",
       "/download/*"
     ]
-  }
+  },
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "PLUS_ADMIN",
+        "class_name": "PlusAdminStore"
+      }
+    ]
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_classes": [
+        "PlusAdminStore"
+      ]
+    }
+  ]
 }
