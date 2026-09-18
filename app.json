@@ -2,7 +2,7 @@
   "expo": {
     "name": "الأفق",
     "slug": "horizon-calendar-v2",
-    "version": "1.0.13",
+    "version": "1.1.1",
     "orientation": "portrait",
     "scheme": "horizoncalendar",
     "userInterfaceStyle": "dark",
@@ -11,7 +11,7 @@
       "bundleIdentifier": "com.alofok.trial",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "نستخدم موقعك أثناء الاستخدام لحساب مواقيت الصلاة وعرض اسم المنطقة القريبة.",
-        "NSUserNotificationUsageDescription": "نستخدم الإشعارات لتذكيرك بالصلاة والمناسبات."
+        "NSUserNotificationUsageDescription": "نستخدم الإشعارات لتذكيرك بالصلاة والأذكار والمناسبات."
       }
     },
     "android": {
@@ -23,7 +23,7 @@
         "VIBRATE",
         "SCHEDULE_EXACT_ALARM"
       ],
-      "versionCode": 1000113
+      "versionCode": 1001101
     },
     "plugins": [
       "expo-location",
