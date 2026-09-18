@@ -3,6 +3,11 @@ const DOWNLOADS = {
     app: 'alofok',
     edition: 'trial',
     url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.7/alofok-trial-1.0.7.apk'
+  },
+  '/download/wissam-admin': {
+    app: 'wissam-digital-admin',
+    edition: 'admin',
+    url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/wissam-admin-v0.1.0/wissam-digital-admin-0.1.0.apk'
   }
 };
 
