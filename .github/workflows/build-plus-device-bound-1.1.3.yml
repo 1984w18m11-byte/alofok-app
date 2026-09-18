@@ -92,8 +92,8 @@ jobs:
           encoded=$(python3 -c 'import urllib.parse; print(urllib.parse.quote("Azan.ogg", safe=""))')
           curl -fL --retry 4 --retry-delay 2 -A "ALAUFUQ-build/1.1.3-plus" "https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}" -o /tmp/alofok-adhan/adhan_andrewler.source
           ffprobe -v error /tmp/alofok-adhan/adhan_andrewler.source >/dev/null
-          ffmpeg -hide_banner -loglevel error -xerror -y -i /tmp/alofok-adhan/adhan_andrewler.source -vn -ac 1 -ar 32000 -c:a libvorbis -q:a 5 assets/adhan/adhan_andrewler.ogg
-          ffmpeg -hide_banner -loglevel error -xerror -y -i /tmp/alofok-adhan/adhan_andrewler.source -vn -ac 1 -ar 32000 -c:a pcm_s16le assets/adhan/adhan_andrewler.wav
+          ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i /tmp/alofok-adhan/adhan_andrewler.source -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a libvorbis -q:a 5 assets/adhan/adhan_andrewler.ogg
+          ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i /tmp/alofok-adhan/adhan_andrewler.source -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a pcm_s16le assets/adhan/adhan_andrewler.wav
 
           for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013; do
             test -s "assets/adhan/${stem}.wav"
