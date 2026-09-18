@@ -1,0 +1,157 @@
+name: Build Al-Ufuq Plus 1.1.3 Device-Bound Test
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - .github/build-plus-device-bound-1.1.3.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  build-plus:
+    name: Build ALAUFUQ Plus 1.1.3
+    runs-on: ubuntu-latest
+    env:
+      APP_VARIANT: paid
+      EXPO_PUBLIC_APP_VARIANT: paid
+      EXPO_PUBLIC_DISTRIBUTION_CHANNEL: direct
+      EXPO_PUBLIC_PLUS_API_BASE: "https://wispy-salad-438b.wissamdigital11.workers.dev"
+      EXPO_PUBLIC_PAYMENT_CARD: ${{ secrets.ALOFOK_PAYMENT_CARD }}
+      EXPO_PUBLIC_PAYMENT_BANK_ACCOUNT: "5490910105"
+      EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK: "https://wispy-salad-438b.wissamdigital11.workers.dev/api/payment-copy"
+      EXPO_NO_TELEMETRY: "1"
+      RELEASE_VERSION: "1.1.3"
+      NODE_ENV: production
+
+    steps:
+      - name: Checkout Plus final branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Synchronize release metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs');
+          const app=JSON.parse(fs.readFileSync('app.json','utf8'));
+          if(app.expo.version!=='1.1.3') throw new Error('app.json must be 1.1.3');
+          const lock=JSON.parse(fs.readFileSync('package-lock.json','utf8'));
+          lock.version='1.1.3';
+          if(lock.packages&&lock.packages['']) lock.packages[''].version='1.1.3';
+          fs.writeFileSync('package-lock.json',JSON.stringify(lock,null,2)+'\n');
+          NODE
+
+      - name: Validate device-bound Plus protection
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -q "expo-secure-store" package.json
+          grep -q "WHEN_UNLOCKED_THIS_DEVICE_ONLY" src/services/deviceSecurity.js
+          grep -q "nacl.secretbox" src/services/deviceSecurity.js
+          grep -q "unlockPlusForThisDevice" src/app/AppV3.js
+          grep -q "prepareEncryptedPlusBundle" src/app/AppV3.js
+          grep -q "ملف تفعيل Plus غير صالح أو تالف" src/app/AppV3.js
+          grep -q "const packageId = 'com.alofok.trial'" app.config.js
+          grep -q "2001103" app.config.js
+          node <<'NODE'
+          process.env.APP_VARIANT='paid';
+          const cfg=require('./app.config.js')();
+          if(cfg.android.package!=='com.alofok.trial') throw new Error('Plus must share Trial package id');
+          if(cfg.android.versionCode!==2001103) throw new Error('Unexpected Plus versionCode');
+          if(cfg.extra.appVariant!=='paid'||cfg.extra.updateChannel!=='plus') throw new Error('Plus channel mismatch');
+          NODE
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Prepare required Adhan notification sounds
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq ffmpeg librsvg2-bin fonts-noto-core
+          mkdir -p assets/adhan /tmp/alofok-adhan
+
+          test -s assets/adhan/beautiful_adhan.ogg
+          ffmpeg -hide_banner -loglevel error -xerror -y -i assets/adhan/beautiful_adhan.ogg -vn -ac 1 -ar 32000 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
+
+          encoded=$(python3 -c 'import urllib.parse; print(urllib.parse.quote("Azan.ogg", safe=""))')
+          curl -fL --retry 4 --retry-delay 2 -A "ALAUFUQ-build/1.1.3-plus" "https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}" -o /tmp/alofok-adhan/adhan_andrewler.source
+          ffprobe -v error /tmp/alofok-adhan/adhan_andrewler.source >/dev/null
+          ffmpeg -hide_banner -loglevel error -xerror -y -i /tmp/alofok-adhan/adhan_andrewler.source -vn -ac 1 -ar 32000 -c:a libvorbis -q:a 5 assets/adhan/adhan_andrewler.ogg
+          ffmpeg -hide_banner -loglevel error -xerror -y -i /tmp/alofok-adhan/adhan_andrewler.source -vn -ac 1 -ar 32000 -c:a pcm_s16le assets/adhan/adhan_andrewler.wav
+
+          for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013; do
+            test -s "assets/adhan/${stem}.wav"
+            ffprobe -v error "assets/adhan/${stem}.wav" >/dev/null
+          done
+
+      - name: Render Plus launcher icon
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsvg-convert -w 1024 -h 1024 assets/icons/icon-paid-approved.svg -o assets/icon-paid.png
+          test -s assets/icon-paid.png
+
+      - name: Validate translations
+        run: npm run check:translations
+
+      - name: Run release QA
+        run: npm run check:release
+
+      - name: Validate paid Expo configuration
+        run: npx expo config --type public
+
+      - name: Generate Android project
+        run: npx expo prebuild --platform android --no-install --clean
+
+      - name: Build standalone Plus release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon
+
+      - name: Upload Plus APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: alaufuq-plus-1.1.3-device-bound-test
+          path: android/app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 14
+
+  publish-test:
+    name: Publish Plus 1.1.3 test APK
+    needs: build-plus
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Plus APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: alaufuq-plus-1.1.3-device-bound-test
+          path: artifacts/plus
+
+      - name: Prepare APK filename
+        run: cp artifacts/plus/app-release.apk alaufuq-plus-1.1.3-device-bound-test.apk
+
+      - name: Publish protected test release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view plus-device-bound-v1.1.3-test --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || \
+          gh release create plus-device-bound-v1.1.3-test --repo 1984w18m11-byte/alofok-app \
+            --title "الأفق Plus 1.1.3 — اختبار حماية الجهاز" \
+            --notes "نسخة اختبار قبل النشر العام. Plus مرتبطة بالجهاز والحزمة الداخلية المشفرة؛ نسخ APK إلى جهاز آخر لا يفتح Plus. لا يتم تحديث رابط الموقع أو قناة Plus العامة حتى اعتماد المستخدم بعد الاختبار."
+          gh release upload plus-device-bound-v1.1.3-test alaufuq-plus-1.1.3-device-bound-test.apk \
+            --repo 1984w18m11-byte/alofok-app --clobber
