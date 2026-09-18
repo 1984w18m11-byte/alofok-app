@@ -401,7 +401,7 @@ export default function AppV3(){
  const tomorrowFajr=useMemo(()=>utcDateFromMinutes(tomorrowCivil,tomorrowPrayers.rawMinutesUtc.fajr),[tomorrowCivil.getTime(),tomorrowPrayers]);
  const eveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(civilDate,21,0,tzOffset),[civilDate.getTime(),tzOffset]);
  const nextEveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(tomorrowCivil,21,0,tomorrowOffset),[tomorrowCivil.getTime(),tomorrowOffset]);
- const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
+ const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,lat:location.lat,lon:location.lon,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
  useEffect(()=>{
@@ -469,6 +469,11 @@ export default function AppV3(){
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
  },[checkUpdate,screen]);
+ useEffect(()=>{
+  if(!adhkar.openedKind)return;
+  navigate(adhkar.openedKind==='morning'?'adhkarMorning':'adhkarEvening');
+  adhkar.clearOpened();
+ },[adhkar.openedKind,navigate,adhkar.clearOpened]);
  useEffect(()=>{
   if(!adhkar.openKind)return;
   setDrawer(false);
