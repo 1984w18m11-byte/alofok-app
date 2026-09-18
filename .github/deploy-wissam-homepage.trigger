@@ -16,3 +16,4 @@ deploy-alaufuq-trial-1.1.2-main-20260918
 deploy-alaufuq-trial-1.1.2-wissam-digital-main-20260918-confirmed
 redeploy-alaufuq-trial-1.1.2-wissam-digital-main-final-20260918-b
 deploy-alaufuq-trial-1.1.2-wissam-digital-main-after-final-test-20260918
+deploy-alaufuq-trial-1.1.2-wissam-digital-main-20260918
