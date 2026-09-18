@@ -455,11 +455,6 @@ export default function AppV3(){
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
  },[checkUpdate,screen]);
- useEffect(()=>{
-  if(!adhkar.openedKind)return;
-  navigate(adhkar.openedKind==='evening'?'adhkarEvening':'adhkarMorning');
-  adhkar.clearOpened();
- },[adhkar.openedKind,navigate,adhkar.clearOpened]);
  const goBack=useCallback(()=>{
   setDrawer(false);
   setScreenHistory(history=>{
