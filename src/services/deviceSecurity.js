@@ -5,8 +5,7 @@ import nacl from 'tweetnacl';
 import * as naclUtil from 'tweetnacl-util';
 
 const DEVICE_SECRET_KEY='alufuq_device_secret_v1';
-const ENTITLEMENTS_URL=process.env.EXPO_PUBLIC_PLUS_ENTITLEMENTS_URL||'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/plus-entitlements.json';
-const PLUS_BUNDLE_URL=process.env.EXPO_PUBLIC_PLUS_BUNDLE_URL||'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/plus-bundle.json';
+const PLUS_API_BASE=(process.env.EXPO_PUBLIC_PLUS_API_BASE||'https://wispy-salad-438b.wissamdigital11.workers.dev').replace(/\/$/,'');
 const PLUS_DIR=`${FileSystem.documentDirectory}alufuq-protected/`;
 const PLUS_FILE=`${PLUS_DIR}plus.bundle.enc`;
 
@@ -54,21 +53,13 @@ async function fetchJson(url){
 export async function checkPlusApproval(){
   const deviceCode=await getDeviceCode();
   try{
-    const data=await fetchJson(ENTITLEMENTS_URL);
-    const entries=Array.isArray(data)?data:(Array.isArray(data?.approved)?data.approved:[]);
-    const match=entries.find(entry=>{
-      if(typeof entry==='string')return cleanCode(entry)===deviceCode;
-      return cleanCode(entry?.device_code||entry?.deviceCode||entry?.code)===deviceCode
-        && String(entry?.tier||'plus').toLowerCase()==='plus'
-        && !isExpired(entry?.expires_at||entry?.expiresAt);
-    });
-    if(!match)return {approved:false,deviceCode};
-    const normalized=typeof match==='string'?{device_code:match,tier:'plus'}:match;
+    const data=await fetchJson(`${PLUS_API_BASE}/api/plus/status?device_code=${encodeURIComponent(deviceCode)}`);
     return {
-      approved:true,
+      approved:Boolean(data?.approved),
       deviceCode,
-      approvedAt:normalized.approved_at||normalized.approvedAt||null,
-      expiresAt:normalized.expires_at||normalized.expiresAt||null
+      status:data?.status||'none',
+      approvedAt:data?.approvedAt||null,
+      expiresAt:data?.expiresAt||null
     };
   }catch(error){
     return {approved:false,deviceCode,offline:true,error:String(error?.message||error)};
@@ -117,7 +108,7 @@ export async function prepareEncryptedPlusBundle(){
   const entitlement=await checkPlusApproval();
   if(!entitlement.approved)return {ok:false,reason:'not_approved',deviceCode:entitlement.deviceCode,offline:entitlement.offline};
   try{
-    const remote=await fetchJson(PLUS_BUNDLE_URL);
+    const remote=await fetchJson(`${PLUS_API_BASE}/api/plus/payload?device_code=${encodeURIComponent(entitlement.deviceCode)}`);
     await writeEncryptedBundle({
       ...remote,
       tier:'plus',
@@ -146,7 +137,6 @@ export async function clearProtectedPlusBundle(){
 }
 
 export const protectedPlusConfig={
-  entitlementsUrl:ENTITLEMENTS_URL,
-  plusBundleUrl:PLUS_BUNDLE_URL,
+  apiBase:PLUS_API_BASE,
   protectedFile:PLUS_FILE
 };
