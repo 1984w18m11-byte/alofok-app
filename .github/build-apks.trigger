@@ -13,3 +13,4 @@ build-trial-1.0.10-adhkar-live-20260918
 trial-1.0.10-no-adhkar-final-20260918
 trial-1.0.10-no-adhkar-final-20260918
 trial-1.0.10-no-adhkar-final-20260918
+trial-1.0.11-no-adhkar-20260918
