@@ -380,8 +380,10 @@ export default function AppV3(){
  const prayers=useMemo(()=>calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon,tzOffsetMin:tzOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[civilDate,location.lat,location.lon,tzOffset,rtl]);
  const lunar=useMemo(()=>proposedLunisolarDate(civilDate),[civilDate]);
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
+ const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,lat:location.lat,lon:location.lon,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
+ useEffect(()=>{adhkar.schedule()},[adhkar.schedule]);
 
  const setSelectedTheme=useCallback(async id=>{
   if(!IS_PLUS&&!['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
@@ -439,6 +441,14 @@ export default function AppV3(){
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
  },[checkUpdate,screen]);
+ useEffect(()=>{
+  if(!adhkar.openedKind)return;
+  const target=adhkar.openedKind==='morning'?'adhkarMorning':'adhkarEvening';
+  setDrawer(false);
+  setScreenHistory(history=>[...history,screen]);
+  setScreen(target);
+  adhkar.clearOpened();
+ },[adhkar.openedKind]);
  const goBack=useCallback(()=>{
   setDrawer(false);
   setScreenHistory(history=>{
