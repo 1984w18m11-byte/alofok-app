@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [trial, paid]
+        variant: [trial]
     env:
       APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
