@@ -37,7 +37,7 @@ export function TrialPlusActivation({rtl,country,onBack,alreadyActive=false}){
 
    <PaymentTransferPanel rtl={rtl} purpose='plus' edition={alreadyActive?'plus':'trial'} amountIqd={PLUS_PRICE_IQD} eventName={PAYMENT_COPY_EVENT} notificationEndpoint={PAYMENT_COPY_WEBHOOK}/>
 
-   <Text style={[s.footerNote,dir(rtl)]}>{rtl?'بعد التحويل انتظر موافقة الإدارة. لا يحتاج المستخدم إلى معرفة أو إرسال كود الجهاز.':'After payment, wait for admin approval. The user does not need to know or send the device code.'}</Text>
+   <Text style={[s.footerNote,dir(rtl)]}>{rtl?'بعد التحويل انتظر موافقة الإدارة، وبعد التفعيل سيظهر تحديث Plus داخل التطبيق.':'After payment, wait for admin approval. Once activated, the Plus update will appear inside the app.'}</Text>
   </>}
  </ScrollView></SafeAreaView>
 }
