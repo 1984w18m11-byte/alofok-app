@@ -312,10 +312,11 @@ function AboutScreen({t,rtl,onBack}){
  </ScrollView></SafeAreaView>
 }
 
-function SettingsScreen({t,rtl,adhan,onNavigate,location,onBack}){
+function SettingsScreen({t,rtl,adhan,adhkar,onNavigate,location,onBack}){
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('settings')} t={t} rtl={rtl} onBack={onBack}/>
   <View style={s.settingCard}><View style={[s.settingRow,rowDir(rtl)]}><View><Text style={[s.settingTitle,textDir(rtl)]}>{t('notifications')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{t('adhanTitle')}</Text></View><Switch value={adhan.alertsEnabled} onValueChange={adhan.setPrayerAlerts} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhan.alertsEnabled?GOLD:'#E8EDF2'}/></View></View>
+  <AdhkarSettings rtl={rtl} adhkar={adhkar}/>
   {[[t('adhanTitle'),'adhan','♪'],[t('themes'),'themes','▧'],[t('languages'),'languages','◎'],[t('location'),'cities','⌖'],[t('about'),'about','ⓘ'],[t('privacy'),'privacy','◇']].map(([label,target,icon])=><Pressable key={target} onPress={()=>onNavigate(target)} style={[s.settingLink,rowDir(rtl)]}><Text style={s.settingIcon}>{icon}</Text><Text style={[s.settingLinkText,textDir(rtl)]}>{label}</Text><Text style={s.settingChevron}>›</Text></Pressable>)}
   <View style={s.settingCard}><Text style={[s.settingTitle,textDir(rtl)]}>{t('location')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{location.label}</Text></View>
  </ScrollView></SafeAreaView>
