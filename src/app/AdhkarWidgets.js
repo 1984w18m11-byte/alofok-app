@@ -52,6 +52,13 @@ export function AdhkarSettings({rtl,adhkar}){
   />
   <Setting
    rtl={rtl}
+   title={rtl?'تنبيه أذكار الصباح':'Morning adhkar reminder'}
+   hint={rtl?'تنبيه بعد أذان الفجر':'Reminder after Fajr'}
+   value={adhkar.morningAlert}
+   onChange={adhkar.setMorningAlert}
+  />
+  <Setting
+   rtl={rtl}
    title={rtl?'أذكار المساء':'Evening adhkar'}
    hint={rtl?'تظهر الساعة 9 مساءً وتختفي منتصف الليل':'Appears at 9:00 PM and expires at midnight'}
    value={adhkar.eveningEnabled}
@@ -59,10 +66,10 @@ export function AdhkarSettings({rtl,adhkar}){
   />
   <Setting
    rtl={rtl}
-   title={rtl?'منبّه الأذكار':'Adhkar reminders'}
-   hint={rtl?'تنبيه عند بدء وقت أذكار الصباح والمساء':'Notify when the morning/evening adhkar window begins'}
-   value={adhkar.alertsEnabled}
-   onChange={adhkar.setAlertsEnabled}
+   title={rtl?'تنبيه أذكار المساء':'Evening adhkar reminder'}
+   hint={rtl?'تنبيه الساعة 9:00 مساءً':'Reminder at 9:00 PM'}
+   value={adhkar.eveningAlert}
+   onChange={adhkar.setEveningAlert}
   />
  </View>
 }
