@@ -393,6 +393,7 @@ export default function AppV3(){
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
+ useEffect(()=>{adhkar.schedule()},[adhkar.schedule]);
 
  const setSelectedTheme=useCallback(async id=>{
   if(!IS_PLUS&&!['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
