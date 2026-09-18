@@ -80,4 +80,4 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
           cd wissam-digital-site
-          npx -y wrangler@4 pages deploy public --project-name al-site --branch main
+          npx -y wrangler@4 pages deploy public --project-name wissam-digital-site --branch main
