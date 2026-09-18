@@ -56,12 +56,9 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   await Clipboard.setStringAsync(clean);
   await postCopyEvent(kind,copiedAt);
   setBusy('');
-  Alert.alert(
-   rtl?'تم النسخ':'Copied',
-   purpose==='plus'
-    ?(rtl?'تم نسخ الرقم وإرسال طلب التفعيل تلقائيًا. بعد التحويل انتظر موافقة الإدارة.':'The number was copied and the activation request was sent automatically. After payment, wait for admin approval.')
-    :(rtl?'تم نسخ الرقم.':'Number copied.')
-  );
+  if(purpose!=='plus'){
+   Alert.alert(rtl?'تم النسخ':'Copied',rtl?'تم نسخ الرقم.':'Number copied.');
+  }
  };
 
  return <View style={s.wrap}>
