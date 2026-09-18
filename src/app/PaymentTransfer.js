@@ -16,10 +16,10 @@ const ADMIN_EVENT_ENDPOINT=process.env.EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK||'https:
 
 function dir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl':'ltr'}}
 function digits(value){return String(value||'').replace(/\D/g,'')}
-function maskedLast4(value){
+function visibleNumber(value){
  const clean=digits(value);
- if(!clean)return '••••';
- return `•••• ${clean.slice(-4)}`;
+ if(!clean)return '—';
+ return clean.replace(/(.{4})/g,'$1 ').trim();
 }
 
 export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amountIqd=null,eventName='payment_data_copied',notificationEndpoint=ADMIN_EVENT_ENDPOINT}){
@@ -65,8 +65,8 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   {open&&<View style={s.listCard}>
    <View style={s.methodRow}>
     <View style={s.methodText}>
-     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'حوالة — 16 رقم':'Transfer — 16 digits'}</Text>
-     <Text selectable={false} style={s.masked}>{maskedLast4(CARD_NUMBER)}</Text>
+     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'رقم التحويل — 16 رقم':'Transfer number — 16 digits'}</Text>
+     <Text selectable={false} style={s.masked}>{visibleNumber(CARD_NUMBER)}</Text>
     </View>
     <Pressable disabled={!!busy} onPress={()=>copyDestination('money_transfer_16',CARD_NUMBER)} style={[s.copySmall,busy&&s.disabled]}>
      <Text style={s.copySmallText}>{busy==='money_transfer_16'?(rtl?'…':'…'):(rtl?'نسخ':'Copy')}</Text>
@@ -77,8 +77,8 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
 
    <View style={s.methodRow}>
     <View style={s.methodText}>
-     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'تحويل موبايل — 10 أرقام':'Mobile transfer — 10 digits'}</Text>
-     <Text selectable={false} style={s.masked}>{maskedLast4(ACCOUNT_NUMBER)}</Text>
+     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'رقم الحساب — 10 أرقام':'Account number — 10 digits'}</Text>
+     <Text selectable={false} style={s.masked}>{visibleNumber(ACCOUNT_NUMBER)}</Text>
     </View>
     <Pressable disabled={!!busy} onPress={()=>copyDestination('mobile_purchase_10',ACCOUNT_NUMBER)} style={[s.copySmall,busy&&s.disabled]}>
      <Text style={s.copySmallText}>{busy==='mobile_purchase_10'?(rtl?'…':'…'):(rtl?'نسخ':'Copy')}</Text>
@@ -92,16 +92,16 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
 
 const s=StyleSheet.create({
  wrap:{marginTop:10},
- compactToggle:{minHeight:52,backgroundColor:CARD,borderRadius:14,borderWidth:1,borderColor:LINE,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},
+ compactToggle:{minHeight:46,backgroundColor:CARD,borderRadius:14,borderWidth:1,borderColor:LINE,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},
  toggleTitle:{color:GOLD,fontSize:16,fontWeight:'900',flex:1},
  toggleArrow:{color:WHITE,fontSize:22,fontWeight:'900',marginLeft:10},
  listCard:{backgroundColor:'rgba(13,31,49,.94)',borderRadius:14,borderWidth:1,borderColor:LINE,marginTop:8,paddingHorizontal:12},
- methodRow:{minHeight:68,flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10},
+ methodRow:{minHeight:56,flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10},
  methodText:{flex:1},
  methodTitle:{color:WHITE,fontSize:13,fontWeight:'800'},
  masked:{color:MUTED,fontSize:16,fontWeight:'900',letterSpacing:.8,marginTop:4},
- copySmall:{backgroundColor:GOLD,borderRadius:10,paddingHorizontal:18,paddingVertical:10,minWidth:72,alignItems:'center'},
- copySmallText:{color:NAVY,fontSize:13,fontWeight:'900'},
+ copySmall:{backgroundColor:GOLD,borderRadius:9,paddingHorizontal:14,paddingVertical:8,minWidth:64,alignItems:'center'},
+ copySmallText:{color:NAVY,fontSize:12,fontWeight:'900'},
  divider:{height:1,backgroundColor:LINE},
  disabled:{opacity:.6},
  note:{color:MUTED,fontSize:11,lineHeight:17,marginTop:9}
