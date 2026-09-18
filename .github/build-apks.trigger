@@ -20,3 +20,4 @@ trial-1.0.10-no-adhkar-final-test-20260918
 trial-1.0.10-no-adhkar-final2-20260918
 trial-1.0.10-no-adhkar-final-20260918
 trial-1.0.10-no-adhkar-rebuild-20260918
+trial-1.0.11-no-adhkar-user-test-20260918
