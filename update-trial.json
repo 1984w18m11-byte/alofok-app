@@ -2,13 +2,13 @@
   "channel": "trial",
   "build_variant": "trial",
   "package_id": "com.alofok.trial",
-  "version": "1.0.7",
-  "versionCode": 1000107,
+  "version": "1.0.8",
+  "versionCode": 1000108,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "الإصدار 1.0.7: ربط طلبات تفعيل Plus مباشرة بتطبيق Wissam Digital Admin، مع موافقة/رفض من موبايل الإدارة ونقطة تحديث بعد الموافقة.",
-  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.7/alofok-trial-1.0.7.apk",
+  "notes_ar": "الإصدار 1.0.8: إخفاء كود الجهاز عن المستخدم بالكامل. الكود يبقى داخليًا ويُرسل تلقائيًا لإدارة وسام ديجيتال عند نسخ رقم التحويل.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.8/alofok-trial-1.0.8.apk",
   "mandatory": false,
   "published_at": "2026-09-18",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.7 connects Plus activation requests to Wissam Digital Admin with mobile approve/reject and upgrade availability after approval."
+  "notes_en": "1.0.8 hides the device code from customers. It remains internal and is sent automatically to Wissam Digital Admin when a transfer number is copied."
 }
