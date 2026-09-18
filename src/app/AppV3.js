@@ -22,7 +22,6 @@ import {downloadAndInstallApk} from '../services/apkUpdater';
 import {AdhkarScreen} from './AdhkarScreen';
 import {AdhkarHomeCard,AdhkarSettings} from './AdhkarWidgets';
 import {useAdhkar} from './useAdhkar';
-import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -236,7 +235,7 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
 
     {!!adhkar.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}
 
-    {!!adhkar?.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}\n\n    <View style={s.glassPanel}>
+    <View style={s.glassPanel}>
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
      <PrayerStrip times={prayers.formatted} t={t} rtl={rtl}/>
     </View>
@@ -397,24 +396,9 @@ export default function AppV3(){
  const prayers=useMemo(()=>calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon,tzOffsetMin:tzOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[civilDate,location.lat,location.lon,tzOffset,rtl]);
  const lunar=useMemo(()=>proposedLunisolarDate(civilDate),[civilDate]);
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
- const tomorrowCivil=useMemo(()=>{const d=new Date(civilDate);d.setUTCDate(d.getUTCDate()+1);return d},[civilDate.getTime()]);
- const tomorrowProbe=useMemo(()=>new Date(now.getTime()+86400000),[civilDate.getTime()]);
- const tomorrowOffset=useMemo(()=>timeZoneOffsetMinutes(tomorrowProbe,location.tz),[tomorrowProbe.getTime(),location.tz]);
- const tomorrowPrayers=useMemo(()=>calculatePrayerTimes({date:tomorrowCivil,lat:location.lat,lon:location.lon,tzOffsetMin:tomorrowOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[tomorrowCivil.getTime(),location.lat,location.lon,tomorrowOffset,rtl]);
- const tomorrowFajr=useMemo(()=>utcDateFromMinutes(tomorrowCivil,tomorrowPrayers.rawMinutesUtc.fajr),[tomorrowCivil.getTime(),tomorrowPrayers]);
- const eveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(civilDate,21,0,tzOffset),[civilDate.getTime(),tzOffset]);
- const nextEveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(tomorrowCivil,21,0,tomorrowOffset),[tomorrowCivil.getTime(),tomorrowOffset]);
  const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,lat:location.lat,lon:location.lon,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
- useEffect(()=>{
-  adhkar.schedule({
-   morningDate:prayerDates.fajr,
-   nextMorningDate:tomorrowFajr,
-   eveningDate:eveningAdhkarDate,
-   nextEveningDate:nextEveningAdhkarDate
-  });
- },[adhkar.schedule,prayerDates.fajr?.getTime?.(),tomorrowFajr?.getTime?.(),eveningAdhkarDate.getTime(),nextEveningAdhkarDate.getTime()]);
 
  const setSelectedTheme=useCallback(async id=>{
   if(!IS_PLUS&&!['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
