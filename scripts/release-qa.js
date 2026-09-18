@@ -31,6 +31,7 @@ assert(lockedRequirements.includes('كود الجهاز لا يظهر للمست
 assert(lockedRequirements.includes('أي إصدار جديد يجب أن يحافظ على كل المتطلبات المقفلة السابقة'),'new releases must preserve prior locked requirements');
 assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
 assert(!paymentTransfer.includes('Alert.alert'),'payment copy must stay silent for the customer');
+assert(!app.includes('AdhkarFeature')&&!app.includes('adhkarMorning')&&!app.includes('adhkarEvening'),'adhkar feature is deferred from Trial 1.0.10');
 assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes('useAdhkar'),'adhkar is intentionally deferred and must not ship in this Trial build');
 assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes("screen==='adhkarMorning'")&&!app.includes("screen==='adhkarEvening'"),'current Trial build must not include adhkar');
 assert(!paymentTransfer.includes('Alert.alert')&&!paymentTransfer.includes('كود جهازك')&&!paymentTransfer.includes('Device code copied'),'payment copy must stay silent and must never expose the device code to the customer');
