@@ -29,7 +29,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.1.2';
+const VERSION='1.1.3';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -321,7 +321,7 @@ function PlusLockScreen({rtl,status,onRetry}){
  return <SafeAreaView style={{flex:1,backgroundColor:NAVY,justifyContent:'center',padding:24}}>
   <View style={{backgroundColor:CARD,borderWidth:1,borderColor:'rgba(244,196,93,.55)',borderRadius:22,padding:22}}>
    <Text style={{color:GOLD,fontSize:24,fontWeight:'900',textAlign:rtl?'right':'left'}}>{rtl?'حماية Plus':'Plus protection'}</Text>
-   <Text style={{color:WHITE,fontSize:15,lineHeight:24,marginTop:12,textAlign:rtl?'right':'left'}}>{checking?(rtl?'جاري التحقق من هذا الجهاز…':'Checking this device…'):(rtl?'هذه النسخة غير مفعّلة لهذا الموبايل. ملف APK وحده لا يفتح Plus؛ يجب أن يكون هذا الجهاز موافقًا عليه وأن يملك الحزمة الداخلية المشفرة.':'This Plus build is not activated for this phone. The APK alone cannot unlock Plus; this device must be approved and hold its encrypted internal payload.')}</Text>
+   <Text style={{color:WHITE,fontSize:15,lineHeight:24,marginTop:12,textAlign:rtl?'right':'left'}}>{checking?(rtl?'جاري التحقق من هذا الجهاز…':'Checking this device…'):(rtl?'ملف تفعيل Plus غير صالح أو تالف لهذا الموبايل. نسخ ملف APK أو نقله إلى جهاز آخر لا يفتح Plus؛ يجب أن يكون هذا الجهاز نفسه موافقًا عليه وأن يملك مفتاحه والحزمة الداخلية المشفرة.':'The Plus activation file is invalid for this phone. Copying or moving the APK to another device cannot unlock Plus; this exact device must be approved and hold its own key and encrypted internal payload.')}</Text>
    {!checking&&<Pressable onPress={onRetry} style={{backgroundColor:GOLD,borderRadius:14,paddingVertical:14,alignItems:'center',marginTop:20}}><Text style={{color:NAVY,fontWeight:'900',fontSize:15}}>{rtl?'إعادة فحص التفعيل':'Check activation again'}</Text></Pressable>}
   </View>
  </SafeAreaView>
