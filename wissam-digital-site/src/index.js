@@ -107,7 +107,7 @@ export class PlusAdminStore {
     const id = crypto.randomUUID();
     const request = {
       id,
-      app: 'Al-Ufuq',
+      app: 'ALAUFUQ',
       section: 'plus',
       deviceCode,
       amountIqd: Number(payload.amountIqd || 8000),
