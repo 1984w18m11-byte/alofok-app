@@ -5,10 +5,10 @@
   "version": "1.0.10",
   "versionCode": 1000110,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "الإصدار 1.0.10: تحسين شاشة تفعيل Plus؛ كود الجهاز مخفي بالكامل عن المستخدم، نسخ رقم التحويل يتم بصمت دون رسالة «تم النسخ»، وواجهة التحويلات مدمجة وصغيرة مع «حوالة — 16 رقم» و«تحويل موبايل — 10 أرقام»، ويظهر آخر 4 أرقام فقط بينما يُرسل طلب التفعيل تلقائيًا إلى Wissam Digital Admin.",
+  "notes_ar": "الإصدار 1.0.10: تحديث واجهة تفعيل Plus فقط: كود الجهاز مخفي بالكامل عن المستخدم، التحويلات بمربع صغير، يظهر آخر 4 أرقام فقط، وحوالة 16 رقم وتحويل موبايل 10 أرقام مع نسخ صامت دون رسالة للمستخدم.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.10/alofok-trial-1.0.10.apk",
   "mandatory": false,
   "published_at": "2026-09-18",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.10 improves Plus activation: the device code stays fully hidden, copying payment details is silent, payment methods are compact (16-digit transfer and 10-digit mobile transfer), only the last four digits are shown, and the activation request is sent automatically to Wissam Digital Admin."
+  "notes_en": "1.0.10 updates only the Plus activation flow: device code fully hidden, compact payment panel, last 4 digits only, 16-digit transfer and 10-digit mobile transfer, with silent copy."
 }
