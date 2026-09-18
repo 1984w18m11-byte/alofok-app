@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {Pressable,StyleSheet,Text,View} from 'react-native';
+import {Alert,Pressable,StyleSheet,Text,View} from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import {getDeviceCode} from '../services/deviceSecurity';
 
