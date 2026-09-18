@@ -1,4 +1,4 @@
-name: Build Al-Ufuq Trial 1.1.1
+name: Build ALAUFUQ Trial 1.1.2
 
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
       EXPO_PUBLIC_PAYMENT_BANK_ACCOUNT: "5490910105"
       EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK: "https://wispy-salad-438b.wissamdigital11.workers.dev/api/payment-copy"
       EXPO_NO_TELEMETRY: "1"
-      RELEASE_VERSION: "1.1.1"
+      RELEASE_VERSION: "1.1.2"
       NODE_ENV: production
 
     steps:
@@ -94,7 +94,7 @@ jobs:
             encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$file_title")
             local url="https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}"
             local input="/tmp/alofok-adhan/${stem}.source"
-            curl -fL --retry 4 --retry-delay 2 -A "ALAUFUQ-build/1.1.1" "$url" -o "$input"
+            curl -fL --retry 4 --retry-delay 2 -A "ALAUFUQ-build/1.1.2" "$url" -o "$input"
             test -s "$input"
             ffprobe -v error "$input" >/dev/null
             local duration
@@ -162,28 +162,28 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-${{ matrix.variant }}-1.1.1
+          name: alaufuq-${{ matrix.variant }}-1.1.2
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
 
   publish-release:
-    name: Publish Al-Ufuq Trial 1.1.1
+    name: Publish ALAUFUQ Trial 1.1.2
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
       - name: Download Trial APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: alofok-trial-1.1.1
+          name: alaufuq-trial-1.1.2
           path: artifacts/trial
 
       - name: Prepare Trial APK filename
-        run: cp artifacts/trial/app-release.apk alofok-trial-1.1.1.apk
+        run: cp artifacts/trial/app-release.apk alaufuq-trial-1.1.2.apk
 
       - name: Publish Trial GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.1.1 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.1.1 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.1.1" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي، آخر 4 أرقام فقط تظهر، والنسخ صامت مع إرسال طلب التفعيل إلى Wissam Digital Admin."
-          gh release upload v1.1.1 alofok-trial-1.1.1.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release view v1.1.2 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.1.2 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.1.2" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. واجهة تفعيل Plus صغيرة، كود الجهاز مخفي تمامًا، رقما التحويل يظهران للمستخدم، وعند النسخ يُرسل كود الجهاز تلقائيًا إلى Wissam Digital Admin."
+          gh release upload v1.1.2 alaufuq-trial-1.1.2.apk --repo 1984w18m11-byte/alofok-app --clobber
