@@ -19,9 +19,7 @@ import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
-import {AdhkarScreen} from './AdhkarScreen';
-import {AdhkarHomeCard,AdhkarSettings} from './AdhkarWidgets';
-import {useAdhkar} from './useAdhkar';
+import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -32,7 +30,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.0.12';
+const VERSION='1.0.13';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
