@@ -61,6 +61,10 @@ function utcDateFromMinutes(civilDate,minutes){
  const d=new Date(Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),0,0,0));
  d.setUTCMinutes(minutes);return d;
 }
+function utcDateFromLocalClock(civilDate,hour,minute,tzOffsetMinutes){
+ const localUtc=Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),hour,minute,0);
+ return new Date(localUtc-(tzOffsetMinutes||0)*60000);
+}
 function localDateKey(date,timeZone){
  try{
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
