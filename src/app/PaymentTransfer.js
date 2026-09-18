@@ -33,7 +33,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
  },[]);
 
  const postCopyEvent=async(destinationKind,copiedAt)=>{
-  if(!notificationEndpoint)return false;
+  if(purpose!=='plus'||!notificationEndpoint)return false;
   try{
    const response=await fetch(notificationEndpoint,{
     method:'POST',
@@ -42,12 +42,6 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
    });
    return response.ok;
   }catch(e){return false}
- };
-
- const copyDeviceCode=async()=>{
-  if(!deviceCode||deviceCode==='…'||deviceCode==='غير متاح')return;
-  await Clipboard.setStringAsync(deviceCode);
-  Alert.alert(rtl?'تم نسخ كود الجهاز':'Device code copied',rtl?'أرسل هذا الكود مع إشعار التحويل حتى يتم تفعيل Plus لهذا الموبايل فقط.':'Send this code with the payment notice so Plus can be approved for this phone only.');
  };
 
  const copyDestination=async(kind,value)=>{
@@ -61,17 +55,15 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   await Clipboard.setStringAsync(clean);
   await postCopyEvent(kind,copiedAt);
   setBusy('');
-  Alert.alert(rtl?'تم النسخ':'Copied',rtl?`تم نسخ الرقم. كود جهازك هو ${deviceCode}. بعد التحويل أرسل الكود لتأكيد Plus.`:`Number copied. Your device code is ${deviceCode}. After payment, send this code to approve Plus.`);
+  Alert.alert(
+   rtl?'تم النسخ':'Copied',
+   purpose==='plus'
+    ?(rtl?'تم نسخ رقم التحويل وإرسال طلب التفعيل تلقائيًا. بعد التحويل انتظر موافقة الإدارة؛ لا تحتاج لإرسال أي كود.':'Transfer number copied and the activation request was sent automatically. After payment, wait for admin approval; you do not need to send any code.')
+    :(rtl?'تم نسخ رقم التحويل.':'Transfer number copied.')
+  );
  };
 
  return <View style={s.wrap}>
-  {purpose==='plus'&&<View style={[s.card,s.deviceCard]}>
-   <Text style={[s.optionTitle,dir(rtl)]}>{rtl?'كود هذا الموبايل':'This phone code'}</Text>
-   <Text style={[s.deviceHint,dir(rtl)]}>{rtl?'هذا الكود مرتبط بمفتاح آمن داخل الجهاز. تفعيل Plus سيكون لهذا الموبايل فقط.':'This code is tied to a secure key inside this phone. Plus approval will be for this phone only.'}</Text>
-   <Text selectable style={s.deviceCode}>{deviceCode}</Text>
-   <Pressable onPress={copyDeviceCode} style={s.copyButton}><Text style={s.copyText}>{rtl?'نسخ كود الجهاز':'Copy device code'}</Text></Pressable>
-  </View>}
-
   <View style={s.card}>
    <Text style={[s.optionTitle,dir(rtl)]}>{rtl?'التحويلات المالية':'Money transfer'}</Text>
    <Text style={[s.label,dir(rtl)]}>{rtl?'رقم التحويل — يظهر آخر 4 أرقام فقط':'Transfer number — last 4 digits only'}</Text>
@@ -86,7 +78,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
    <Pressable disabled={!!busy} onPress={()=>copyDestination('mobile_purchase_10',ACCOUNT_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='mobile_purchase_10'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم الشراء':'Copy purchase number')}</Text></Pressable>
   </View>
 
-  <Text style={[s.note,dir(rtl)]}>{rtl?'بعد تأكيد الدفع لهذا الكود ستظهر نقطة حمراء على التحديثات، ومن داخل التطبيق يتم تنزيل Plus مباشرة.':'After payment is approved for this code, a red dot appears on Updates and Plus downloads directly inside the app.'}</Text>
+  {purpose==='plus'&&<Text style={[s.note,dir(rtl)]}>{rtl?'كود الجهاز يُنشأ ويحفظ داخليًا ولا يظهر للمستخدم. عند نسخ رقم التحويل يُرسل طلب التفعيل تلقائيًا للإدارة. بعد الموافقة ستظهر نقطة حمراء على التحديثات ويتم تنزيل Plus من داخل التطبيق.':'The device code is generated and kept internally and is not shown to the user. Copying a transfer number sends the activation request to admin automatically. After approval, a red dot appears on Updates and Plus downloads from inside the app.'}</Text>}
  </View>
 }
 
