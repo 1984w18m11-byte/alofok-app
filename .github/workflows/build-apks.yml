@@ -1,4 +1,4 @@
-name: Build Al-Ufuq Trial 1.0.11
+name: Build Al-Ufuq Trial 1.0.12
 
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
       EXPO_PUBLIC_PAYMENT_BANK_ACCOUNT: "5490910105"
       EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK: "https://wispy-salad-438b.wissamdigital11.workers.dev/api/payment-copy"
       EXPO_NO_TELEMETRY: "1"
-      RELEASE_VERSION: "1.0.11"
+      RELEASE_VERSION: "1.0.12"
       NODE_ENV: production
 
     steps:
@@ -94,7 +94,7 @@ jobs:
             encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$file_title")
             local url="https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}"
             local input="/tmp/alofok-adhan/${stem}.source"
-            curl -fL --retry 4 --retry-delay 2 -A "ALAUFUQ-build/1.0.11" "$url" -o "$input"
+            curl -fL --retry 4 --retry-delay 2 -A "ALAUFUQ-build/1.0.12" "$url" -o "$input"
             test -s "$input"
             ffprobe -v error "$input" >/dev/null
             local duration
@@ -162,28 +162,28 @@ jobs:
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-${{ matrix.variant }}-1.0.11
+          name: alofok-${{ matrix.variant }}-1.0.12
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
 
   publish-release:
-    name: Publish Al-Ufuq Trial 1.0.11
+    name: Publish Al-Ufuq Trial 1.0.12
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
       - name: Download Trial APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: alofok-trial-1.0.11
+          name: alofok-trial-1.0.12
           path: artifacts/trial
 
       - name: Prepare Trial APK filename
-        run: cp artifacts/trial/app-release.apk alofok-trial-1.0.11.apk
+        run: cp artifacts/trial/app-release.apk alofok-trial-1.0.12.apk
 
       - name: Publish Trial GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.11 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.11 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.11" --notes "أذكار الصباح بعد الفجر حتى 10 صباحًا، وأذكار المساء من 9 مساءً حتى منتصف الليل، مع القراءة والإخفاء بعد الإتمام وخيارات التشغيل والمنبّه في الإعدادات. مع الحفاظ على تفعيل Plus المدمج وكود الجهاز المخفي والنسخ الصامت."
-          gh release upload v1.0.11 alofok-trial-1.0.11.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release view v1.0.12 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.12 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.12" --notes "إضافة أذكار الصباح بعد الفجر حتى 10 صباحًا وأذكار المساء من 9 مساءً حتى منتصف الليل، مع صفحة قراءة وإخفاء بعد الإتمام وتنبيهات مستقلة من الإعدادات. مع الحفاظ على واجهة تفعيل Plus المدمجة وكود الجهاز المخفي والنسخ الصامت."
+          gh release upload v1.0.12 alofok-trial-1.0.12.apk --repo 1984w18m11-byte/alofok-app --clobber
