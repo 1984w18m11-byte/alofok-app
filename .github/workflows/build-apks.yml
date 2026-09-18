@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [trial, paid]
+        variant: [trial]
     env:
       APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
@@ -172,7 +172,7 @@ jobs:
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
-      - name: Download both APK artifacts
+      - name: Download Trial APK artifact
         uses: actions/download-artifact@v4
         with:
           name: alofok-trial-1.0.12
