@@ -1,10 +1,10 @@
-name: Build Al-Ufuq Trial 1.0.12
+name: Release Al-Ufuq Trial 1.0.12
 
 on:
   workflow_dispatch:
   push:
     paths:
-      - .github/build-apks.trigger
+      - .github/release-trial-1.0.12.trigger
 
 permissions:
   contents: write
@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [trial, paid]
+        variant: [trial]
     env:
       APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
