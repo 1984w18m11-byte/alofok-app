@@ -19,9 +19,16 @@ const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
 const paymentTransfer=read('src/app/PaymentTransfer.js');
+const lockedRequirements=read('AL_UFUQ_LOCKED_REQUIREMENTS.md');
 
 assert(entry.includes("import AppV3 from './src/app/AppV3'"),'App.js must use the modular V3 entry');
 assert(!paymentTransfer.includes('نسخ كود الجهاز')&&!paymentTransfer.includes('Copy device code'),'device code must stay hidden from customers');
+assert(paymentTransfer.includes('compactToggle')&&paymentTransfer.includes('listCard'),'Plus payment UI must stay compact/collapsible');
+assert(paymentTransfer.includes('maskedLast4(CARD_NUMBER)'),'16-digit transfer number must show only the last four digits');
+assert(paymentTransfer.includes('maskedLast4(ACCOUNT_NUMBER)'),'10-digit account number must show only the last four digits');
+assert(!paymentTransfer.includes('style={s.number}>{ACCOUNT_NUMBER}</Text>'),'full 10-digit account number must not be rendered');
+assert(lockedRequirements.includes('كود الجهاز لا يظهر للمستخدم نهائيًا'),'locked requirements file must preserve hidden device-code rule');
+assert(lockedRequirements.includes('أي إصدار جديد يجب أن يحافظ على كل المتطلبات المقفلة السابقة'),'new releases must preserve prior locked requirements');
 assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
 assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.json');
 assert(pkg.version===version,'package.json version mismatch');
