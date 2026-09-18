@@ -16,15 +16,16 @@ const ADMIN_EVENT_ENDPOINT=process.env.EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK||'https:
 
 function dir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl':'ltr'}}
 function digits(value){return String(value||'').replace(/\D/g,'')}
-function maskedCard(value){
+function maskedLast4(value){
  const clean=digits(value);
- if(!clean)return '•••• •••• •••• ••••';
- return `•••• •••• •••• ${clean.slice(-4)}`;
+ if(!clean)return '••••';
+ return `•••• ${clean.slice(-4)}`;
 }
 
 export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amountIqd=null,eventName='payment_data_copied',notificationEndpoint=ADMIN_EVENT_ENDPOINT}){
  const [deviceCode,setDeviceCode]=useState('…');
  const [busy,setBusy]=useState('');
+ const [open,setOpen]=useState(false);
 
  useEffect(()=>{
   let active=true;
@@ -58,28 +59,58 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   Alert.alert(
    rtl?'تم النسخ':'Copied',
    purpose==='plus'
-    ?(rtl?'تم نسخ رقم التحويل وإرسال طلب التفعيل تلقائيًا. بعد التحويل انتظر موافقة الإدارة؛ لا تحتاج لإرسال أي كود.':'Transfer number copied and the activation request was sent automatically. After payment, wait for admin approval; you do not need to send any code.')
-    :(rtl?'تم نسخ رقم التحويل.':'Transfer number copied.')
+    ?(rtl?'تم نسخ الرقم وإرسال طلب التفعيل تلقائيًا. بعد التحويل انتظر موافقة الإدارة.':'The number was copied and the activation request was sent automatically. After payment, wait for admin approval.')
+    :(rtl?'تم نسخ الرقم.':'Number copied.')
   );
  };
 
  return <View style={s.wrap}>
-  <View style={s.card}>
-   <Text style={[s.optionTitle,dir(rtl)]}>{rtl?'التحويلات المالية':'Money transfer'}</Text>
-   <Text style={[s.label,dir(rtl)]}>{rtl?'رقم التحويل — يظهر آخر 4 أرقام فقط':'Transfer number — last 4 digits only'}</Text>
-   <Text selectable={false} style={s.number}>{maskedCard(CARD_NUMBER)}</Text>
-   <Pressable disabled={!!busy} onPress={()=>copyDestination('money_transfer_16',CARD_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='money_transfer_16'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم التحويل':'Copy transfer number')}</Text></Pressable>
-  </View>
+  <Pressable onPress={()=>setOpen(v=>!v)} style={s.compactToggle}>
+   <Text style={[s.toggleTitle,dir(rtl)]}>{rtl?'التحويلات المالية':'Payment methods'}</Text>
+   <Text style={s.toggleArrow}>{open?'⌃':'⌄'}</Text>
+  </Pressable>
 
-  <View style={s.card}>
-   <Text style={[s.optionTitle,dir(rtl)]}>{rtl?'الشراء عن طريق الموبايل':'Purchase by mobile'}</Text>
-   <Text style={[s.label,dir(rtl)]}>{rtl?'رقم الحساب — 10 أرقام':'Account number — 10 digits'}</Text>
-   <Text selectable style={s.number}>{ACCOUNT_NUMBER}</Text>
-   <Pressable disabled={!!busy} onPress={()=>copyDestination('mobile_purchase_10',ACCOUNT_NUMBER)} style={[s.copyButton,busy&&s.disabled]}><Text style={s.copyText}>{busy==='mobile_purchase_10'?(rtl?'جاري النسخ…':'Copying…'):(rtl?'نسخ رقم الشراء':'Copy purchase number')}</Text></Pressable>
-  </View>
+  {open&&<View style={s.listCard}>
+   <View style={s.methodRow}>
+    <View style={s.methodText}>
+     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'رقم التحويل':'Transfer number'}</Text>
+     <Text selectable={false} style={s.masked}>{maskedLast4(CARD_NUMBER)}</Text>
+    </View>
+    <Pressable disabled={!!busy} onPress={()=>copyDestination('money_transfer_16',CARD_NUMBER)} style={[s.copySmall,busy&&s.disabled]}>
+     <Text style={s.copySmallText}>{busy==='money_transfer_16'?(rtl?'…':'…'):(rtl?'نسخ':'Copy')}</Text>
+    </Pressable>
+   </View>
 
-  {purpose==='plus'&&<Text style={[s.note,dir(rtl)]}>{rtl?'كود الجهاز يُنشأ ويحفظ داخليًا ولا يظهر للمستخدم. عند نسخ رقم التحويل يُرسل طلب التفعيل تلقائيًا للإدارة. بعد الموافقة ستظهر نقطة حمراء على التحديثات ويتم تنزيل Plus من داخل التطبيق.':'The device code is generated and kept internally and is not shown to the user. Copying a transfer number sends the activation request to admin automatically. After approval, a red dot appears on Updates and Plus downloads from inside the app.'}</Text>}
+   <View style={s.divider}/>
+
+   <View style={s.methodRow}>
+    <View style={s.methodText}>
+     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'رقم الحساب':'Account number'}</Text>
+     <Text selectable={false} style={s.masked}>{maskedLast4(ACCOUNT_NUMBER)}</Text>
+    </View>
+    <Pressable disabled={!!busy} onPress={()=>copyDestination('mobile_purchase_10',ACCOUNT_NUMBER)} style={[s.copySmall,busy&&s.disabled]}>
+     <Text style={s.copySmallText}>{busy==='mobile_purchase_10'?(rtl?'…':'…'):(rtl?'نسخ':'Copy')}</Text>
+    </Pressable>
+   </View>
+  </View>}
+
+  {purpose==='plus'&&<Text style={[s.note,dir(rtl)]}>{rtl?'عند نسخ أي رقم تحويل يُرسل طلب التفعيل تلقائيًا للإدارة. بعد الموافقة يظهر تحديث Plus داخل التطبيق.':'Copying a payment number sends the activation request automatically to admin. After approval, the Plus update appears inside the app.'}</Text>}
  </View>
 }
 
-const s=StyleSheet.create({wrap:{marginTop:4},card:{backgroundColor:CARD,borderRadius:18,borderWidth:1,borderColor:LINE,padding:16,marginTop:14},deviceCard:{borderColor:'rgba(244,196,93,.55)'},label:{color:MUTED,fontSize:12,marginTop:4},optionTitle:{color:GOLD,fontSize:16,fontWeight:'900'},deviceHint:{color:MUTED,fontSize:12,lineHeight:19,marginTop:6},deviceCode:{color:WHITE,fontSize:18,fontWeight:'900',textAlign:'center',letterSpacing:.8,marginVertical:14},number:{color:WHITE,fontSize:20,fontWeight:'900',textAlign:'center',letterSpacing:.7,marginVertical:14},copyButton:{backgroundColor:GOLD,borderRadius:14,paddingVertical:14,alignItems:'center'},copyText:{color:NAVY,fontSize:15,fontWeight:'900'},disabled:{opacity:.6},note:{color:MUTED,fontSize:12,lineHeight:19,marginTop:10}});
+const s=StyleSheet.create({
+ wrap:{marginTop:10},
+ compactToggle:{minHeight:52,backgroundColor:CARD,borderRadius:14,borderWidth:1,borderColor:LINE,paddingHorizontal:14,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},
+ toggleTitle:{color:GOLD,fontSize:16,fontWeight:'900',flex:1},
+ toggleArrow:{color:WHITE,fontSize:22,fontWeight:'900',marginLeft:10},
+ listCard:{backgroundColor:'rgba(13,31,49,.94)',borderRadius:14,borderWidth:1,borderColor:LINE,marginTop:8,paddingHorizontal:12},
+ methodRow:{minHeight:68,flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:10},
+ methodText:{flex:1},
+ methodTitle:{color:WHITE,fontSize:13,fontWeight:'800'},
+ masked:{color:MUTED,fontSize:16,fontWeight:'900',letterSpacing:.8,marginTop:4},
+ copySmall:{backgroundColor:GOLD,borderRadius:10,paddingHorizontal:18,paddingVertical:10,minWidth:72,alignItems:'center'},
+ copySmallText:{color:NAVY,fontSize:13,fontWeight:'900'},
+ divider:{height:1,backgroundColor:LINE},
+ disabled:{opacity:.6},
+ note:{color:MUTED,fontSize:11,lineHeight:17,marginTop:9}
+});
