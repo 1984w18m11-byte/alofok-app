@@ -1,6 +1,6 @@
 {
   "name": "horizon-calendar-v2",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "private": true,
   "main": "node_modules/expo/AppEntry.js",
   "scripts": {
@@ -25,6 +25,12 @@
     "react-native": "0.81.5",
     "react-native-qrcode-svg": "6.3.24",
     "react-native-safe-area-context": "~5.6.0",
-    "react-native-svg": "15.12.1"
+    "react-native-svg": "15.12.1",
+    "expo-crypto": "~15.0.9",
+    "expo-file-system": "~19.0.24",
+    "expo-intent-launcher": "~13.0.8",
+    "expo-secure-store": "~15.0.8",
+    "tweetnacl": "1.0.3",
+    "tweetnacl-util": "0.15.1"
   }
 }
