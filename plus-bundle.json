@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "tier": "plus",
+  "app": "Al-Ufuq",
+  "payload_version": "2026.09.18.1",
+  "protected_features": [
+    "plus_themes",
+    "automatic_theme_rotation",
+    "plus_interface"
+  ],
+  "note": "This payload is downloaded only after approval, then encrypted inside the app-private storage with the device-bound key."
+}
