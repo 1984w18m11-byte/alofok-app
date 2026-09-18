@@ -30,7 +30,7 @@ export function AdhkarScreen({kind='morning',rtl,onBack,onComplete}){
    {rows.map((item,index)=><View key={item.id||index} style={s.card}>
     <View style={s.cardTop}>
      <Text style={[s.cardTitle,dir(rtl)]}>{rtl?('ذكر '+(index+1)):('Dhikr '+(index+1))}</Text>
-     <View style={s.count}><Text style={s.countText}>{rtl?(item.count+'×'):('×'+item.count)}</Text></View>
+     <View style={s.count}><Text style={s.countText}>{item.count}</Text></View>
     </View>
     <Text style={[s.text,dir(rtl)]}>{item.text}</Text>
    
