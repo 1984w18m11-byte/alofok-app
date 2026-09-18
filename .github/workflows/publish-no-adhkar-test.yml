@@ -1,0 +1,38 @@
+name: Publish isolated no-adhkar Trial test
+
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-no-adhkar-test.yml'
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download verified Trial artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: alofok-trial-1.0.11
+          path: artifact
+          github-token: ${{ github.token }}
+          run-id: 35349766575
+
+      - name: Prepare test APK
+        run: cp artifact/app-release.apk alofok-trial-no-adhkar-test.apk
+
+      - name: Publish isolated test release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view trial-no-adhkar-test-20260918 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || \
+            gh release create trial-no-adhkar-test-20260918 \
+              --repo 1984w18m11-byte/alofok-app \
+              --target 75d1500bf9b5b9e20b367796e97f2063fc46c813 \
+              --title "Al-Ufuq Trial Test — No Adhkar" \
+              --notes "نسخة اختبار معزولة بدون أذكار الصباح والمساء حاليًا. تتضمن واجهة تفعيل Plus المدمجة، إخفاء كود الجهاز، إظهار آخر 4 أرقام فقط، والنسخ الصامت مع إرسال الطلب إلى Wissam Digital Admin."
+          gh release upload trial-no-adhkar-test-20260918 alofok-trial-no-adhkar-test.apk \
+            --repo 1984w18m11-byte/alofok-app --clobber
