@@ -1,7 +1,7 @@
 import React from 'react';
 import {Pressable,ScrollView,StyleSheet,Text,View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
-import adhkar from '../data/adhkar.json';
+import {MORNING_ADHKAR,EVENING_ADHKAR} from './adhkarContent';
 
 const NAVY='#06182B';
 const CARD='rgba(17,34,52,0.90)';
@@ -14,7 +14,7 @@ function dir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl
 
 export function AdhkarScreen({kind='morning',rtl,onBack,onComplete}){
  const morning=kind==='morning';
- const rows=morning?adhkar.morning:adhkar.evening;
+ const rows=morning?MORNING_ADHKAR:EVENING_ADHKAR;
  const title=rtl?(morning?'أذكار الصباح':'أذكار المساء'):(morning?'Morning adhkar':'Evening adhkar');
  const hint=rtl
   ?(morning?'تظهر أذكار الصباح بعد الفجر وحتى الساعة 10 صباحًا، أو تختفي بعد إتمام القراءة.':'تظهر أذكار المساء من الساعة 9 مساءً وحتى منتصف الليل، أو تختفي بعد إتمام القراءة.')
@@ -27,13 +27,13 @@ export function AdhkarScreen({kind='morning',rtl,onBack,onComplete}){
     <View style={s.spacer}/>
    </View>
    <Text style={[s.hint,dir(rtl)]}>{hint}</Text>
-   {rows.map((item,index)=><View key={item.id} style={s.card}>
+   {rows.map((item,index)=><View key={item.id||index} style={s.card}>
     <View style={s.cardTop}>
      <Text style={[s.cardTitle,dir(rtl)]}>{rtl?('ذكر '+(index+1)):('Dhikr '+(index+1))}</Text>
      <View style={s.count}><Text style={s.countText}>{rtl?(item.count+'×'):('×'+item.count)}</Text></View>
     </View>
-    <Text style={[s.text,dir(rtl)]}>{rtl?item.ar:item.en}</Text>
-    {!!item.source&&<Text style={[s.source,dir(rtl)]}>{item.source}</Text>}
+    <Text style={[s.text,dir(rtl)]}>{item.text}</Text>
+   
    </View>)}
    <Pressable onPress={onComplete} style={s.done}><Text style={s.doneText}>{rtl?'تمت القراءة وإخفاء الأذكار':'Finished reading & hide'}</Text></Pressable>
   </ScrollView>
