@@ -19,6 +19,7 @@ import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,getDeviceCode,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
+import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -194,7 +195,7 @@ function Drawer({t,rtl,onClose,onNavigate,onUpdate,updateReady=false}){
  </View>
 }
 
-function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavigate,themeSource,hijriDate,setHijriDate,gregDate,setGregDate}){
+function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavigate,themeSource,hijriDate,setHijriDate,gregDate,setGregDate,adhkar}){
  const gregDay=new Intl.DateTimeFormat(locale,{day:'numeric'}).format(now);
  const gregMonth=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(now);
  const week=new Intl.DateTimeFormat(locale,{weekday:'long'}).format(now);
@@ -220,6 +221,8 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
 
     <View style={s.visualSpace}/>
     <View style={s.quoteBlock}><Text style={s.quoteText}>{rtl?'﴿ وَمَا كَانَ رَبُّكَ نَسِيًّا ﴾':'“Your Lord is never forgetful.”'}</Text><Text style={s.quoteSub}>{rtl?'كل يوم هو فرصة لقرب جديد':'Every day is a new opportunity'}</Text></View>
+
+    {!!adhkar.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}
 
     <View style={s.glassPanel}>
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
@@ -298,10 +301,11 @@ function AboutScreen({t,rtl,onBack}){
  </ScrollView></SafeAreaView>
 }
 
-function SettingsScreen({t,rtl,adhan,onNavigate,location,onBack}){
+function SettingsScreen({t,rtl,adhan,adhkar,onNavigate,location,onBack}){
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('settings')} t={t} rtl={rtl} onBack={onBack}/>
   <View style={s.settingCard}><View style={[s.settingRow,rowDir(rtl)]}><View><Text style={[s.settingTitle,textDir(rtl)]}>{t('notifications')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{t('adhanTitle')}</Text></View><Switch value={adhan.alertsEnabled} onValueChange={adhan.setPrayerAlerts} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhan.alertsEnabled?GOLD:'#E8EDF2'}/></View></View>
+  <AdhkarSettings rtl={rtl} adhkar={adhkar}/>
   {[[t('adhanTitle'),'adhan','♪'],[t('themes'),'themes','▧'],[t('languages'),'languages','◎'],[t('location'),'cities','⌖'],[t('about'),'about','ⓘ'],[t('privacy'),'privacy','◇']].map(([label,target,icon])=><Pressable key={target} onPress={()=>onNavigate(target)} style={[s.settingLink,rowDir(rtl)]}><Text style={s.settingIcon}>{icon}</Text><Text style={[s.settingLinkText,textDir(rtl)]}>{label}</Text><Text style={s.settingChevron}>›</Text></Pressable>)}
   <View style={s.settingCard}><Text style={[s.settingTitle,textDir(rtl)]}>{t('location')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{location.label}</Text></View>
  </ScrollView></SafeAreaView>
@@ -322,7 +326,6 @@ function PlusLockScreen({rtl,status,deviceCode,onRetry}){
   <View style={{backgroundColor:CARD,borderWidth:1,borderColor:'rgba(244,196,93,.55)',borderRadius:22,padding:22}}>
    <Text style={{color:GOLD,fontSize:24,fontWeight:'900',textAlign:rtl?'right':'left'}}>{rtl?'حماية Plus':'Plus protection'}</Text>
    <Text style={{color:WHITE,fontSize:15,lineHeight:24,marginTop:12,textAlign:rtl?'right':'left'}}>{checking?(rtl?'جاري التحقق من هذا الجهاز…':'Checking this device…'):(rtl?'هذه النسخة غير مفعّلة لهذا الموبايل. ملف APK وحده لا يفتح Plus؛ يجب أن يكون هذا الجهاز موافقًا عليه وأن يملك الحزمة الداخلية المشفرة.':'This Plus build is not activated for this phone. The APK alone cannot unlock Plus; this device must be approved and hold its encrypted internal payload.')}</Text>
-   {!!deviceCode&&<><Text style={{color:MUTED,fontSize:12,marginTop:18,textAlign:rtl?'right':'left'}}>{rtl?'كود الجهاز':'Device code'}</Text><Text selectable style={{color:WHITE,fontSize:18,fontWeight:'900',letterSpacing:.6,textAlign:'center',marginTop:8}}>{deviceCode}</Text></>}
    {!checking&&<Pressable onPress={onRetry} style={{backgroundColor:GOLD,borderRadius:14,paddingVertical:14,alignItems:'center',marginTop:20}}><Text style={{color:NAVY,fontWeight:'900',fontSize:15}}>{rtl?'إعادة فحص التفعيل':'Check activation again'}</Text></Pressable>}
   </View>
  </SafeAreaView>
@@ -384,8 +387,10 @@ export default function AppV3(){
  const prayers=useMemo(()=>calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon,tzOffsetMin:tzOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[civilDate,location.lat,location.lon,tzOffset,rtl]);
  const lunar=useMemo(()=>proposedLunisolarDate(civilDate),[civilDate]);
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
+ const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
+ useEffect(()=>{adhkar.schedule()},[adhkar.morningEnabled,adhkar.eveningEnabled,prayerDates.fajr?.getTime?.(),civilDate.getTime(),location.tz,language]);
 
  const setSelectedTheme=useCallback(async id=>{
   if(!IS_PLUS&&!['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
@@ -484,12 +489,14 @@ export default function AppV3(){
  if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={goBack}/>;
  if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={goBack} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
  if(screen==='advertise')return <AdvertiseScreen rtl={rtl} language={language} country={location.country} onBack={goBack}/>;
- if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} onNavigate={navigate} location={location} onBack={goBack}/>;
+ if(screen==='adhkarMorning')return <AdhkarScreen kind='morning' rtl={rtl} onBack={goBack} onComplete={adhkar.markComplete}/>;
+ if(screen==='adhkarEvening')return <AdhkarScreen kind='evening' rtl={rtl} onBack={goBack} onComplete={adhkar.markComplete}/>;
+ if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} adhkar={adhkar} onNavigate={navigate} location={location} onBack={goBack}/>;
  if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={goBack}/>;
  if(screen==='calendarHijri'||screen==='calendarGregorian')setTimeout(()=>setScreen('home'),0);
 
  return <View style={s.root}>
-  <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate}/>
+  <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate} adhkar={adhkar}/>
   {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate} updateReady={plusUpgradeReady}/>} 
   {!IS_PLUS&&<TrialAdOverlay ad={trialAds.ad} rtl={rtl} onClose={trialAds.dismiss} onOpen={trialAds.open}/>} 
  </View>
