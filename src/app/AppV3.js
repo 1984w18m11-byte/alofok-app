@@ -457,9 +457,11 @@ export default function AppV3(){
  },[checkUpdate,screen]);
  useEffect(()=>{
   if(!adhkar.openedKind)return;
-  navigate(adhkar.openedKind==='morning'?'adhkarMorning':'adhkarEvening');
+  if(adhkar.visibleKind===adhkar.openedKind){
+   navigate(adhkar.openedKind==='morning'?'adhkarMorning':'adhkarEvening');
+  }
   adhkar.clearOpened();
- },[adhkar.openedKind,navigate,adhkar.clearOpened]);
+ },[adhkar.openedKind,adhkar.visibleKind,navigate,adhkar.clearOpened]);
  const goBack=useCallback(()=>{
   setDrawer(false);
   setScreenHistory(history=>{
