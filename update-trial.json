@@ -5,10 +5,10 @@
   "version": "1.0.10",
   "versionCode": 1000110,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "الإصدار 1.0.10: واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي بالكامل عن المستخدم، طلب التفعيل يصل إلى Wissam Digital Admin بصمت عند نسخ وسيلة الدفع، وتظهر آخر 4 أرقام فقط من أرقام التحويل. أذكار الصباح والمساء غير مضافة في هذه النسخة.",
+  "notes_ar": "الإصدار 1.0.10: تثبيت تفعيل Plus المدمج بدون إظهار كود الجهاز للمستخدم، واجهة تحويلات صغيرة، يظهر آخر 4 أرقام فقط، والنسخ يتم بصمت. أذكار الصباح والمساء مؤجلة وغير مضافة في هذا الإصدار.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.10/alofok-trial-1.0.10.apk",
   "mandatory": false,
   "published_at": "2026-09-18",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.10 keeps Plus activation compact, fully hides the device code from customers, silently sends activation requests to Wissam Digital Admin when a payment destination is copied, and shows only the last 4 payment digits. Morning/evening adhkar are not included in this build."
+  "notes_en": "1.0.10 keeps the compact Plus activation flow with the device code hidden, only the last 4 payment digits visible, and silent copy. Morning/evening adhkar are deferred and are not included in this build."
 }
