@@ -9,6 +9,8 @@ import {makeV3Translator,v3IsRtl,v3LocaleTag} from './v3Strings';
 import {HOME_REFERENCE_BACKGROUND,THEME_BY_ID,THEME_CATALOG,automaticThemeId} from './themeCatalog';
 import {useDeviceLocation} from './useDeviceLocation';
 import {useAdhanAudio} from './useAdhanAudio';
+import {useAdhkar} from './useAdhkar';
+import {ADHKAR_CONTENT} from './adhkarData';
 import religiousEvents from '../data/events.json';
 import nationalEvents from '../data/national-events.json';
 import religiousEventsExtra from '../data/religious-events-extra.json';
@@ -17,7 +19,7 @@ import {AuthenticityScreen,CopyrightScreen,PrivacyScreen} from './LegalScreens';
 import {AdvertiseScreen,TrialAdOverlay,useTrialAd} from './TrialAds';
 import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
-import {checkPlusApproval,getDeviceCode,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
+import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
 import {useAdhkar} from './useAdhkar';
 import {adhkarFor} from './adhkarCatalog';
@@ -60,6 +62,11 @@ function utcDateFromMinutes(civilDate,minutes){
  if(minutes==null)return null;
  const d=new Date(Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),0,0,0));
  d.setUTCMinutes(minutes);return d;
+}
+function utcDateForLocalClock(civilDate,hour,minute,timeZone){
+ const guess=new Date(Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),hour,minute,0));
+ const offset=timeZoneOffsetMinutes(guess,timeZone);
+ return new Date(guess.getTime()-offset*60000);
 }
 function utcDateFromLocalClock(civilDate,hour,minute,tzOffsetMinutes){
  const localUtc=Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),hour,minute,0);
@@ -251,6 +258,7 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
      <PrayerStrip times={prayers.formatted} t={t} rtl={rtl}/>
     </View>
+    <AdhkarCard adhkar={adhkar} rtl={rtl}/>
 
     {!!activeAdhkar&&<Pressable onPress={()=>onOpenAdhkar(activeAdhkar)} style={s.adhkarHomeCard}>
      <View style={{flex:1}}>
@@ -336,6 +344,15 @@ function SettingsScreen({t,rtl,adhan,adhkar,onNavigate,location,onBack}){
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('settings')} t={t} rtl={rtl} onBack={onBack}/>
   <View style={s.settingCard}><View style={[s.settingRow,rowDir(rtl)]}><View><Text style={[s.settingTitle,textDir(rtl)]}>{t('notifications')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{t('adhanTitle')}</Text></View><Switch value={adhan.alertsEnabled} onValueChange={adhan.setPrayerAlerts} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhan.alertsEnabled?GOLD:'#E8EDF2'}/></View></View>
+  <View style={s.settingCard}>
+   <View style={[s.settingRow,rowDir(rtl)]}><View style={{flex:1}}><Text style={[s.settingTitle,textDir(rtl)]}>{rtl?'أذكار الصباح':'Morning adhkar'}</Text><Text style={[s.settingHint,textDir(rtl)]}>{rtl?'تظهر بعد الفجر حتى 10:00 صباحًا':'Shown after Fajr until 10:00 AM'}</Text></View><Switch value={adhkar.morningEnabled} onValueChange={adhkar.setMorningEnabled} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhkar.morningEnabled?GOLD:'#E8EDF2'}/></View>
+  </View>
+  <View style={s.settingCard}>
+   <View style={[s.settingRow,rowDir(rtl)]}><View style={{flex:1}}><Text style={[s.settingTitle,textDir(rtl)]}>{rtl?'أذكار المساء':'Evening adhkar'}</Text><Text style={[s.settingHint,textDir(rtl)]}>{rtl?'تظهر من 9:00 مساءً حتى 12:00':'Shown from 9:00 PM until midnight'}</Text></View><Switch value={adhkar.eveningEnabled} onValueChange={adhkar.setEveningEnabled} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhkar.eveningEnabled?GOLD:'#E8EDF2'}/></View>
+  </View>
+  <View style={s.settingCard}>
+   <View style={[s.settingRow,rowDir(rtl)]}><View style={{flex:1}}><Text style={[s.settingTitle,textDir(rtl)]}>{rtl?'تنبيهات الأذكار':'Adhkar notifications'}</Text><Text style={[s.settingHint,textDir(rtl)]}>{rtl?'منبه مستقل لأذكار الصباح والمساء':'Separate reminder for morning and evening adhkar'}</Text></View><Switch value={adhkar.alertsEnabled} onValueChange={adhkar.setAlertsEnabled} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhkar.alertsEnabled?GOLD:'#E8EDF2'}/></View>
+  </View>
   <AdhkarSettings rtl={rtl} adhkar={adhkar}/>
   {[[t('adhanTitle'),'adhan','♪'],[t('themes'),'themes','▧'],[t('languages'),'languages','◎'],[t('location'),'cities','⌖'],[t('about'),'about','ⓘ'],[t('privacy'),'privacy','◇']].map(([label,target,icon])=><Pressable key={target} onPress={()=>onNavigate(target)} style={[s.settingLink,rowDir(rtl)]}><Text style={s.settingIcon}>{icon}</Text><Text style={[s.settingLinkText,textDir(rtl)]}>{label}</Text><Text style={s.settingChevron}>›</Text></Pressable>)}
   <View style={s.settingCard}><Text style={[s.settingTitle,textDir(rtl)]}>{t('location')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{location.label}</Text></View>
@@ -351,7 +368,7 @@ function CitiesScreen({t,rtl,location,onBack}){
 }
 
 
-function PlusLockScreen({rtl,status,deviceCode,onRetry}){
+function PlusLockScreen({rtl,status,onRetry}){
  const checking=status==='checking';
  return <SafeAreaView style={{flex:1,backgroundColor:NAVY,justifyContent:'center',padding:24}}>
   <View style={{backgroundColor:CARD,borderWidth:1,borderColor:'rgba(244,196,93,.55)',borderRadius:22,padding:22}}>
@@ -372,7 +389,6 @@ export default function AppV3(){
  const [hijriDate,setHijriDate]=useState(new Date());
  const [gregDate,setGregDate]=useState(new Date());
  const [plusAccess,setPlusAccess]=useState(IS_PLUS?'checking':'not_required');
- const [plusDeviceCode,setPlusDeviceCode]=useState('');
  const [plusUpgradeReady,setPlusUpgradeReady]=useState(false);
  const rtl=v3IsRtl(language),locale=v3LocaleTag(language);
  const t=useMemo(()=>{
@@ -395,8 +411,6 @@ export default function AppV3(){
   let timer=null;
   const refresh=async()=>{
    try{
-    const code=await getDeviceCode();
-    if(active)setPlusDeviceCode(code);
     if(IS_PLUS){
      if(active)setPlusAccess('checking');
      const result=await unlockPlusForThisDevice();
@@ -514,13 +528,12 @@ export default function AppV3(){
  const retryPlusAccess=useCallback(async()=>{
   setPlusAccess('checking');
   try{
-   const code=await getDeviceCode();setPlusDeviceCode(code);
    const result=await unlockPlusForThisDevice();
    setPlusAccess(result.unlocked?'unlocked':'locked');
   }catch(_){setPlusAccess('locked')}
  },[]);
 
- if(IS_PLUS&&plusAccess!=='unlocked')return <PlusLockScreen rtl={rtl} status={plusAccess} deviceCode={plusDeviceCode} onRetry={retryPlusAccess}/>;
+ if(IS_PLUS&&plusAccess!=='unlocked')return <PlusLockScreen rtl={rtl} status={plusAccess} onRetry={retryPlusAccess}/>;
 
  if(screen==='adhan')return <AdhanScreen t={t} rtl={rtl} adhan={adhan} onBack={goBack}/>;
  if(screen==='adhkarMorning'||screen==='adhkarEvening'){
