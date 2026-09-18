@@ -5,3 +5,4 @@ main-button-current-trial-20260918
 worker-pages-trial-1.0.9-20260918
 trial-1.0.12-site-20260918
 trial-adhkar-1.0.12-site-20260918
+deploy-trial-1.0.12-adhkar-20260918
