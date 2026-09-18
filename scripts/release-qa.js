@@ -19,6 +19,7 @@ const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
 const paymentTransfer=read('src/app/PaymentTransfer.js');
+const adhkarFeature=read('src/app/AdhkarFeature.js');
 const lockedRequirements=read('AL_UFUQ_LOCKED_REQUIREMENTS.md');
 
 assert(entry.includes("import AppV3 from './src/app/AppV3'"),'App.js must use the modular V3 entry');
@@ -31,8 +32,15 @@ assert(lockedRequirements.includes('كود الجهاز لا يظهر للمست
 assert(lockedRequirements.includes('أي إصدار جديد يجب أن يحافظ على كل المتطلبات المقفلة السابقة'),'new releases must preserve prior locked requirements');
 assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
 assert(!paymentTransfer.includes('Alert.alert'),'payment copy must stay silent for the customer');
-assert(!app.includes('AdhkarFeature')&&!app.includes('adhkarMorning')&&!app.includes('adhkarEvening'),'adhkar feature is deferred from Trial 1.0.11');
-assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes('useAdhkar'),'adhkar is intentionally deferred and must not ship in this Trial build');
+assert(app.includes("from './AdhkarFeature'")&&app.includes('AdhkarHomeCard')&&app.includes('AdhkarScreen')&&app.includes('AdhkarSettings')&&app.includes('useAdhkar'),'adhkar feature must be wired into home, reading screen, settings and state');
+assert(app.includes("screen==='adhkarMorning'")&&app.includes("screen==='adhkarEvening'"),'morning and evening adhkar reading routes must exist');
+assert(adhkarFeature.includes("now.getTime()>=fajrDate.getTime()")&&adhkarFeature.includes('localMinutes<600'),'morning adhkar must begin after calculated Fajr and expire at 10:00 AM');
+assert(adhkarFeature.includes('localMinutes>=1260&&localMinutes<1440'),'evening adhkar must begin at 9:00 PM and expire at midnight');
+assert(adhkarFeature.includes('markComplete')&&adhkarFeature.includes("done.morning===today")&&adhkarFeature.includes("done.evening===today"),'completed adhkar must remain hidden for the current period');
+assert(adhkarFeature.includes('MORNING_ADHKAR')&&adhkarFeature.includes('EVENING_ADHKAR'),'morning and evening reading content must be bundled');
+assert(adhkarFeature.includes('morningAlert')&&adhkarFeature.includes('eveningAlert'),'morning and evening reminder controls must be independent');
+assert(adhkarFeature.includes("for(let i=0;i<14;i++)")&&adhkarFeature.includes("alofok-v3-adhkar"),'adhkar local notifications must be scheduled ahead');
+assert(adhkarFeature.includes("Notifications.getLastNotificationResponseAsync")&&adhkarFeature.includes("addNotificationResponseReceivedListener"),'tapping an adhkar notification must reopen the reading flow');
 assert(!paymentTransfer.includes('Alert.alert')&&!paymentTransfer.includes('كود جهازك')&&!paymentTransfer.includes('Device code copied'),'payment copy must stay silent and must never expose the device code to the customer');
 assert(!app.includes("!!deviceCode&&<><Text"),'plus lock screen must not expose device code');
 assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.json');
@@ -43,13 +51,13 @@ assert(Number(String(plus.version).replace(/\./g,''))<=Number(String(version).re
 assert(trial.channel==='trial'&&plus.channel==='plus','Trial and Plus update channels must stay distinct');
 assert(trial.build_variant==='trial'&&plus.build_variant==='paid','manifest build variants must stay distinct');
 assert(trial.package_id==='com.alofok.trial'&&plus.package_id==='com.alofok.trial','Trial and Plus must share the canonical Android package for in-place upgrade');
-assert(trial.versionCode===1000111,'Trial manifest must stay in the Trial versionCode range');
+assert(trial.versionCode===1000112,'Trial manifest must stay in the Trial versionCode range');
 assert(plus.versionCode>=2000000&&plus.versionCode<3000000,'Plus manifest must stay in the Plus versionCode range');
 assert(trial.versionCode<plus.versionCode,'Plus versionCode must stay above Trial so Trial cannot replace Plus');
 assert(trial.cross_channel_allowed===false&&plus.cross_channel_allowed===false,'cross-channel update manifests must stay disabled');
 assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must contain exactly one packageId declaration');
 assert(config.includes("const packageId = 'com.alofok.trial';"),'Trial and Plus must share the canonical package id');
-assert(config.includes('const androidVersionCode = isPaid ? 2000111 : 1000111;'),'variant-specific Android versionCode ranges missing');
+assert(config.includes('const androidVersionCode = isPaid ? 2000112 : 1000112;'),'variant-specific Android versionCode ranges missing');
 assert(config.includes("isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png'"),'Trial and Plus must use their approved full launcher icons');
 assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork inside adaptiveIcon; it causes the icon to render too small');
 
