@@ -23,3 +23,4 @@ redeploy-alaufuq-trial-1.1.2-wissam-digital-main-user-request-20260918
 deploy-alaufuq-trial-1.1.2-final-visible-version-20260918
 deploy-al-site-alaufuq-1.1.2-fix-20260918
 publish-user-tested-alaufuq-1.1.2-to-wissam-digital-main-20260918-2322
+deploy-correct-pages-project-wissam-digital-site-20260918
