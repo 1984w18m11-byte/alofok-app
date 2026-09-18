@@ -70,7 +70,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   {open&&<View style={s.listCard}>
    <View style={s.methodRow}>
     <View style={s.methodText}>
-     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'رقم التحويل':'Transfer number'}</Text>
+     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'حوالة — 16 رقم':'Transfer — 16 digits'}</Text>
      <Text selectable={false} style={s.masked}>{maskedLast4(CARD_NUMBER)}</Text>
     </View>
     <Pressable disabled={!!busy} onPress={()=>copyDestination('money_transfer_16',CARD_NUMBER)} style={[s.copySmall,busy&&s.disabled]}>
@@ -82,7 +82,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
 
    <View style={s.methodRow}>
     <View style={s.methodText}>
-     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'رقم الحساب':'Account number'}</Text>
+     <Text style={[s.methodTitle,dir(rtl)]}>{rtl?'تحويل موبايل — 10 أرقام':'Mobile transfer — 10 digits'}</Text>
      <Text selectable={false} style={s.masked}>{maskedLast4(ACCOUNT_NUMBER)}</Text>
     </View>
     <Pressable disabled={!!busy} onPress={()=>copyDestination('mobile_purchase_10',ACCOUNT_NUMBER)} style={[s.copySmall,busy&&s.disabled]}>
