@@ -187,5 +187,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.8 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.8 --repo 1984w18m11-byte/alofok-app --title "الأفق 1.0.8" --notes "ربط طلبات تفعيل Plus بتطبيق Wissam Digital Admin: طلب تلقائي عند نسخ رقم التحويل، تفعيل/رفض من موبايل الإدارة، ثم تحديث Plus للجهاز الموافق عليه."
+          gh release view v1.0.8 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.8 --repo 1984w18m11-byte/alofok-app --title "الأفق 1.0.8" --notes "إخفاء كود الجهاز عن المستخدم بالكامل؛ يبقى داخليًا ويصل تلقائيًا إلى Wissam Digital Admin عند نسخ رقم التحويل."
           gh release upload v1.0.8 alofok-trial-1.0.8.apk alofok-plus-1.0.8.apk --repo 1984w18m11-byte/alofok-app --clobber
