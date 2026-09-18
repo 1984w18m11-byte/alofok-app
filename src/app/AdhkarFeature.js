@@ -3,6 +3,7 @@ import {Platform,Pressable,ScrollView,StyleSheet,Switch,Text,View} from 'react-n
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
+import {calculatePrayerTimes} from '../engine/prayer';
 
 const NAVY='#06182B';
 const CARD='rgba(17,34,52,0.92)';
@@ -11,11 +12,16 @@ const WHITE='#F7F8FB';
 const GOLD='#F4C45D';
 const MUTED='#B9C4D1';
 
-const MORNING_ENABLED_KEY='alofok_v3_adhkar_morning_enabled';
-const EVENING_ENABLED_KEY='alofok_v3_adhkar_evening_enabled';
-const ALERTS_KEY='alofok_v3_adhkar_alerts_enabled';
-const MORNING_DONE_KEY='alofok_v3_adhkar_morning_done';
-const EVENING_DONE_KEY='alofok_v3_adhkar_evening_done';
+const SETTINGS_KEY='alofok_v3_adhkar_settings_v2';
+const DONE_KEY='alofok_v3_adhkar_done_v2';
+const IDS_KEY='alofok_v3_adhkar_notification_ids_v2';
+
+const DEFAULT_SETTINGS={
+ morningEnabled:true,
+ eveningEnabled:true,
+ morningAlert:false,
+ eveningAlert:false
+};
 
 export const MORNING_ADHKAR=[
  {title:'آية الكرسي',text:'اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ.',count:'مرة واحدة'},
@@ -41,149 +47,169 @@ function zoneParts(date,timeZone){
  try{
   const parts=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
   const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
-  return {year:+v.year,month:+v.month,day:+v.day,hour:+v.hour,minute:+v.minute};
+  return {year:+v.year,month:+v.month,day:+v.day,hour:+v.hour,minute:+v.minute,key:`${v.year}-${v.month}-${v.day}`};
  }catch(_){
-  return {year:date.getFullYear(),month:date.getMonth()+1,day:date.getDate(),hour:date.getHours(),minute:date.getMinutes()};
+  const y=date.getFullYear(),m=date.getMonth()+1,d=date.getDate();
+  return {year:y,month:m,day:d,hour:date.getHours(),minute:date.getMinutes(),key:`${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`};
  }
 }
-function dateKey(date,timeZone){
- const p=zoneParts(date,timeZone);
- return `${p.year}-${String(p.month).padStart(2,'0')}-${String(p.day).padStart(2,'0')}`;
+function offsetMinutes(date,timeZone){
+ try{
+  const parts=new Intl.DateTimeFormat('en-US',{timeZone,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hourCycle:'h23'}).formatToParts(date);
+  const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+  const represented=Date.UTC(+v.year,+v.month-1,+v.day,+v.hour,+v.minute,+v.second);
+  return Math.round((represented-date.getTime())/60000);
+ }catch(_){return -date.getTimezoneOffset()}
 }
-function isMorningWindow(now,fajrDate,timeZone){
- if(!(fajrDate instanceof Date)||Number.isNaN(fajrDate.getTime()))return false;
- const p=zoneParts(now,timeZone);
- return now.getTime()>=fajrDate.getTime()&&p.hour<10;
+function dateKey(date,timeZone){return zoneParts(date,timeZone).key}
+function addLocalDays(parts,days){
+ const d=new Date(Date.UTC(parts.year,parts.month-1,parts.day+days,12));
+ return {year:d.getUTCFullYear(),month:d.getUTCMonth()+1,day:d.getUTCDate(),key:`${d.getUTCFullYear()}-${String(d.getUTCMonth()+1).padStart(2,'0')}-${String(d.getUTCDate()).padStart(2,'0')}`};
 }
-function isEveningWindow(now,timeZone){
- const p=zoneParts(now,timeZone);
- return p.hour>=21&&p.hour<24;
+function localClockInstant(parts,timeZone,hour,minute=0){
+ const wall=Date.UTC(parts.year,parts.month-1,parts.day,hour,minute,0);
+ let guess=new Date(wall);
+ let off=offsetMinutes(guess,timeZone);
+ let actual=new Date(wall-off*60000);
+ const off2=offsetMinutes(actual,timeZone);
+ if(off2!==off)actual=new Date(wall-off2*60000);
+ return actual;
 }
-async function ensurePermission(){
- const current=await Notifications.getPermissionsAsync();
- if(current.status==='granted')return true;
- const next=await Notifications.requestPermissionsAsync();
- return next.status==='granted';
+function fajrInstant(parts,timeZone,lat,lon){
+ const civil=new Date(Date.UTC(parts.year,parts.month-1,parts.day,12));
+ const off=offsetMinutes(civil,timeZone);
+ const result=calculatePrayerTimes({date:civil,lat,lon,tzOffsetMin:off,method:'MWL',clockLanguage:'en'});
+ const minutes=result?.rawMinutesUtc?.fajr;
+ if(minutes==null)return null;
+ return new Date(Date.UTC(parts.year,parts.month-1,parts.day,0,0,0)+minutes*60000);
 }
+async function readJson(key,fallback){
+ try{
+  const raw=await AsyncStorage.getItem(key);
+  return raw?{...fallback,...JSON.parse(raw)}:fallback;
+ }catch(_){return fallback}
+}
+async function writeJson(key,value){try{await AsyncStorage.setItem(key,JSON.stringify(value))}catch(_){}}
 
-export function useAdhkar({now=new Date(),fajrDate=null,timeZone='Asia/Baghdad',language='ar'}={}){
- const [morningEnabled,setMorningEnabledState]=useState(true);
- const [eveningEnabled,setEveningEnabledState]=useState(true);
- const [alertsEnabled,setAlertsEnabledState]=useState(false);
- const [morningDone,setMorningDone]=useState('');
- const [eveningDone,setEveningDone]=useState('');
- const [openKind,setOpenKind]=useState(null);
+export function useAdhkar({now=new Date(),fajrDate=null,timeZone='Asia/Baghdad',lat=33.3152,lon=44.3661,language='ar'}={}){
+ const [settings,setSettings]=useState(DEFAULT_SETTINGS);
+ const [done,setDone]=useState({});
  const [ready,setReady]=useState(false);
  const [openedKind,setOpenedKind]=useState(null);
+
+ useEffect(()=>{
+  let active=true;
+  Promise.all([readJson(SETTINGS_KEY,DEFAULT_SETTINGS),readJson(DONE_KEY,{})]).then(([s,d])=>{
+   if(!active)return;
+   setSettings(s);setDone(d);setReady(true);
+  });
+  return()=>{active=false};
+ },[]);
+
+ useEffect(()=>{
+  const sub=Notifications.addNotificationResponseReceivedListener(response=>{
+   const data=response?.notification?.request?.content?.data;
+   if(data?.kind==='alofok-v3-adhkar'&&(data?.period==='morning'||data?.period==='evening'))setOpenedKind(data.period);
+  });
+  return()=>sub.remove();
+ },[]);
+
  const today=dateKey(now,timeZone);
+ const p=zoneParts(now,timeZone);
+ const localMinutes=p.hour*60+p.minute;
+ const morningDone=done.morning===today;
+ const eveningDone=done.evening===today;
 
- useEffect(()=>{
-  Promise.all([
-   AsyncStorage.getItem(MORNING_ENABLED_KEY),
-   AsyncStorage.getItem(EVENING_ENABLED_KEY),
-   AsyncStorage.getItem(ALERTS_KEY),
-   AsyncStorage.getItem(MORNING_DONE_KEY),
-   AsyncStorage.getItem(EVENING_DONE_KEY)
-  ]).then(([m,e,a,md,ed])=>{
-   setMorningEnabledState(m!=='0');
-   setEveningEnabledState(e!=='0');
-   setAlertsEnabledState(a==='1');
-   setMorningDone(md||'');
-   setEveningDone(ed||'');
-   setReady(true);
-  }).catch(()=>setReady(true));
- },[]);
+ const visibleKind=useMemo(()=>{
+  if(!ready)return null;
+  if(settings.morningEnabled&&!morningDone&&fajrDate instanceof Date&&!Number.isNaN(fajrDate.getTime())&&now.getTime()>=fajrDate.getTime()&&localMinutes<600)return 'morning';
+  if(settings.eveningEnabled&&!eveningDone&&localMinutes>=1260&&localMinutes<1440)return 'evening';
+  return null;
+ },[ready,settings.morningEnabled,settings.eveningEnabled,morningDone,eveningDone,fajrDate?.getTime?.(),now.getTime(),localMinutes]);
 
- useEffect(()=>{
-  let mounted=true;
-  const openFromResponse=response=>{
-   const data=response?.notification?.request?.content?.data||{};
-   if(data.kind==='alofok-v3-adhkar'&&(data.period==='morning'||data.period==='evening')&&mounted)setOpenKind(data.period);
-  };
-  const sub=Notifications.addNotificationResponseReceivedListener(openFromResponse);
-  Notifications.getLastNotificationResponseAsync().then(openFromResponse).catch(()=>{});
-  return()=>{mounted=false;sub.remove()};
- },[]);
-
- const setMorningEnabled=useCallback(async enabled=>{
-  setMorningEnabledState(Boolean(enabled));
-  try{await AsyncStorage.setItem(MORNING_ENABLED_KEY,enabled?'1':'0')}catch(e){}
-  return true;
- },[]);
- const setEveningEnabled=useCallback(async enabled=>{
-  setEveningEnabledState(Boolean(enabled));
-  try{await AsyncStorage.setItem(EVENING_ENABLED_KEY,enabled?'1':'0')}catch(e){}
-  return true;
- },[]);
- const setAlertsEnabled=useCallback(async enabled=>{
-  if(enabled&&!(await ensurePermission()))return false;
-  setAlertsEnabledState(Boolean(enabled));
-  try{await AsyncStorage.setItem(ALERTS_KEY,enabled?'1':'0')}catch(e){}
-  return true;
+ const updateSetting=useCallback(async(key,value)=>{
+  setSettings(prev=>{
+   const next={...prev,[key]:value};
+   writeJson(SETTINGS_KEY,next);
+   return next;
+  });
  },[]);
 
  const markComplete=useCallback(async kind=>{
   const key=dateKey(new Date(),timeZone);
-  if(kind==='morning'){
-   setMorningDone(key);await AsyncStorage.setItem(MORNING_DONE_KEY,key).catch(()=>{});
-  }else if(kind==='evening'){
-   setEveningDone(key);await AsyncStorage.setItem(EVENING_DONE_KEY,key).catch(()=>{});
-  }
+  setDone(prev=>{
+   const next={...prev,[kind]:key};
+   writeJson(DONE_KEY,next);
+   return next;
+  });
  },[timeZone]);
 
- const visibleKind=useMemo(()=>{
-  if(!ready)return null;
-  if(morningEnabled&&morningDone!==today&&isMorningWindow(now,fajrDate,timeZone))return 'morning';
-  if(eveningEnabled&&eveningDone!==today&&isEveningWindow(now,timeZone))return 'evening';
-  return null;
- },[ready,morningEnabled,eveningEnabled,morningDone,eveningDone,today,now,fajrDate,timeZone]);
+ const clearOpened=useCallback(()=>setOpenedKind(null),[]);
 
- const schedule=useCallback(async({morningDate,nextMorningDate,eveningDate,nextEveningDate}={})=>{
+ const schedule=useCallback(async()=>{
   try{
-   const scheduled=await Notifications.getAllScheduledNotificationsAsync();
-   for(const n of scheduled){
-    if(n.content?.data?.kind==='alofok-v3-adhkar')await Notifications.cancelScheduledNotificationAsync(n.identifier);
+   const previous=await readJson(IDS_KEY,{ids:[]});
+   await Promise.all((previous.ids||[]).map(id=>Notifications.cancelScheduledNotificationAsync(id).catch(()=>{})));
+   const wantsMorning=settings.morningEnabled&&settings.morningAlert;
+   const wantsEvening=settings.eveningEnabled&&settings.eveningAlert;
+   if(!wantsMorning&&!wantsEvening){await writeJson(IDS_KEY,{ids:[]});return}
+
+   const currentPerm=await Notifications.getPermissionsAsync();
+   let granted=currentPerm.status==='granted'||currentPerm.granted===true;
+   if(!granted){
+    const requested=await Notifications.requestPermissionsAsync();
+    granted=requested.status==='granted'||requested.granted===true;
    }
-   if(!alertsEnabled)return;
-   const permission=await Notifications.getPermissionsAsync();
-   if(permission.status!=='granted')return;
+   if(!granted)return;
 
    const channelId='alofok-v3-adhkar';
    if(Platform.OS==='android'){
-    await Notifications.setNotificationChannelAsync(channelId,{name:'Al-Ufuq — أذكار',importance:Notifications.AndroidImportance.HIGH,vibrationPattern:[0,180,120,180],sound:'default'});
+    await Notifications.setNotificationChannelAsync(channelId,{name:'Al-Ufuq — أذكار',importance:Notifications.AndroidImportance.DEFAULT,vibrationPattern:[0,180,120,180],sound:'default'});
    }
-   const current=Date.now();
-   const arabic=String(language||'').toLowerCase().startsWith('ar');
-   const jobs=[];
-   if(morningEnabled){
-    const d=morningDate instanceof Date&&morningDate.getTime()>current?morningDate:nextMorningDate;
-    if(d instanceof Date&&d.getTime()>current)jobs.push({period:'morning',date:new Date(d.getTime()+60000)});
-   }
-   if(eveningEnabled){
-    const d=eveningDate instanceof Date&&eveningDate.getTime()>current?eveningDate:nextEveningDate;
-    if(d instanceof Date&&d.getTime()>current)jobs.push({period:'evening',date:d});
-   }
-   for(const job of jobs){
-    const morning=job.period==='morning';
-    await Notifications.scheduleNotificationAsync({
-     content:{
-      title:arabic?(morning?'أذكار الصباح':'أذكار المساء'):(morning?'Morning adhkar':'Evening adhkar'),
-      body:arabic?(morning?'حان وقت أذكار الصباح. متاحة حتى الساعة 10:00 صباحًا.':'حان وقت أذكار المساء. متاحة حتى الساعة 12:00 ليلًا.'):(morning?'Morning adhkar are ready until 10:00 AM.':'Evening adhkar are ready until midnight.'),
-      sound:'default',
-      data:{kind:'alofok-v3-adhkar',period:job.period}
-     },
-     trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:job.date,channelId:Platform.OS==='android'?channelId:undefined}
-    });
-   }
-  }catch(_){}
- },[alertsEnabled,morningEnabled,eveningEnabled,language]);
 
- const clearOpenKind=useCallback(()=>setOpenKind(null),[]);
+   const ids=[];
+   const base=zoneParts(new Date(),timeZone);
+   for(let i=0;i<14;i++){
+    const day=addLocalDays(base,i);
+    if(wantsMorning){
+     const fajr=fajrInstant(day,timeZone,lat,lon);
+     if(fajr){
+      const triggerDate=new Date(fajr.getTime()+60000);
+      if(triggerDate.getTime()>Date.now()+5000){
+       const id=await Notifications.scheduleNotificationAsync({
+        content:{title:language.startsWith('ar')?'أذكار الصباح':'Morning adhkar',body:language.startsWith('ar')?'حان وقت أذكار الصباح. افتح الأفق للقراءة.':'It is time for morning adhkar. Open Al-Ufuq to read.',sound:'default',data:{kind:'alofok-v3-adhkar',period:'morning'}},
+        trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:triggerDate,channelId:Platform.OS==='android'?channelId:undefined}
+       });
+       ids.push(id);
+      }
+     }
+    }
+    if(wantsEvening){
+     const triggerDate=localClockInstant(day,timeZone,21,0);
+     if(triggerDate.getTime()>Date.now()+5000){
+      const id=await Notifications.scheduleNotificationAsync({
+       content:{title:language.startsWith('ar')?'أذكار المساء':'Evening adhkar',body:language.startsWith('ar')?'حان وقت أذكار المساء. افتح الأفق للقراءة.':'It is time for evening adhkar. Open Al-Ufuq to read.',sound:'default',data:{kind:'alofok-v3-adhkar',period:'evening'}},
+       trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:triggerDate,channelId:Platform.OS==='android'?channelId:undefined}
+      });
+      ids.push(id);
+     }
+    }
+   }
+   await writeJson(IDS_KEY,{ids});
+  }catch(_){}
+ },[settings.morningEnabled,settings.eveningEnabled,settings.morningAlert,settings.eveningAlert,timeZone,lat,lon,language,today]);
 
  return useMemo(()=>({
-  morningEnabled,eveningEnabled,alertsEnabled,visibleKind,openKind,
-  setMorningEnabled,setEveningEnabled,setAlertsEnabled,markComplete,schedule,clearOpenKind
- }),[morningEnabled,eveningEnabled,alertsEnabled,visibleKind,openKind,setMorningEnabled,setEveningEnabled,setAlertsEnabled,markComplete,schedule,clearOpenKind]);
+  morningEnabled:settings.morningEnabled,
+  eveningEnabled:settings.eveningEnabled,
+  morningAlert:settings.morningAlert,
+  eveningAlert:settings.eveningAlert,
+  setMorningEnabled:value=>updateSetting('morningEnabled',value),
+  setEveningEnabled:value=>updateSetting('eveningEnabled',value),
+  setMorningAlert:value=>updateSetting('morningAlert',value),
+  setEveningAlert:value=>updateSetting('eveningAlert',value),
+  visibleKind,markComplete,schedule,openedKind,clearOpened
+ }),[settings,visibleKind,markComplete,schedule,openedKind,clearOpened,updateSetting]);
 }
 
 export function AdhkarHomeCard({kind,rtl,onPress}){
@@ -198,12 +224,17 @@ export function AdhkarHomeCard({kind,rtl,onPress}){
  </Pressable>
 }
 
+function SettingRow({rtl,title,hint,value,onChange}){
+ return <View style={s.settingCard}><View style={[s.settingRow,{flexDirection:rtl?'row-reverse':'row'}]}><View style={{flex:1}}><Text style={[s.settingTitle,{textAlign:rtl?'right':'left'}]}>{title}</Text><Text style={[s.settingHint,{textAlign:rtl?'right':'left'}]}>{hint}</Text></View><Switch value={value} onValueChange={onChange} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={value?GOLD:'#E8EDF2'}/></View></View>
+}
+
 export function AdhkarSettings({rtl,adhkar}){
- const row=(title,hint,value,onValueChange)=><View style={s.settingCard}><View style={[s.settingRow,{flexDirection:rtl?'row-reverse':'row'}]}><View style={{flex:1}}><Text style={[s.settingTitle,{textAlign:rtl?'right':'left'}]}>{title}</Text><Text style={[s.settingHint,{textAlign:rtl?'right':'left'}]}>{hint}</Text></View><Switch value={value} onValueChange={onValueChange} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={value?GOLD:'#E8EDF2'}/></View></View>;
  return <View style={s.settingsWrap}>
-  {row(rtl?'أذكار الصباح':'Morning adhkar',rtl?'بعد الفجر حتى 10:00 صباحًا':'After Fajr until 10:00 AM',adhkar.morningEnabled,adhkar.setMorningEnabled)}
-  {row(rtl?'أذكار المساء':'Evening adhkar',rtl?'من 9:00 مساءً حتى 12:00 ليلًا':'9:00 PM until midnight',adhkar.eveningEnabled,adhkar.setEveningEnabled)}
-  {row(rtl?'تنبيه الأذكار':'Adhkar reminders',rtl?'تنبيه مستقل لأذكار الصباح والمساء':'Separate morning and evening reminder',adhkar.alertsEnabled,adhkar.setAlertsEnabled)}
+  <Text style={[s.settingsHeading,{textAlign:rtl?'right':'left'}]}>{rtl?'أذكار الصباح والمساء':'Morning & evening adhkar'}</Text>
+  <SettingRow rtl={rtl} title={rtl?'أذكار الصباح':'Morning adhkar'} hint={rtl?'بعد الفجر حتى 10:00 صباحًا':'After Fajr until 10:00 AM'} value={adhkar.morningEnabled} onChange={adhkar.setMorningEnabled}/>
+  <SettingRow rtl={rtl} title={rtl?'تنبيه أذكار الصباح':'Morning reminder'} hint={rtl?'إشعار بعد أذان الفجر':'Notification after Fajr'} value={adhkar.morningAlert} onChange={adhkar.setMorningAlert}/>
+  <SettingRow rtl={rtl} title={rtl?'أذكار المساء':'Evening adhkar'} hint={rtl?'من 9:00 مساءً حتى 12:00 منتصف الليل':'9:00 PM until midnight'} value={adhkar.eveningEnabled} onChange={adhkar.setEveningEnabled}/>
+  <SettingRow rtl={rtl} title={rtl?'تنبيه أذكار المساء':'Evening reminder'} hint={rtl?'إشعار الساعة 9:00 مساءً':'Notification at 9:00 PM'} value={adhkar.eveningAlert} onChange={adhkar.setEveningAlert}/>
  </View>
 }
 
@@ -230,7 +261,7 @@ const s=StyleSheet.create({
  header:{height:60,alignItems:'center',justifyContent:'space-between'},back:{width:44,height:44,borderRadius:14,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(4,20,37,.58)',borderWidth:1,borderColor:LINE},backText:{color:WHITE,fontSize:30},title:{color:WHITE,fontSize:24,fontWeight:'900',flex:1,marginHorizontal:12},
  homeCard:{marginTop:12,minHeight:76,borderRadius:18,borderWidth:1,borderColor:'rgba(244,196,93,.55)',backgroundColor:'rgba(7,23,41,.88)',paddingHorizontal:14,flexDirection:'row',alignItems:'center',gap:12},
  homeIcon:{width:42,height:42,borderRadius:21,backgroundColor:'rgba(244,196,93,.14)',borderWidth:1,borderColor:GOLD,alignItems:'center',justifyContent:'center'},homeIconText:{color:GOLD,fontSize:22},homeTitle:{color:GOLD,fontSize:17,fontWeight:'900'},homeHint:{color:MUTED,fontSize:11,marginTop:4},chevron:{color:WHITE,fontSize:26},
- settingsWrap:{gap:10,marginTop:10},settingCard:{backgroundColor:CARD,borderRadius:16,borderWidth:1,borderColor:LINE,padding:14},settingRow:{alignItems:'center',gap:12},settingTitle:{color:WHITE,fontSize:15,fontWeight:'800'},settingHint:{color:MUTED,fontSize:11,marginTop:4},
+ settingsWrap:{gap:10,marginTop:10},settingsHeading:{color:GOLD,fontSize:17,fontWeight:'900',marginTop:4},settingCard:{backgroundColor:CARD,borderRadius:16,borderWidth:1,borderColor:LINE,padding:14},settingRow:{alignItems:'center',gap:12},settingTitle:{color:WHITE,fontSize:15,fontWeight:'800'},settingHint:{color:MUTED,fontSize:11,marginTop:4},
  dhikrCard:{backgroundColor:CARD,borderRadius:18,borderWidth:1,borderColor:LINE,padding:15,marginTop:12},dhikrTop:{alignItems:'center',justifyContent:'space-between',gap:8},dhikrTitle:{color:GOLD,fontSize:16,fontWeight:'900',flex:1},count:{color:MUTED,fontSize:11},dhikrText:{color:WHITE,fontSize:18,lineHeight:34,textAlign:'right',writingDirection:'rtl',marginTop:12},
  doneButton:{backgroundColor:GOLD,borderRadius:15,paddingVertical:15,alignItems:'center',marginTop:18},doneText:{color:NAVY,fontSize:15,fontWeight:'900'}
 });
