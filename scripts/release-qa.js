@@ -33,7 +33,13 @@ assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'supp
 assert(!paymentTransfer.includes('Alert.alert'),'payment copy must stay silent for the customer');
 assert(!app.includes('AdhkarFeature')&&!app.includes('adhkarMorning')&&!app.includes('adhkarEvening'),'adhkar feature is deferred from Trial 1.0.10');
 assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes('useAdhkar'),'adhkar is intentionally deferred and must not ship in this Trial build');
-assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes("screen==='adhkarMorning'")&&!app.includes("screen==='adhkarEvening'"),'current Trial build must not include adhkar');
+assert(app.includes("from './AdhkarFeature'")&&app.includes('AdhkarHomeCard')&&app.includes('AdhkarScreen')&&app.includes('AdhkarSettings')&&app.includes('const adhkar=useAdhkar'),'adhkar feature must be wired into home, reading screen, settings and state');
+assert(app.includes('adhkar.schedule()'),'adhkar reminder scheduling must be active in AppV3');
+assert(adhkarFeature.includes("now.getTime()>=fajrDate.getTime()")&&adhkarFeature.includes('localMinutes<600'),'morning adhkar must begin after calculated Fajr and expire at 10:00 AM');
+assert(adhkarFeature.includes('localMinutes>=1260&&localMinutes<1440'),'evening adhkar must begin at 9:00 PM and end at midnight');
+assert(adhkarFeature.includes("DONE_KEY")&&adhkarFeature.includes('markComplete')&&adhkarFeature.includes("done.morning===today")&&adhkarFeature.includes("done.evening===today"),'completed adhkar must stay hidden for the rest of the window');
+assert(adhkarFeature.includes('MORNING_ADHKAR')&&adhkarFeature.includes('EVENING_ADHKAR'),'morning and evening reading content must be bundled');
+assert(adhkarFeature.includes('morningAlert')&&adhkarFeature.includes('eveningAlert')&&adhkarFeature.includes('setMorningAlert')&&adhkarFeature.includes('setEveningAlert'),'independent morning and evening adhkar reminders must exist');
 assert(!paymentTransfer.includes('Alert.alert')&&!paymentTransfer.includes('كود جهازك')&&!paymentTransfer.includes('Device code copied'),'payment copy must stay silent and must never expose the device code to the customer');
 assert(!app.includes("!!deviceCode&&<><Text"),'plus lock screen must not expose device code');
 assert(!app.includes("from './AdhkarFeature'")&&!app.includes('useAdhkar(')&&!app.includes('AdhkarHomeCard'),'adhkar must stay disabled in this Trial build');
