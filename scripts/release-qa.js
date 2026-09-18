@@ -32,7 +32,7 @@ assert(lockedRequirements.includes('أي إصدار جديد يجب أن يحا�
 assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
 assert(!paymentTransfer.includes('Alert.alert'),'payment copy must stay silent for the customer');
 assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes('useAdhkar'),'adhkar is intentionally deferred and must not ship in this Trial build');
-assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes("screen==='adhkarMorning'"),'current Trial build must not include adhkar');
+assert(!app.includes('AdhkarFeature')&&!app.includes('AdhkarHomeCard')&&!app.includes("screen==='adhkarMorning'")&&!app.includes("screen==='adhkarEvening'"),'current Trial build must not include adhkar');
 assert(!paymentTransfer.includes('Alert.alert')&&!paymentTransfer.includes('كود جهازك')&&!paymentTransfer.includes('Device code copied'),'payment copy must stay silent and must never expose the device code to the customer');
 assert(!app.includes("!!deviceCode&&<><Text"),'plus lock screen must not expose device code');
 assert(!app.includes("from './AdhkarFeature'")&&!app.includes('useAdhkar(')&&!app.includes('AdhkarHomeCard'),'adhkar must stay disabled in this Trial build');
