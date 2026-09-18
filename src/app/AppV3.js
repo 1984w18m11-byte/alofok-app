@@ -457,6 +457,11 @@ export default function AppV3(){
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
  },[checkUpdate,screen]);
+ useEffect(()=>{
+  if(!adhkar.openedKind)return;
+  navigate(adhkar.openedKind==='morning'?'adhkarMorning':'adhkarEvening');
+  adhkar.clearOpened();
+ },[adhkar.openedKind,navigate,adhkar.clearOpened]);
  const goBack=useCallback(()=>{
   setDrawer(false);
   setScreenHistory(history=>{
@@ -497,12 +502,14 @@ export default function AppV3(){
  if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={goBack}/>;
  if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={goBack} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
  if(screen==='advertise')return <AdvertiseScreen rtl={rtl} language={language} country={location.country} onBack={goBack}/>;
- if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} onNavigate={navigate} location={location} onBack={goBack}/>;
+ if(screen==='adhkarMorning')return <AdhkarScreen kind='morning' rtl={rtl} onBack={goBack} onComplete={async()=>{await adhkar.markComplete('morning');goBack()}}/>;
+ if(screen==='adhkarEvening')return <AdhkarScreen kind='evening' rtl={rtl} onBack={goBack} onComplete={async()=>{await adhkar.markComplete('evening');goBack()}}/>;
+ if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} adhkar={adhkar} onNavigate={navigate} location={location} onBack={goBack}/>;
  if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={goBack}/>;
  if(screen==='calendarHijri'||screen==='calendarGregorian')setTimeout(()=>setScreen('home'),0);
 
  return <View style={s.root}>
-  <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate}/>
+  <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate} adhkar={adhkar}/>
   {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate} updateReady={plusUpgradeReady}/>} 
   {!IS_PLUS&&<TrialAdOverlay ad={trialAds.ad} rtl={rtl} onClose={trialAds.dismiss} onOpen={trialAds.open}/>} 
  </View>
