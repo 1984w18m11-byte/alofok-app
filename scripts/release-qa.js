@@ -18,8 +18,11 @@ const registry=JSON.parse(read('src/data/adhan-registry.json'));
 const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
+const paymentTransfer=read('src/app/PaymentTransfer.js');
 
 assert(entry.includes("import AppV3 from './src/app/AppV3'"),'App.js must use the modular V3 entry');
+assert(!paymentTransfer.includes('نسخ كود الجهاز')&&!paymentTransfer.includes('Copy device code'),'device code must stay hidden from customers');
+assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
 assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.json');
 assert(pkg.version===version,'package.json version mismatch');
 assert(lock.version===version&&lock.packages?.['']?.version===version,'package-lock version mismatch');
