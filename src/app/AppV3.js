@@ -234,7 +234,9 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
     <View style={s.quoteBlock}><Text style={s.quoteText}>{rtl?'﴿ وَمَا كَانَ رَبُّكَ نَسِيًّا ﴾':'“Your Lord is never forgetful.”'}</Text><Text style={s.quoteSub}>{rtl?'كل يوم هو فرصة لقرب جديد':'Every day is a new opportunity'}</Text></View>
 
 
-    {!!adhkar?.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}\n\n    <View style={s.glassPanel}>
+    {!!adhkar?.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}
+
+    <View style={s.glassPanel}>
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
      <PrayerStrip times={prayers.formatted} t={t} rtl={rtl}/>
     </View>
@@ -396,6 +398,7 @@ export default function AppV3(){
  const lunar=useMemo(()=>proposedLunisolarDate(civilDate),[civilDate]);
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
+ const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,lat:location.lat,lon:location.lon,language:locale});
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
 
  const setSelectedTheme=useCallback(async id=>{
