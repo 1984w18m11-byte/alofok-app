@@ -9,7 +9,6 @@ import {makeV3Translator,v3IsRtl,v3LocaleTag} from './v3Strings';
 import {HOME_REFERENCE_BACKGROUND,THEME_BY_ID,THEME_CATALOG,automaticThemeId} from './themeCatalog';
 import {useDeviceLocation} from './useDeviceLocation';
 import {useAdhanAudio} from './useAdhanAudio';
-import {useAdhkar} from './useAdhkar';
 import {ADHKAR_CONTENT} from './adhkarData';
 import religiousEvents from '../data/events.json';
 import nationalEvents from '../data/national-events.json';
@@ -32,7 +31,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.0.4';
+const VERSION='1.0.10';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -374,7 +373,6 @@ export default function AppV3(){
  },[language]);
  const location=useDeviceLocation({rtl});
  const adhan=useAdhanAudio();
- const adhkar=useAdhkar();
  const trialAds=useTrialAd({enabled:!IS_PLUS,country:location.country,language});
 
  useEffect(()=>{AsyncStorage.getItem(LANGUAGE_KEY).then(x=>{if(x&&LOCALES.some(([id])=>id===x))setLanguage(x)}).catch(()=>{});AsyncStorage.getItem(THEME_KEY).then(x=>{if(x&&(x==='auto'||THEME_BY_ID[x]))setSelectedThemeState(x)}).catch(()=>{})},[]);
@@ -409,7 +407,6 @@ export default function AppV3(){
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
  const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
- const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
  useEffect(()=>{adhkar.schedule()},[adhkar.schedule]);
 
