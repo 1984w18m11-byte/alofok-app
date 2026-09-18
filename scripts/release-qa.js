@@ -39,7 +39,7 @@ assert(!app.includes("!!deviceCode&&<><Text"),'plus lock screen must not expose 
 assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.json');
 assert(pkg.version===version,'package.json version mismatch');
 assert(lock.version===version&&lock.packages?.['']?.version===version,'package-lock version mismatch');
-assert(trial.version===version,'Trial update manifest version mismatch');
+assert(process.env.EXPO_PUBLIC_APP_VARIANT==='paid' ? trial.version==='1.1.2' : trial.version===version,'Trial update manifest version mismatch');
 assert(Number(String(plus.version).replace(/\./g,''))<=Number(String(version).replace(/\./g,'')),'Plus update manifest cannot point to a future unbuilt version');
 assert(trial.channel==='trial'&&plus.channel==='plus','Trial and Plus update channels must stay distinct');
 assert(trial.build_variant==='trial'&&plus.build_variant==='paid','manifest build variants must stay distinct');
@@ -50,7 +50,7 @@ assert(trial.versionCode<plus.versionCode,'Plus versionCode must stay above Tria
 assert(trial.cross_channel_allowed===false&&plus.cross_channel_allowed===false,'cross-channel update manifests must stay disabled');
 assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must contain exactly one packageId declaration');
 assert(config.includes("const packageId = 'com.alofok.trial';"),'Trial and Plus must share the canonical package id');
-assert(config.includes('const androidVersionCode = isPaid ? 2001102 : 1001102;'),'variant-specific Android versionCode ranges missing');
+assert(config.includes('const androidVersionCode = isPaid ? 2001103 : 1001102;'),'variant-specific Android versionCode ranges missing');
 assert(config.includes("isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png'"),'Trial and Plus must use their approved full launcher icons');
 assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork inside adaptiveIcon; it causes the icon to render too small');
 
