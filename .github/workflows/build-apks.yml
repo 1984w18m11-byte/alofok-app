@@ -185,5 +185,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.11 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.11 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.11" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي عن المستخدم، طلب التفعيل يرسل للإدارة بصمت عند نسخ وسيلة الدفع، وتظهر آخر 4 أرقام فقط."
+          gh release view v1.0.11 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.11 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.11" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. تثبيت واجهة تفعيل Plus المدمجة، إخفاء كود الجهاز عن المستخدم، نسخ التحويل بصمت، وإظهار آخر 4 أرقام فقط."
           gh release upload v1.0.11 alofok-trial-1.0.11.apk --repo 1984w18m11-byte/alofok-app --clobber
