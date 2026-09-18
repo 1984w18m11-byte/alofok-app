@@ -84,8 +84,18 @@ export function useAdhkar({now,fajrDate,timeZone='Asia/Baghdad',language='ar'}){
  const [morningDone,setMorningDone]=useState('');
  const [eveningDone,setEveningDone]=useState('');
  const [alertsEnabled,setAlertsEnabledState]=useState(false);
+ const [openedKind,setOpenedKind]=useState(null);
  const [ready,setReady]=useState(false);
  const today=dateKey(now,timeZone);
+
+ useEffect(()=>{
+  const sub=Notifications.addNotificationResponseReceivedListener(response=>{
+   const kind=response?.notification?.request?.content?.data?.kind;
+   const period=response?.notification?.request?.content?.data?.period;
+   if(kind==='alofok-v3-adhkar'&&(period==='morning'||period==='evening'))setOpenedKind(period);
+  });
+  return()=>sub.remove();
+ },[]);
 
  useEffect(()=>{
   Promise.all([
@@ -120,6 +130,8 @@ export function useAdhkar({now,fajrDate,timeZone='Asia/Baghdad',language='ar'}){
   await AsyncStorage.setItem(ALERTS_ENABLED_KEY,enabled?'1':'0').catch(()=>{});
   return true;
  },[]);
+
+ const clearOpened=useCallback(()=>setOpenedKind(null),[]);
 
  const markComplete=useCallback(async kind=>{
   const key=dateKey(new Date(),timeZone);
@@ -168,7 +180,7 @@ export function useAdhkar({now,fajrDate,timeZone='Asia/Baghdad',language='ar'}){
   }catch(_){}
  },[alertsEnabled,morningEnabled,eveningEnabled,morningDone,eveningDone,fajrDate,timeZone,language,today]);
 
- return useMemo(()=>({morningEnabled,eveningEnabled,alertsEnabled,setMorningEnabled,setEveningEnabled,setAlertsEnabled,visibleKind,markComplete,schedule}),[morningEnabled,eveningEnabled,alertsEnabled,setMorningEnabled,setEveningEnabled,setAlertsEnabled,visibleKind,markComplete,schedule]);
+ return useMemo(()=>({morningEnabled,eveningEnabled,alertsEnabled,setMorningEnabled,setEveningEnabled,setAlertsEnabled,visibleKind,markComplete,schedule,openedKind,clearOpened}),[morningEnabled,eveningEnabled,alertsEnabled,setMorningEnabled,setEveningEnabled,setAlertsEnabled,visibleKind,markComplete,schedule,openedKind,clearOpened]);
 }
 
 export function AdhkarHomeCard({kind,rtl,onPress}){
