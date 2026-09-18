@@ -20,9 +20,6 @@ import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
 import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
-import {AdhkarScreen} from './AdhkarScreen';
-import {AdhkarHomeCard,AdhkarSettings} from './AdhkarWidgets';
-import {useAdhkar} from './useAdhkar';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -400,6 +397,7 @@ export default function AppV3(){
  const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,lat:location.lat,lon:location.lon,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
+ useEffect(()=>{adhkar.schedule()},[adhkar.schedule]);
 
  const setSelectedTheme=useCallback(async id=>{
   if(!IS_PLUS&&!['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
@@ -502,8 +500,8 @@ export default function AppV3(){
  if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={goBack}/>;
  if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={goBack} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
  if(screen==='advertise')return <AdvertiseScreen rtl={rtl} language={language} country={location.country} onBack={goBack}/>;
- if(screen==='adhkarMorning')return <AdhkarScreen kind='morning' rtl={rtl} onBack={goBack} onComplete={async()=>{await adhkar.markComplete('morning');goBack()}}/>;
- if(screen==='adhkarEvening')return <AdhkarScreen kind='evening' rtl={rtl} onBack={goBack} onComplete={async()=>{await adhkar.markComplete('evening');goBack()}}/>;
+ if(screen==='adhkarMorning')return <AdhkarScreen kind='morning' rtl={rtl} onBack={goBack} onComplete={adhkar.markComplete}/>;
+ if(screen==='adhkarEvening')return <AdhkarScreen kind='evening' rtl={rtl} onBack={goBack} onComplete={adhkar.markComplete}/>;
  if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} adhkar={adhkar} onNavigate={navigate} location={location} onBack={goBack}/>;
  if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={goBack}/>;
  if(screen==='calendarHijri'||screen==='calendarGregorian')setTimeout(()=>setScreen('home'),0);
