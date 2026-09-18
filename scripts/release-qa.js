@@ -19,6 +19,7 @@ const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
 const paymentTransfer=read('src/app/PaymentTransfer.js');
+const adhkarFeature=read('src/app/AdhkarFeature.js');
 const lockedRequirements=read('AL_UFUQ_LOCKED_REQUIREMENTS.md');
 
 assert(entry.includes("import AppV3 from './src/app/AppV3'"),'App.js must use the modular V3 entry');
@@ -30,6 +31,12 @@ assert(!paymentTransfer.includes('style={s.number}>{ACCOUNT_NUMBER}</Text>'),'fu
 assert(lockedRequirements.includes('كود الجهاز لا يظهر للمستخدم نهائيًا'),'locked requirements file must preserve hidden device-code rule');
 assert(lockedRequirements.includes('أي إصدار جديد يجب أن يحافظ على كل المتطلبات المقفلة السابقة'),'new releases must preserve prior locked requirements');
 assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
+assert(app.includes("AdhkarHomeCard")&&app.includes("AdhkarScreen")&&app.includes("AdhkarSettings")&&app.includes("useAdhkar"),'adhkar feature must be wired into home, reading screen, settings and state');
+assert(adhkarFeature.includes("isMorningWindow(now,fajrDate,timeZone)"),'morning adhkar must begin after calculated Fajr');
+assert(adhkarFeature.includes("p.hour<10"),'morning adhkar must expire at 10:00 AM');
+assert(adhkarFeature.includes("p.hour>=21&&p.hour<24"),'evening adhkar must run from 9:00 PM to midnight');
+assert(adhkarFeature.includes("MORNING_DONE_KEY")&&adhkarFeature.includes("EVENING_DONE_KEY"),'completed adhkar must stay hidden for the rest of the window');
+assert(adhkarFeature.includes("alofok-v3-adhkar"),'adhkar local notification scheduling must exist');
 assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.json');
 assert(pkg.version===version,'package.json version mismatch');
 assert(lock.version===version&&lock.packages?.['']?.version===version,'package-lock version mismatch');
@@ -37,13 +44,13 @@ assert(trial.version===version&&plus.version===version,'update manifests version
 assert(trial.channel==='trial'&&plus.channel==='plus','Trial and Plus update channels must stay distinct');
 assert(trial.build_variant==='trial'&&plus.build_variant==='paid','manifest build variants must stay distinct');
 assert(trial.package_id==='com.alofok.trial'&&plus.package_id==='com.alofok.trial','Trial and Plus must share the canonical Android package for in-place upgrade');
-assert(trial.versionCode===1000108,'Trial manifest must stay in the Trial versionCode range');
-assert(plus.versionCode===2000108,'Plus manifest must stay in the Plus versionCode range');
+assert(trial.versionCode===1000109,'Trial manifest must stay in the Trial versionCode range');
+assert(plus.versionCode===2000109,'Plus manifest must stay in the Plus versionCode range');
 assert(trial.versionCode<plus.versionCode,'Plus versionCode must stay above Trial so Trial cannot replace Plus');
 assert(trial.cross_channel_allowed===false&&plus.cross_channel_allowed===false,'cross-channel update manifests must stay disabled');
 assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must contain exactly one packageId declaration');
 assert(config.includes("const packageId = 'com.alofok.trial';"),'Trial and Plus must share the canonical package id');
-assert(config.includes('const androidVersionCode = isPaid ? 2000108 : 1000108;'),'variant-specific Android versionCode ranges missing');
+assert(config.includes('const androidVersionCode = isPaid ? 2000109 : 1000109;'),'variant-specific Android versionCode ranges missing');
 assert(config.includes("isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png'"),'Trial and Plus must use their approved full launcher icons');
 assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork inside adaptiveIcon; it causes the icon to render too small');
 
