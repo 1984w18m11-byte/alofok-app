@@ -236,7 +236,7 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
 
     {!!adhkar.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}
 
-    <View style={s.glassPanel}>
+    {!!adhkar?.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}\n\n    <View style={s.glassPanel}>
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
      <PrayerStrip times={prayers.formatted} t={t} rtl={rtl}/>
     </View>
