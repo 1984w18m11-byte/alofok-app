@@ -11,3 +11,4 @@ trial-only-1.0.9-adhkar-20260918
 trial-1.0.10-no-adhkar-test-20260918
 build-trial-1.0.10-adhkar-live-20260918
 trial-1.0.10-no-adhkar-final-20260918
+trial-1.0.10-no-adhkar-final-20260918
