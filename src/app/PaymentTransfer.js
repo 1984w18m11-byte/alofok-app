@@ -1,5 +1,5 @@
 import React,{useEffect,useState} from 'react';
-import {Alert,Pressable,StyleSheet,Text,View} from 'react-native';
+import {Pressable,StyleSheet,Text,View} from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import {getDeviceCode} from '../services/deviceSecurity';
 
@@ -47,10 +47,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
 
  const copyDestination=async(kind,value)=>{
   const clean=digits(value);
-  if(!clean){
-   Alert.alert(rtl?'بيانات التحويل غير مكتملة':'Transfer data incomplete',rtl?'رقم التحويل غير متوفر في هذا الإصدار.':'The transfer number is unavailable in this build.');
-   return;
-  }
+  if(!clean)return;
   setBusy(kind);
   const copiedAt=new Date().toISOString();
   await Clipboard.setStringAsync(clean);
