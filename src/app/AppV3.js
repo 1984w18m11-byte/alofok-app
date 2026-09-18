@@ -9,7 +9,6 @@ import {makeV3Translator,v3IsRtl,v3LocaleTag} from './v3Strings';
 import {HOME_REFERENCE_BACKGROUND,THEME_BY_ID,THEME_CATALOG,automaticThemeId} from './themeCatalog';
 import {useDeviceLocation} from './useDeviceLocation';
 import {useAdhanAudio} from './useAdhanAudio';
-import {ADHKAR_CONTENT} from './adhkarData';
 import religiousEvents from '../data/events.json';
 import nationalEvents from '../data/national-events.json';
 import religiousEventsExtra from '../data/religious-events-extra.json';
@@ -31,7 +30,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.0.10';
+const VERSION='1.0.9';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -238,7 +237,6 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
      <PrayerStrip times={prayers.formatted} t={t} rtl={rtl}/>
     </View>
-    <AdhkarCard adhkar={adhkar} rtl={rtl}/>
 
 
     <SectionCard title={t('hijriCalendar')} rtl={rtl}>
@@ -317,15 +315,6 @@ function SettingsScreen({t,rtl,adhan,adhkar,onNavigate,location,onBack}){
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('settings')} t={t} rtl={rtl} onBack={onBack}/>
   <View style={s.settingCard}><View style={[s.settingRow,rowDir(rtl)]}><View><Text style={[s.settingTitle,textDir(rtl)]}>{t('notifications')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{t('adhanTitle')}</Text></View><Switch value={adhan.alertsEnabled} onValueChange={adhan.setPrayerAlerts} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhan.alertsEnabled?GOLD:'#E8EDF2'}/></View></View>
-  <View style={s.settingCard}>
-   <View style={[s.settingRow,rowDir(rtl)]}><View style={{flex:1}}><Text style={[s.settingTitle,textDir(rtl)]}>{rtl?'أذكار الصباح':'Morning adhkar'}</Text><Text style={[s.settingHint,textDir(rtl)]}>{rtl?'تظهر بعد الفجر حتى 10:00 صباحًا':'Shown after Fajr until 10:00 AM'}</Text></View><Switch value={adhkar.morningEnabled} onValueChange={adhkar.setMorningEnabled} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhkar.morningEnabled?GOLD:'#E8EDF2'}/></View>
-  </View>
-  <View style={s.settingCard}>
-   <View style={[s.settingRow,rowDir(rtl)]}><View style={{flex:1}}><Text style={[s.settingTitle,textDir(rtl)]}>{rtl?'أذكار المساء':'Evening adhkar'}</Text><Text style={[s.settingHint,textDir(rtl)]}>{rtl?'تظهر من 9:00 مساءً حتى 12:00':'Shown from 9:00 PM until midnight'}</Text></View><Switch value={adhkar.eveningEnabled} onValueChange={adhkar.setEveningEnabled} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhkar.eveningEnabled?GOLD:'#E8EDF2'}/></View>
-  </View>
-  <View style={s.settingCard}>
-   <View style={[s.settingRow,rowDir(rtl)]}><View style={{flex:1}}><Text style={[s.settingTitle,textDir(rtl)]}>{rtl?'تنبيهات الأذكار':'Adhkar notifications'}</Text><Text style={[s.settingHint,textDir(rtl)]}>{rtl?'منبه مستقل لأذكار الصباح والمساء':'Separate reminder for morning and evening adhkar'}</Text></View><Switch value={adhkar.alertsEnabled} onValueChange={adhkar.setAlertsEnabled} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhkar.alertsEnabled?GOLD:'#E8EDF2'}/></View>
-  </View>
   <AdhkarSettings rtl={rtl} adhkar={adhkar}/>
   {[[t('adhanTitle'),'adhan','♪'],[t('themes'),'themes','▧'],[t('languages'),'languages','◎'],[t('location'),'cities','⌖'],[t('about'),'about','ⓘ'],[t('privacy'),'privacy','◇']].map(([label,target,icon])=><Pressable key={target} onPress={()=>onNavigate(target)} style={[s.settingLink,rowDir(rtl)]}><Text style={s.settingIcon}>{icon}</Text><Text style={[s.settingLinkText,textDir(rtl)]}>{label}</Text><Text style={s.settingChevron}>›</Text></Pressable>)}
   <View style={s.settingCard}><Text style={[s.settingTitle,textDir(rtl)]}>{t('location')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{location.label}</Text></View>
