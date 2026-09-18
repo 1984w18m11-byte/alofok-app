@@ -7,3 +7,4 @@ trial-adhkar-1.0.9-20260918
 trial-adhkar-1.0.9-build-20260918
 build-trial-1.0.9-adhkar-final-20260918
 trial-1.0.10-adhkar-20260918
+trial-only-1.0.9-adhkar-20260918
