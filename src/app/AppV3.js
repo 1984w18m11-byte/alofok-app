@@ -19,6 +19,9 @@ import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
+import {AdhkarScreen} from './AdhkarScreen';
+import {AdhkarHomeCard,AdhkarSettings} from './AdhkarWidgets';
+import {useAdhkar} from './useAdhkar';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -29,7 +32,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.1.0';
+const VERSION='1.1.1';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -203,7 +206,7 @@ function Drawer({t,rtl,onClose,onNavigate,onUpdate,updateReady=false}){
  </View>
 }
 
-function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavigate,themeSource,hijriDate,setHijriDate,gregDate,setGregDate}){
+function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavigate,themeSource,hijriDate,setHijriDate,gregDate,setGregDate,adhkar}){
  const gregDay=new Intl.DateTimeFormat(locale,{day:'numeric'}).format(now);
  const gregMonth=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(now);
  const week=new Intl.DateTimeFormat(locale,{weekday:'long'}).format(now);
@@ -231,7 +234,7 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
     <View style={s.quoteBlock}><Text style={s.quoteText}>{rtl?'﴿ وَمَا كَانَ رَبُّكَ نَسِيًّا ﴾':'“Your Lord is never forgetful.”'}</Text><Text style={s.quoteSub}>{rtl?'كل يوم هو فرصة لقرب جديد':'Every day is a new opportunity'}</Text></View>
 
 
-    <View style={s.glassPanel}>
+    {!!adhkar?.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}\n\n    <View style={s.glassPanel}>
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
      <PrayerStrip times={prayers.formatted} t={t} rtl={rtl}/>
     </View>
