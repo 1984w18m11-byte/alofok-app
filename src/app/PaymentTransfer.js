@@ -53,9 +53,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   await Clipboard.setStringAsync(clean);
   await postCopyEvent(kind,copiedAt);
   setBusy('');
-  if(purpose!=='plus'){
-   Alert.alert(rtl?'تم النسخ':'Copied',rtl?'تم نسخ الرقم.':'Number copied.');
-  }
+
  };
 
  return <View style={s.wrap}>
