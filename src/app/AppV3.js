@@ -405,8 +405,8 @@ export default function AppV3(){
  const prayers=useMemo(()=>calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon,tzOffsetMin:tzOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[civilDate,location.lat,location.lon,tzOffset,rtl]);
  const lunar=useMemo(()=>proposedLunisolarDate(civilDate),[civilDate]);
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
- const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
+ const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
  useEffect(()=>{adhkar.schedule()},[adhkar.schedule]);
 
@@ -466,6 +466,11 @@ export default function AppV3(){
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
  },[checkUpdate,screen]);
+ useEffect(()=>{
+  if(!adhkar.openedKind)return;
+  navigate(adhkar.openedKind==='evening'?'adhkarEvening':'adhkarMorning');
+  adhkar.clearOpened();
+ },[adhkar.openedKind,navigate,adhkar.clearOpened]);
  const goBack=useCallback(()=>{
   setDrawer(false);
   setScreenHistory(history=>{
@@ -497,10 +502,6 @@ export default function AppV3(){
  if(IS_PLUS&&plusAccess!=='unlocked')return <PlusLockScreen rtl={rtl} status={plusAccess} onRetry={retryPlusAccess}/>;
 
  if(screen==='adhan')return <AdhanScreen t={t} rtl={rtl} adhan={adhan} onBack={goBack}/>;
- if(screen==='adhkarMorning'||screen==='adhkarEvening'){
-  const kind=screen==='adhkarEvening'?'evening':'morning';
-  return <AdhkarScreen kind={kind} rtl={rtl} onBack={goBack} onDone={async()=>{await adhkar.markDone(kind,adhkarDateKey);goBack()}}/>;
- }
  if(screen==='themes')return <ThemesScreen t={t} rtl={rtl} isPlus={IS_PLUS} selectedTheme={selectedTheme} setSelectedTheme={setSelectedTheme} onBack={goBack}/>;
  if(screen==='plus')return IS_PLUS?<SupportScreen rtl={rtl} edition='plus' onBack={goBack}/>:<PlusScreen t={t} rtl={rtl} isPlus={IS_PLUS} country={location.country} onBack={goBack}/>;
  if(screen==='support')return <SupportScreen rtl={rtl} edition={IS_PLUS?'plus':'trial'} onBack={goBack}/>;
