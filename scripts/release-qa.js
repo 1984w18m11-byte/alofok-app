@@ -19,7 +19,6 @@ const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
 const paymentTransfer=read('src/app/PaymentTransfer.js');
-const adhkarFeature=read('src/app/AdhkarFeature.js');
 const lockedRequirements=read('AL_UFUQ_LOCKED_REQUIREMENTS.md');
 
 assert(entry.includes("import AppV3 from './src/app/AppV3'"),'App.js must use the modular V3 entry');
@@ -31,6 +30,7 @@ assert(!paymentTransfer.includes('style={s.number}>{ACCOUNT_NUMBER}</Text>'),'fu
 assert(lockedRequirements.includes('كود الجهاز لا يظهر للمستخدم نهائيًا'),'locked requirements file must preserve hidden device-code rule');
 assert(lockedRequirements.includes('أي إصدار جديد يجب أن يحافظ على كل المتطلبات المقفلة السابقة'),'new releases must preserve prior locked requirements');
 assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
+assert(!app.includes("from './AdhkarFeature'")&&!app.includes('AdhkarHomeCard')&&!app.includes("screen==='adhkarMorning'")&&!app.includes("screen==='adhkarEvening'"),'adhkar must stay out of the current Trial build until explicitly re-enabled');
 assert(!paymentTransfer.includes('Alert.alert')&&!paymentTransfer.includes('كود جهازك')&&!paymentTransfer.includes('Device code copied'),'payment copy must stay silent and must never expose the device code to the customer');
 assert(!app.includes("!!deviceCode&&<><Text"),'plus lock screen must not expose device code');
 assert(app.includes("from './AdhkarFeature'")&&app.includes('AdhkarHomeCard')&&app.includes('AdhkarScreen')&&app.includes('AdhkarSettings')&&app.includes('useAdhkar'),'adhkar feature must be wired into home, reading screen, settings and state');
