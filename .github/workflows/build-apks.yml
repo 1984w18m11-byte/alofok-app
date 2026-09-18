@@ -168,22 +168,22 @@ jobs:
           retention-days: 14
 
   publish-release:
-    name: Publish Al-Ufuq Trial 1.0.9 APK
+    name: Publish Al-Ufuq Trial 1.0.10 APK
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
       - name: Download Trial APK artifact
         uses: actions/download-artifact@v4
         with:
-          name: alofok-trial-1.0.9
+          name: alofok-trial-1.0.10
           path: artifacts/trial
 
       - name: Prepare Trial APK filename
-        run: cp artifacts/trial/app-release.apk alofok-trial-1.0.9.apk
+        run: cp artifacts/trial/app-release.apk alofok-trial-1.0.10.apk
 
       - name: Publish Trial GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.9 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.9 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.9" --notes "أذكار الصباح بعد الفجر حتى 10 صباحًا، وأذكار المساء من 9 مساءً حتى منتصف الليل، مع صفحة قراءة وإخفاء بعد الإتمام وتنبيه اختياري من الإعدادات. كما تتضمن واجهة تفعيل Plus المدمجة مع إخفاء كود الجهاز عن المستخدم."
-          gh release upload v1.0.9 alofok-trial-1.0.9.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release view v1.0.10 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.10 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.10" --notes "تثبيت واجهة تفعيل Plus المدمجة، إخفاء كود الجهاز بالكامل، نسخ أرقام التحويل بصمت، وإرسال طلب التفعيل تلقائيًا إلى Wissam Digital Admin. أذكار الصباح والمساء مؤجلة وغير مضمّنة في هذه النسخة."
+          gh release upload v1.0.10 alofok-trial-1.0.10.apk --repo 1984w18m11-byte/alofok-app --clobber
