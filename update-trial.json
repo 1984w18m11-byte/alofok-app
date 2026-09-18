@@ -5,10 +5,10 @@
   "version": "1.0.12",
   "versionCode": 1000112,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "الإصدار 1.0.12: أذكار الصباح تظهر بعد أذان الفجر وتبقى حتى 10:00 صباحًا أو إتمام القراءة، وأذكار المساء من 9:00 مساءً حتى منتصف الليل أو إتمام القراءة، مع صفحة قراءة وخيارات تشغيل وتنبيه مستقلة في الإعدادات. ويحافظ الإصدار على واجهة تفعيل Plus المدمجة، إخفاء كود الجهاز، إظهار آخر 4 أرقام فقط، والنسخ الصامت مع إرسال طلب التفعيل إلى Wissam Digital Admin.",
+  "notes_ar": "الإصدار 1.0.12: إضافة أذكار الصباح بعد أذان الفجر حتى 10:00 صباحًا، وأذكار المساء من 9:00 مساءً حتى منتصف الليل، مع صفحة قراءة وإخفاء بعد الإتمام وتنبيهات مستقلة من الإعدادات. كما يحافظ على تفعيل Plus المدمج: كود الجهاز مخفي، أرقام التحويل مختصرة بآخر 4 أرقام، والنسخ صامت مع إرسال طلب التفعيل إلى Wissam Digital Admin.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.12/alofok-trial-1.0.12.apk",
   "mandatory": false,
   "published_at": "2026-09-18",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.12 adds timed morning adhkar after Fajr until 10:00 AM and evening adhkar from 9:00 PM until midnight, with reading/completion hiding and separate enable/reminder settings, while preserving the compact silent hidden-code Plus activation flow."
+  "notes_en": "1.0.12 adds morning adhkar after Fajr until 10:00 AM and evening adhkar from 9:00 PM until midnight, with reading/completion hiding and independent reminders, while preserving the compact hidden-code Plus activation flow."
 }
