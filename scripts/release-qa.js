@@ -19,8 +19,7 @@ const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
 const paymentTransfer=read('src/app/PaymentTransfer.js');
-const adhkarFeature=read('src/app/useAdhkar.js');
-const adhkarCatalog=read('src/app/adhkarCatalog.js');
+const adhkarFeature=read('src/app/AdhkarFeature.js');
 const lockedRequirements=read('AL_UFUQ_LOCKED_REQUIREMENTS.md');
 
 assert(entry.includes("import AppV3 from './src/app/AppV3'"),'App.js must use the modular V3 entry');
@@ -33,12 +32,12 @@ assert(lockedRequirements.includes('كود الجهاز لا يظهر للمست
 assert(lockedRequirements.includes('أي إصدار جديد يجب أن يحافظ على كل المتطلبات المقفلة السابقة'),'new releases must preserve prior locked requirements');
 assert(paymentTransfer.includes("purpose!=='plus'||!notificationEndpoint"),'support copy must not create Plus admin requests');
 assert(!paymentTransfer.includes('Alert.alert'),'payment copy must stay silent for the customer');
-assert(app.includes('adhkarHomeCard')&&app.includes('AdhkarScreen')&&app.includes('SettingsScreen')&&app.includes('useAdhkar'),'adhkar feature must be wired into home, reading screen, settings and state');
-assert(app.includes("now.getTime()>=prayerDates.fajr.getTime()")&&app.includes('localMinutes<600'),'morning adhkar must begin after calculated Fajr and expire at 10:00 AM');
-assert(app.includes('localMinutes>=1260'),'evening adhkar must begin at 9:00 PM and end at midnight');
-assert(adhkarFeature.includes("MORNING_DONE_KEY")&&adhkarFeature.includes("EVENING_DONE_KEY"),'completed adhkar must stay hidden for the rest of the window');
-assert(adhkarCatalog.includes('MORNING_ADHKAR')&&adhkarCatalog.includes('EVENING_ADHKAR'),'morning and evening reading content must be bundled');
-assert(adhkarFeature.includes("alofok-adhkar"),'adhkar local notification scheduling must exist');
+assert(app.includes("from './AdhkarFeature'")&&app.includes('AdhkarHomeCard')&&app.includes('AdhkarScreen')&&app.includes('AdhkarSettings')&&app.includes('useAdhkar'),'adhkar feature must be wired into home, reading screen, settings and state');
+assert(adhkarFeature.includes("now.getTime()>=fajrDate.getTime()")&&adhkarFeature.includes('p.hour<10'),'morning adhkar must begin after calculated Fajr and expire at 10:00 AM');
+assert(adhkarFeature.includes('p.hour>=21&&p.hour<24'),'evening adhkar must begin at 9:00 PM and end at midnight');
+assert(adhkarFeature.includes("MORNING_DONE_KEY")&&adhkarFeature.includes("EVENING_DONE_KEY")&&adhkarFeature.includes('markComplete'),'completed adhkar must stay hidden for the rest of the window');
+assert(adhkarFeature.includes('MORNING_ADHKAR')&&adhkarFeature.includes('EVENING_ADHKAR'),'morning and evening reading content must be bundled');
+assert(adhkarFeature.includes("alofok-v3-adhkar")&&adhkarFeature.includes('setAlertsEnabled'),'adhkar notification scheduling and settings must exist');
 assert(app.includes(`const VERSION='${version}';`),'V3 version must match app.json');
 assert(pkg.version===version,'package.json version mismatch');
 assert(lock.version===version&&lock.packages?.['']?.version===version,'package-lock version mismatch');
