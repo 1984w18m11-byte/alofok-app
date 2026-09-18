@@ -394,10 +394,24 @@ export default function AppV3(){
  const prayers=useMemo(()=>calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon,tzOffsetMin:tzOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[civilDate,location.lat,location.lon,tzOffset,rtl]);
  const lunar=useMemo(()=>proposedLunisolarDate(civilDate),[civilDate]);
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
- const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
+ const tomorrowCivil=useMemo(()=>{const d=new Date(civilDate);d.setUTCDate(d.getUTCDate()+1);return d},[civilDate.getTime()]);
+ const tomorrowProbe=useMemo(()=>new Date(now.getTime()+86400000),[civilDate.getTime()]);
+ const tomorrowOffset=useMemo(()=>timeZoneOffsetMinutes(tomorrowProbe,location.tz),[tomorrowProbe.getTime(),location.tz]);
+ const tomorrowPrayers=useMemo(()=>calculatePrayerTimes({date:tomorrowCivil,lat:location.lat,lon:location.lon,tzOffsetMin:tomorrowOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[tomorrowCivil.getTime(),location.lat,location.lon,tomorrowOffset,rtl]);
+ const tomorrowFajr=useMemo(()=>utcDateFromMinutes(tomorrowCivil,tomorrowPrayers.rawMinutesUtc.fajr),[tomorrowCivil.getTime(),tomorrowPrayers]);
+ const eveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(civilDate,21,0,tzOffset),[civilDate.getTime(),tzOffset]);
+ const nextEveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(tomorrowCivil,21,0,tomorrowOffset),[tomorrowCivil.getTime(),tomorrowOffset]);
  const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
+ const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
- useEffect(()=>{adhkar.schedule()},[adhkar.schedule]);
+ useEffect(()=>{
+  adhkar.schedule({
+   morningDate:prayerDates.fajr,
+   nextMorningDate:tomorrowFajr,
+   eveningDate:eveningAdhkarDate,
+   nextEveningDate:nextEveningAdhkarDate
+  });
+ },[adhkar.alertsEnabled,adhkar.morningEnabled,adhkar.eveningEnabled,prayerDates.fajr?.getTime?.(),tomorrowFajr?.getTime?.(),eveningAdhkarDate.getTime(),nextEveningAdhkarDate.getTime(),language]);
 
  const setSelectedTheme=useCallback(async id=>{
   if(!IS_PLUS&&!['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
@@ -455,6 +469,13 @@ export default function AppV3(){
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
  },[checkUpdate,screen]);
+ useEffect(()=>{
+  if(!adhkar.openKind)return;
+  setDrawer(false);
+  setScreenHistory(history=>screen==='home'?history:[...history,screen]);
+  setScreen(adhkar.openKind==='morning'?'adhkarMorning':'adhkarEvening');
+  adhkar.clearOpenKind();
+ },[adhkar.openKind]);
  useEffect(()=>{
   if(!adhkar.openedKind)return;
   navigate(adhkar.openedKind==='evening'?'adhkarEvening':'adhkarMorning');
