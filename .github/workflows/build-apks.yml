@@ -1,4 +1,4 @@
-name: Build Al-Ufuq Trial 1.0.11
+name: Build Al-Ufuq Trial 1.0.11 No-Adhkar Test
 
 on:
   workflow_dispatch:
@@ -168,7 +168,7 @@ jobs:
           retention-days: 14
 
   publish-release:
-    name: Publish Al-Ufuq Trial 1.0.11
+    name: Publish Al-Ufuq Trial 1.0.11 No-Adhkar Test
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
@@ -179,11 +179,11 @@ jobs:
           path: artifacts/trial
 
       - name: Prepare Trial APK filename
-        run: cp artifacts/trial/app-release.apk alofok-trial-1.0.11.apk
+        run: cp artifacts/trial/app-release.apk alofok-trial-1.0.11-no-adhkar.apk
 
       - name: Publish Trial GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.11 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.11 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.11" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي عن المستخدم، نسخ وسيلة الدفع بصمت، والطلب يصل إلى Wissam Digital Admin مع إظهار آخر 4 أرقام فقط."
-          gh release upload v1.0.11 alofok-trial-1.0.11.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release view v1.0.11-no-adhkar-test --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.11-no-adhkar-test --target "$GITHUB_SHA" --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.11 — اختبار بدون أذكار" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي عن المستخدم، نسخ وسيلة الدفع بصمت، والطلب يصل إلى Wissam Digital Admin مع إظهار آخر 4 أرقام فقط."
+          gh release upload v1.0.11-no-adhkar-test alofok-trial-1.0.11-no-adhkar.apk --repo 1984w18m11-byte/alofok-app --clobber
