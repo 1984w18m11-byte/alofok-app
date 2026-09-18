@@ -21,8 +21,6 @@ import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
-import {useAdhkar} from './useAdhkar';
-import {adhkarFor} from './adhkarCatalog';
 import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
 
 const GOLD='#F4C45D';
@@ -71,23 +69,6 @@ function utcDateForLocalClock(civilDate,hour,minute,timeZone){
 function utcDateFromLocalClock(civilDate,hour,minute,tzOffsetMinutes){
  const localUtc=Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),hour,minute,0);
  return new Date(localUtc-(tzOffsetMinutes||0)*60000);
-}
-function localDateKey(date,timeZone){
- try{
-  const parts=new Intl.DateTimeFormat('en-CA',{timeZone,year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(date);
-  const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
-  return `${v.year}-${v.month}-${v.day}`;
- }catch(_){return `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,'0')}-${String(date.getDate()).padStart(2,'0')}`}
-}
-function localClockMinutes(date,timeZone){
- try{
-  const parts=new Intl.DateTimeFormat('en-US',{timeZone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
-  const v=Object.fromEntries(parts.map(p=>[p.type,p.value]));
-  return Number(v.hour)*60+Number(v.minute);
- }catch(_){return date.getHours()*60+date.getMinutes()}
-}
-function localDateAtClock(civilDate,hour,minute,tzOffsetMinutes){
- return new Date(Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),hour,minute,0)-tzOffsetMinutes*60000);
 }
 function isNewer(remote,current){
  const a=String(remote||'').split('.').map(Number),b=String(current||'').split('.').map(Number);
@@ -260,13 +241,6 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
     </View>
     <AdhkarCard adhkar={adhkar} rtl={rtl}/>
 
-    {!!activeAdhkar&&<Pressable onPress={()=>onOpenAdhkar(activeAdhkar)} style={s.adhkarHomeCard}>
-     <View style={{flex:1}}>
-      <Text style={[s.adhkarHomeTitle,textDir(rtl)]}>{activeAdhkar==='morning'?(rtl?'أذكار الصباح':'Morning adhkar'):(rtl?'أذكار المساء':'Evening adhkar')}</Text>
-      <Text style={[s.adhkarHomeHint,textDir(rtl)]}>{rtl?'اضغط للقراءة':'Tap to read'}</Text>
-     </View>
-     <Text style={s.adhkarHomeArrow}>{rtl?'‹':'›'}</Text>
-    </Pressable>}
 
     <SectionCard title={t('hijriCalendar')} rtl={rtl}>
      <HijriGrid date={hijriDate} currentDate={now} locale={locale} t={t} rtl={rtl} onPrevious={()=>setHijriDate(d=>addLunisolarMonths(d,-1))} onNext={()=>setHijriDate(d=>addLunisolarMonths(d,1))} onToday={()=>setHijriDate(new Date())}/>
@@ -435,19 +409,9 @@ export default function AppV3(){
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
  const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
- const adhkarDateKey=useMemo(()=>localDateKey(now,location.tz),[now,location.tz]);
- const localMinutes=useMemo(()=>localClockMinutes(now,location.tz),[now,location.tz]);
- const eveningAdhkarDate=useMemo(()=>localDateAtClock(civilDate,21,0,tzOffset),[civilDate,tzOffset]);
- const activeAdhkar=useMemo(()=>{
-  const morningVisible=adhkar.morningEnabled&&!adhkar.isDone('morning',adhkarDateKey)&&prayerDates.fajr instanceof Date&&now.getTime()>=prayerDates.fajr.getTime()&&localMinutes<600;
-  if(morningVisible)return 'morning';
-  const eveningVisible=adhkar.eveningEnabled&&!adhkar.isDone('evening',adhkarDateKey)&&localMinutes>=1260;
-  if(eveningVisible)return 'evening';
-  return null;
- },[adhkar.morningEnabled,adhkar.eveningEnabled,adhkarDateKey,adhkar.isDone,prayerDates.fajr,now,localMinutes]);
+ const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,language:locale});
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
- useEffect(()=>{adhkar.schedule({morningDate:prayerDates.fajr,eveningDate:eveningAdhkarDate,language:locale})},[adhkar.morningEnabled,adhkar.eveningEnabled,adhkar.morningAlert,adhkar.eveningAlert,civilDate.getTime(),location.lat,location.lon,language]);
- useEffect(()=>{adhkar.schedule()},[adhkar.morningEnabled,adhkar.eveningEnabled,prayerDates.fajr?.getTime?.(),civilDate.getTime(),location.tz,language]);
+ useEffect(()=>{adhkar.schedule()},[adhkar.schedule]);
 
  const setSelectedTheme=useCallback(async id=>{
   if(!IS_PLUS&&!['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)){setScreenHistory(history=>[...history,'themes']);setScreen('plus');return}
