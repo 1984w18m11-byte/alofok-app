@@ -185,5 +185,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.11 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.11 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.11" --notes "نسخة الأفق التجريبية 1.0.11 للاختبار بدون أذكار حاليًا، مع تثبيت واجهة تفعيل Plus المدمجة وإخفاء كود الجهاز ونسخ التحويل بصمت وإرسال طلب التفعيل إلى Wissam Digital Admin."
+          gh release view v1.0.11 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.11 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.11" --notes "أذكار الصباح بعد الفجر حتى 10 صباحًا، وأذكار المساء من 9 مساءً حتى منتصف الليل، مع القراءة والإخفاء بعد الإتمام وخيارات التشغيل والمنبّه في الإعدادات. مع الحفاظ على تفعيل Plus المدمج وكود الجهاز المخفي والنسخ الصامت."
           gh release upload v1.0.11 alofok-trial-1.0.11.apk --repo 1984w18m11-byte/alofok-app --clobber
