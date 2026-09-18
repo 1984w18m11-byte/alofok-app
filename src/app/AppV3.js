@@ -19,6 +19,9 @@ import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
+import {AdhkarScreen} from './AdhkarScreen';
+import {AdhkarHomeCard,AdhkarSettings} from './AdhkarWidgets';
+import {useAdhkar} from './useAdhkar';
 import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
 
 const GOLD='#F4C45D';
