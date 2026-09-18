@@ -5,10 +5,10 @@
   "version": "1.0.9",
   "versionCode": 1000109,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "الإصدار 1.0.9: تثبيت متطلبات التفعيل السابقة ومنع رجوع الأخطاء؛ كود الجهاز مخفي دائمًا، والسعر والتحويلات أصبحت مدمجة وصغيرة، مع إظهار آخر 4 أرقام فقط لكل وسيلة.",
+  "notes_ar": "الإصدار 1.0.9: إضافة أذكار الصباح بعد الفجر حتى 10:00 صباحًا، وأذكار المساء من 9:00 مساءً حتى منتصف الليل، مع القراءة والإخفاء بعد الإتمام وخيارات التفعيل في الإعدادات. كذلك تثبيت واجهة تفعيل Plus المدمجة وكود الجهاز المخفي.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.9/alofok-trial-1.0.9.apk",
   "mandatory": false,
   "published_at": "2026-09-18",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.9 locks prior activation requirements: device code stays hidden, price and transfer controls are compact, and only the last 4 digits of each payment destination are shown."
+  "notes_en": "1.0.9 adds timed morning and evening adhkar with reading, completion hiding, settings controls, plus the locked compact Plus activation flow with hidden device code."
 }
