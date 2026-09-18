@@ -19,7 +19,6 @@ import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
-import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -58,15 +57,6 @@ function utcDateFromMinutes(civilDate,minutes){
  if(minutes==null)return null;
  const d=new Date(Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),0,0,0));
  d.setUTCMinutes(minutes);return d;
-}
-function utcDateForLocalClock(civilDate,hour,minute,timeZone){
- const guess=new Date(Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),hour,minute,0));
- const offset=timeZoneOffsetMinutes(guess,timeZone);
- return new Date(guess.getTime()-offset*60000);
-}
-function utcDateFromLocalClock(civilDate,hour,minute,tzOffsetMinutes){
- const localUtc=Date.UTC(civilDate.getUTCFullYear(),civilDate.getUTCMonth(),civilDate.getUTCDate(),hour,minute,0);
- return new Date(localUtc-(tzOffsetMinutes||0)*60000);
 }
 function isNewer(remote,current){
  const a=String(remote||'').split('.').map(Number),b=String(current||'').split('.').map(Number);
@@ -204,7 +194,7 @@ function Drawer({t,rtl,onClose,onNavigate,onUpdate,updateReady=false}){
  </View>
 }
 
-function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavigate,themeSource,hijriDate,setHijriDate,gregDate,setGregDate,adhkar}){
+function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavigate,themeSource,hijriDate,setHijriDate,gregDate,setGregDate}){
  const gregDay=new Intl.DateTimeFormat(locale,{day:'numeric'}).format(now);
  const gregMonth=new Intl.DateTimeFormat(locale,{month:'long',year:'numeric'}).format(now);
  const week=new Intl.DateTimeFormat(locale,{weekday:'long'}).format(now);
@@ -230,8 +220,6 @@ function HomeScreen({t,rtl,locale,location,prayers,lunar,now,onMenu,onGps,onNavi
 
     <View style={s.visualSpace}/>
     <View style={s.quoteBlock}><Text style={s.quoteText}>{rtl?'﴿ وَمَا كَانَ رَبُّكَ نَسِيًّا ﴾':'“Your Lord is never forgetful.”'}</Text><Text style={s.quoteSub}>{rtl?'كل يوم هو فرصة لقرب جديد':'Every day is a new opportunity'}</Text></View>
-
-    {!!adhkar.visibleKind&&<AdhkarHomeCard kind={adhkar.visibleKind} rtl={rtl} onPress={()=>onNavigate(adhkar.visibleKind==='morning'?'adhkarMorning':'adhkarEvening')}/>}
 
     <View style={s.glassPanel}>
      <View style={[s.panelHeading,rowDir(rtl)]}><Text style={s.panelTitle}>{t('prayerTimes')}</Text><Pressable onPress={()=>onNavigate('adhan')}><Text style={s.panelAction}>{t('showAll')}  ›</Text></Pressable></View>
@@ -311,11 +299,10 @@ function AboutScreen({t,rtl,onBack}){
  </ScrollView></SafeAreaView>
 }
 
-function SettingsScreen({t,rtl,adhan,adhkar,onNavigate,location,onBack}){
+function SettingsScreen({t,rtl,adhan,onNavigate,location,onBack}){
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('settings')} t={t} rtl={rtl} onBack={onBack}/>
   <View style={s.settingCard}><View style={[s.settingRow,rowDir(rtl)]}><View><Text style={[s.settingTitle,textDir(rtl)]}>{t('notifications')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{t('adhanTitle')}</Text></View><Switch value={adhan.alertsEnabled} onValueChange={adhan.setPrayerAlerts} trackColor={{false:'#38495B',true:'#A87B28'}} thumbColor={adhan.alertsEnabled?GOLD:'#E8EDF2'}/></View></View>
-  <AdhkarSettings rtl={rtl} adhkar={adhkar}/>
   {[[t('adhanTitle'),'adhan','♪'],[t('themes'),'themes','▧'],[t('languages'),'languages','◎'],[t('location'),'cities','⌖'],[t('about'),'about','ⓘ'],[t('privacy'),'privacy','◇']].map(([label,target,icon])=><Pressable key={target} onPress={()=>onNavigate(target)} style={[s.settingLink,rowDir(rtl)]}><Text style={s.settingIcon}>{icon}</Text><Text style={[s.settingLinkText,textDir(rtl)]}>{label}</Text><Text style={s.settingChevron}>›</Text></Pressable>)}
   <View style={s.settingCard}><Text style={[s.settingTitle,textDir(rtl)]}>{t('location')}</Text><Text style={[s.settingHint,textDir(rtl)]}>{location.label}</Text></View>
  </ScrollView></SafeAreaView>
@@ -394,14 +381,6 @@ export default function AppV3(){
  const prayers=useMemo(()=>calculatePrayerTimes({date:civilDate,lat:location.lat,lon:location.lon,tzOffsetMin:tzOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[civilDate,location.lat,location.lon,tzOffset,rtl]);
  const lunar=useMemo(()=>proposedLunisolarDate(civilDate),[civilDate]);
  const prayerDates=useMemo(()=>Object.fromEntries(['fajr','dhuhr','asr','maghrib','isha'].map(k=>[k,utcDateFromMinutes(civilDate,prayers.rawMinutesUtc[k])])),[civilDate,prayers]);
- const tomorrowCivil=useMemo(()=>{const d=new Date(civilDate);d.setUTCDate(d.getUTCDate()+1);return d},[civilDate.getTime()]);
- const tomorrowProbe=useMemo(()=>new Date(now.getTime()+86400000),[civilDate.getTime()]);
- const tomorrowOffset=useMemo(()=>timeZoneOffsetMinutes(tomorrowProbe,location.tz),[tomorrowProbe.getTime(),location.tz]);
- const tomorrowPrayers=useMemo(()=>calculatePrayerTimes({date:tomorrowCivil,lat:location.lat,lon:location.lon,tzOffsetMin:tomorrowOffset,method:'MWL',clockLanguage:rtl?'ar':'en'}),[tomorrowCivil.getTime(),location.lat,location.lon,tomorrowOffset,rtl]);
- const tomorrowFajr=useMemo(()=>utcDateFromMinutes(tomorrowCivil,tomorrowPrayers.rawMinutesUtc.fajr),[tomorrowCivil.getTime(),tomorrowPrayers]);
- const eveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(civilDate,21,0,tzOffset),[civilDate.getTime(),tzOffset]);
- const nextEveningAdhkarDate=useMemo(()=>utcDateFromLocalClock(tomorrowCivil,21,0,tomorrowOffset),[tomorrowCivil.getTime(),tomorrowOffset]);
- const adhkar=useAdhkar({now,fajrDate:prayerDates.fajr,timeZone:location.tz,lat:location.lat,lon:location.lon,language:locale});
  const prayerNames=useMemo(()=>({fajr:t('fajr'),dhuhr:t('dhuhr'),asr:t('asr'),maghrib:t('maghrib'),isha:t('isha')}),[t]);
  useEffect(()=>{adhan.schedulePrayerAlerts({dates:prayerDates,names:prayerNames,language:locale})},[adhan.alertsEnabled,adhan.selectedId,civilDate.getTime(),location.lat,location.lon,language]);
  useEffect(()=>{
@@ -469,18 +448,6 @@ export default function AppV3(){
   setScreenHistory(history=>[...history,screen]);
   setScreen(target);
  },[checkUpdate,screen]);
- useEffect(()=>{
-  if(!adhkar.openedKind)return;
-  navigate(adhkar.openedKind==='morning'?'adhkarMorning':'adhkarEvening');
-  adhkar.clearOpened();
- },[adhkar.openedKind,navigate,adhkar.clearOpened]);
- useEffect(()=>{
-  if(!adhkar.openKind)return;
-  setDrawer(false);
-  if(screen!=='home')setScreenHistory(history=>[...history,screen]);
-  setScreen(adhkar.openKind==='morning'?'adhkarMorning':'adhkarEvening');
-  adhkar.clearOpenKind();
- },[adhkar.openKind]);
  const goBack=useCallback(()=>{
   setDrawer(false);
   setScreenHistory(history=>{
@@ -521,14 +488,12 @@ export default function AppV3(){
  if(screen==='copyright')return <CopyrightScreen rtl={rtl} onBack={goBack}/>;
  if(screen==='authenticity')return <AuthenticityScreen rtl={rtl} onBack={goBack} edition={IS_PLUS?'plus':'trial'} version={VERSION}/>;
  if(screen==='advertise')return <AdvertiseScreen rtl={rtl} language={language} country={location.country} onBack={goBack}/>;
- if(screen==='adhkarMorning')return <AdhkarScreen kind='morning' rtl={rtl} onBack={goBack} onComplete={adhkar.markComplete}/>;
- if(screen==='adhkarEvening')return <AdhkarScreen kind='evening' rtl={rtl} onBack={goBack} onComplete={adhkar.markComplete}/>;
- if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} adhkar={adhkar} onNavigate={navigate} location={location} onBack={goBack}/>;
+ if(screen==='settings')return <SettingsScreen t={t} rtl={rtl} adhan={adhan} onNavigate={navigate} location={location} onBack={goBack}/>;
  if(screen==='cities')return <CitiesScreen t={t} rtl={rtl} location={location} onBack={goBack}/>;
  if(screen==='calendarHijri'||screen==='calendarGregorian')setTimeout(()=>setScreen('home'),0);
 
  return <View style={s.root}>
-  <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate} adhkar={adhkar}/>
+  <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate}/>
   {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate} updateReady={plusUpgradeReady}/>} 
   {!IS_PLUS&&<TrialAdOverlay ad={trialAds.ad} rtl={rtl} onClose={trialAds.dismiss} onOpen={trialAds.open}/>} 
  </View>
@@ -538,7 +503,7 @@ const s=StyleSheet.create({
  root:{flex:1,backgroundColor:NAVY},safe:{flex:1},flatSafe:{flex:1,backgroundColor:NAVY},homeBg:{flex:1,backgroundColor:NAVY},homeBgImage:{opacity:1},homeShade:{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(2,12,24,0.33)'},homeContent:{paddingHorizontal:16,paddingBottom:42},
  heroTop:{minHeight:86,flexDirection:'row',alignItems:'flex-start',justifyContent:'space-between',paddingTop:8},iconButton:{width:44,height:44,borderRadius:14,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(4,20,37,.58)',borderWidth:1,borderColor:'rgba(255,255,255,.18)'},iconButtonGold:{borderColor:GOLD_SOFT},iconButtonText:{fontSize:26,color:WHITE,fontWeight:'400'},locationWrap:{alignItems:'flex-end',maxWidth:'55%'},gpsPill:{paddingHorizontal:16,height:42,borderRadius:22,borderWidth:1.2,borderColor:GOLD,backgroundColor:'rgba(2,25,52,.64)',alignItems:'center',justifyContent:'center'},gpsText:{color:WHITE,fontSize:15,fontWeight:'700'},locationLabel:{color:WHITE,fontSize:13,fontWeight:'700',marginTop:7,maxWidth:190},accuracyText:{color:MUTED,fontSize:10,marginTop:2},
  dateHero:{alignItems:'center',paddingTop:4},hijriHero:{color:WHITE,fontSize:25,fontWeight:'700',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},gregHero:{color:'#E5E9EF',fontSize:15,marginTop:8,textAlign:'center',textShadowColor:'rgba(0,0,0,.8)',textShadowRadius:5},visualSpace:{height:245},quoteBlock:{alignItems:'center',marginBottom:14},quoteText:{color:WHITE,fontSize:23,fontWeight:'600',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},quoteSub:{color:WHITE,fontSize:14,marginTop:7,textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:5},
- glassPanel:{backgroundColor:'rgba(7,23,41,.82)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:18,padding:10,overflow:'hidden'},adhkarHomeCard:{marginTop:10,minHeight:64,backgroundColor:'rgba(7,23,41,.88)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:16,paddingHorizontal:14,paddingVertical:11,flexDirection:'row',alignItems:'center'},adhkarHomeTitle:{color:GOLD,fontSize:17,fontWeight:'900'},adhkarHomeHint:{color:MUTED,fontSize:11,marginTop:3},adhkarHomeArrow:{color:WHITE,fontSize:28,fontWeight:'700',marginHorizontal:6},panelHeading:{alignItems:'center',justifyContent:'space-between',marginBottom:8},panelTitle:{fontSize:18,fontWeight:'800',color:GOLD},panelAction:{color:'#DCE3EC',fontSize:12},prayerStrip:{width:'100%',paddingVertical:1},prayerItem:{flex:1,minWidth:0,minHeight:72,alignItems:'center',justifyContent:'center',paddingHorizontal:1,borderRightWidth:StyleSheet.hairlineWidth,borderColor:LINE},prayerIcon:{color:WHITE,fontSize:17},prayerName:{color:WHITE,fontSize:10,fontWeight:'700',marginTop:3,textAlign:'center'},prayerTime:{color:'#F2F3F5',fontSize:10.5,fontWeight:'700',marginTop:2,textAlign:'center'},
+ glassPanel:{backgroundColor:'rgba(7,23,41,.82)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:18,padding:10,overflow:'hidden'},panelHeading:{alignItems:'center',justifyContent:'space-between',marginBottom:8},panelTitle:{fontSize:18,fontWeight:'800',color:GOLD},panelAction:{color:'#DCE3EC',fontSize:12},prayerStrip:{width:'100%',paddingVertical:1},prayerItem:{flex:1,minWidth:0,minHeight:72,alignItems:'center',justifyContent:'center',paddingHorizontal:1,borderRightWidth:StyleSheet.hairlineWidth,borderColor:LINE},prayerIcon:{color:WHITE,fontSize:17},prayerName:{color:WHITE,fontSize:10,fontWeight:'700',marginTop:3,textAlign:'center'},prayerTime:{color:'#F2F3F5',fontSize:10.5,fontWeight:'700',marginTop:2,textAlign:'center'},
  dualCards:{gap:10,marginTop:12},dateMiniCard:{flex:1,minHeight:152,backgroundColor:CARD,borderRadius:18,borderWidth:1,borderColor:'rgba(255,255,255,.20)',padding:14},miniTitle:{color:WHITE,fontSize:15,fontWeight:'800'},miniSubtitle:{color:'#D2DBE5',fontSize:11,marginTop:7},miniDay:{color:WHITE,fontSize:43,fontWeight:'800',textAlign:'center',marginTop:10},miniWeek:{color:'#DDE5EE',fontSize:12,textAlign:'center'},
  sectionCard:{backgroundColor:'rgba(5,20,37,.90)',borderRadius:20,borderWidth:1,borderColor:'rgba(255,255,255,.13)',padding:15,marginTop:14},sectionTitleRow:{alignItems:'center',justifyContent:'space-between',marginBottom:12},sectionTitle:{color:GOLD,fontSize:19,fontWeight:'800',flex:1},calendarNav:{alignItems:'center',justifyContent:'space-between',marginBottom:12},calendarMonthTitle:{color:WHITE,fontSize:17,fontWeight:'800'},navSmall:{width:36,height:36,borderRadius:18,backgroundColor:CARD_2,alignItems:'center',justifyContent:'center'},navSmallText:{color:WHITE,fontSize:26},weekHeader:{flexDirection:'row'},weekHeaderText:{width:'14.2857%',textAlign:'center',color:MUTED,fontSize:10,fontWeight:'700'},calendarGrid:{flexDirection:'row',flexWrap:'wrap',marginTop:6},dayCell:{width:'14.2857%',height:42,alignItems:'center',justifyContent:'center'},dayText:{color:WHITE,fontSize:14},dayToday:{color:NAVY,backgroundColor:GOLD,borderRadius:16,overflow:'hidden',paddingHorizontal:9,paddingVertical:5,fontWeight:'900'},inlineLink:{alignSelf:'center',padding:8,marginTop:3},inlineLinkText:{color:GOLD,fontWeight:'700'},eventNotice:{marginTop:10,borderRadius:12,borderWidth:1,borderColor:GOLD_SOFT,backgroundColor:'rgba(244,196,93,.13)',paddingHorizontal:12,paddingVertical:9},eventNoticeText:{color:'#FFE7A6',fontSize:12,fontWeight:'700',lineHeight:19},note:{color:MUTED,fontSize:12,lineHeight:19,marginTop:8},
  drawerBackdrop:{...StyleSheet.absoluteFillObject,zIndex:20,backgroundColor:'rgba(0,0,0,.30)'},drawerDismiss:{...StyleSheet.absoluteFillObject},drawer:{position:'absolute',top:0,bottom:0,width:'83%',maxWidth:380,backgroundColor:'rgba(5,20,37,.98)',borderColor:'rgba(255,255,255,.12)',borderWidth:StyleSheet.hairlineWidth},drawerSafe:{flex:1,paddingHorizontal:14,paddingTop:10,paddingBottom:10},drawerClose:{width:36,height:36,alignItems:'center',justifyContent:'center'},drawerCloseText:{color:WHITE,fontSize:28},drawerBrand:{alignItems:'center',marginTop:-2,marginBottom:5},logoTile:{width:40,height:40,borderRadius:12,borderWidth:1.3,borderColor:GOLD,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(244,196,93,.10)'},logoTileText:{fontSize:20,color:GOLD},drawerAppName:{fontSize:19,color:GOLD,fontWeight:'900',marginTop:2},drawerTagline:{fontSize:10,color:GOLD_SOFT,marginTop:0},drawerLine:{height:1,backgroundColor:LINE,marginBottom:0},drawerItem:{height:46,alignItems:'center',gap:12,borderBottomWidth:StyleSheet.hairlineWidth,borderBottomColor:LINE},drawerItemIcon:{width:24,textAlign:'center',color:WHITE,fontSize:19},drawerItemText:{flex:1,color:WHITE,fontSize:15,fontWeight:'600'},drawerBottom:{marginTop:'auto',paddingTop:8},drawerSlogan:{color:GOLD,fontSize:15,lineHeight:22,fontWeight:'600'},
