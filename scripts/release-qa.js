@@ -27,13 +27,13 @@ assert(trial.version===version&&plus.version===version,'update manifests version
 assert(trial.channel==='trial'&&plus.channel==='plus','Trial and Plus update channels must stay distinct');
 assert(trial.build_variant==='trial'&&plus.build_variant==='paid','manifest build variants must stay distinct');
 assert(trial.package_id==='com.alofok.trial'&&plus.package_id==='com.alofok.trial','Trial and Plus must share the canonical Android package for in-place upgrade');
-assert(trial.versionCode===1000105,'Trial manifest must stay in the Trial versionCode range');
-assert(plus.versionCode===2000105,'Plus manifest must stay in the Plus versionCode range');
+assert(trial.versionCode===1000106,'Trial manifest must stay in the Trial versionCode range');
+assert(plus.versionCode===2000106,'Plus manifest must stay in the Plus versionCode range');
 assert(trial.versionCode<plus.versionCode,'Plus versionCode must stay above Trial so Trial cannot replace Plus');
 assert(trial.cross_channel_allowed===false&&plus.cross_channel_allowed===false,'cross-channel update manifests must stay disabled');
 assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must contain exactly one packageId declaration');
 assert(config.includes("const packageId = 'com.alofok.trial';"),'Trial and Plus must share the canonical package id');
-assert(config.includes('const androidVersionCode = isPaid ? 2000105 : 1000105;'),'variant-specific Android versionCode ranges missing');
+assert(config.includes('const androidVersionCode = isPaid ? 2000106 : 1000106;'),'variant-specific Android versionCode ranges missing');
 assert(config.includes("isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png'"),'Trial and Plus must use their approved full launcher icons');
 assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork inside adaptiveIcon; it causes the icon to render too small');
 
@@ -132,6 +132,20 @@ assert(authClient.includes('EXPO_PUBLIC_AUTH_API_URL')&&authClient.includes('/v1
 assert(authClient.includes("edition,version,installationId"),'authenticity challenge must bind edition, version and installation');
 const pkgLegal=JSON.parse(read('package.json'));
 assert(pkgLegal.dependencies['react-native-qrcode-svg']&&pkgLegal.dependencies['react-native-svg'],'QR dependencies must be installed');
+
+
+// Device-bound Plus protection guards
+const deviceSecurity=read('src/services/deviceSecurity.js');
+const apkUpdater=read('src/services/apkUpdater.js');
+assert(pkg.dependencies['expo-secure-store']&&pkg.dependencies['expo-crypto']&&pkg.dependencies['tweetnacl'],'device-bound encryption dependencies must be installed');
+assert(deviceSecurity.includes('SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY'),'device secret must be kept in device-only secure storage');
+assert(deviceSecurity.includes('nacl.secretbox'),'Plus payload must use authenticated encryption');
+assert(deviceSecurity.includes('plus-entitlements.json')&&deviceSecurity.includes('plus-bundle.json'),'Plus approval and protected payload sources missing');
+assert(app.includes('unlockPlusForThisDevice')&&app.includes("plusAccess!=='unlocked'"),'Plus build must stay locked until this device is approved');
+assert(app.includes('prepareEncryptedPlusBundle'),'approved Trial must prepare the encrypted Plus payload before upgrade');
+assert(app.includes('downloadAndInstallApk'),'updates must install directly from inside the Android app');
+assert(apkUpdater.includes('android.intent.action.VIEW'),'APK installer intent missing');
+assert(fs.existsSync('plus-entitlements.json')&&fs.existsSync('plus-bundle.json'),'protected Plus registry/payload files missing');
 
 // Trial advertising guards
 const trialAds=read('src/app/TrialAds.js');
