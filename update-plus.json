@@ -2,13 +2,13 @@
   "channel": "plus",
   "build_variant": "paid",
   "package_id": "com.alofok.trial",
-  "version": "1.0.6",
-  "versionCode": 2000106,
+  "version": "1.0.7",
+  "versionCode": 2000107,
   "title_ar": "تحديث الأفق Plus",
-  "notes_ar": "الإصدار 1.0.6: Plus لا تفتح إلا على الجهاز الموافق عليه، مع حزمة داخلية مشفرة ومفتاح محفوظ عبر Android Keystore.",
-  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.6/alofok-plus-1.0.6.apk",
+  "notes_ar": "الإصدار 1.0.7: Plus مرتبطة بخادم إدارة وسام ديجيتال وبكود الجهاز والحزمة الداخلية المشفرة.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.7/alofok-plus-1.0.7.apk",
   "mandatory": false,
   "published_at": "2026-09-18",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.6 locks Plus to the approved device and stores a protected encrypted payload using a key held by Android Keystore-backed SecureStore."
+  "notes_en": "1.0.7 binds Plus to the Wissam Digital admin backend, device code, and encrypted internal payload."
 }
