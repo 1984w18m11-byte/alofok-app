@@ -10,3 +10,4 @@ deploy-alaufuq-trial-1.1.2-main-20260918
 deploy-alaufuq-trial-1.1.2-main-20260918
 deploy-alaufuq-trial-1.1.2-main-site-20260918
 deploy-alaufuq-trial-1.1.2-main-20260918
+redeploy-alaufuq-trial-1.1.2-wissam-digital-main-20260918-final
