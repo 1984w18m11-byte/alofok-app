@@ -5,10 +5,10 @@
   "version": "1.0.11",
   "versionCode": 1000111,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "الإصدار 1.0.11: نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. تتضمن واجهة تفعيل Plus المدمجة، إخفاء كود الجهاز بالكامل عن المستخدم، نسخ وسيلة الدفع بصمت دون رسالة، وإرسال طلب التفعيل إلى Wissam Digital Admin فقط، مع إظهار آخر 4 أرقام لكل وسيلة تحويل.",
+  "notes_ar": "الإصدار 1.0.11: النسخة التجريبية الحالية بدون أذكار الصباح والمساء. تثبيت واجهة تفعيل Plus المدمجة، إخفاء كود الجهاز بالكامل، نسخ أرقام التحويل بصمت، وإظهار آخر 4 أرقام فقط مع توضيح حوالة 16 رقم وتحويل موبايل 10 أرقام.",
   "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.11/alofok-trial-1.0.11.apk",
   "mandatory": false,
   "published_at": "2026-09-18",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.11 is a Trial test build without morning/evening adhkar for now. It keeps the compact Plus activation UI, fully hides the device code, copies payment details silently, sends the activation request only to Wissam Digital Admin, and shows only the last four digits of each payment destination."
+  "notes_en": "1.0.11 keeps morning/evening adhkar out of the current Trial build and preserves the compact Plus activation flow with hidden device code, silent payment copying, and last-four-digits display."
 }
