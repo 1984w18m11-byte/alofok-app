@@ -168,7 +168,7 @@ jobs:
           retention-days: 14
 
   publish-release:
-    name: Publish Al-Ufuq Trial 1.0.10 APK
+    name: Publish Al-Ufuq Trial 1.0.10
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
@@ -185,5 +185,5 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view v1.0.10 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.10 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.10" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. تتضمن واجهة تفعيل Plus المدمجة، إخفاء كود الجهاز عن المستخدم، والنسخ الصامت لأرقام التحويل مع إرسال طلب التفعيل إلى Wissam Digital Admin."
+          gh release view v1.0.10 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.0.10 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.0.10" --notes "نسخة تجريبية للاختبار: واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي عن المستخدم، طلب التفعيل يرسل للإدارة بصمت عند نسخ وسيلة الدفع، وتظهر آخر 4 أرقام فقط. أذكار الصباح والمساء غير مضافة في هذه النسخة."
           gh release upload v1.0.10 alofok-trial-1.0.10.apk --repo 1984w18m11-byte/alofok-app --clobber
