@@ -8,3 +8,4 @@ trial-adhkar-1.0.12-site-20260918
 deploy-trial-1.0.12-adhkar-20260918
 deploy-alaufuq-trial-1.1.2-main-20260918
 deploy-alaufuq-trial-1.1.2-main-20260918
+deploy-alaufuq-trial-1.1.2-main-site-20260918
