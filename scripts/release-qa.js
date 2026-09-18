@@ -19,6 +19,9 @@ const events=JSON.parse(read('src/data/events.json'));
 const national=JSON.parse(read('src/data/national-events.json'));
 const version=appJson.expo.version;
 const paymentTransfer=read('src/app/PaymentTransfer.js');
+const adhkarHook=read('src/app/useAdhkar.js');
+const adhkarScreen=read('src/app/AdhkarScreen.js');
+const adhkarWidgets=read('src/app/AdhkarWidgets.js');
 const adhkarFeature=read('src/app/AdhkarFeature.js');
 const lockedRequirements=read('AL_UFUQ_LOCKED_REQUIREMENTS.md');
 
