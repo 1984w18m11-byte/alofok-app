@@ -17,6 +17,8 @@ import {AuthenticityScreen,CopyrightScreen,PrivacyScreen} from './LegalScreens';
 import {AdvertiseScreen,TrialAdOverlay,useTrialAd} from './TrialAds';
 import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
+import {checkPlusApproval,getDeviceCode,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
+import {downloadAndInstallApk} from '../services/apkUpdater';
 
 const GOLD='#F4C45D';
 const GOLD_SOFT='#DCA94B';
@@ -32,6 +34,7 @@ const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
  :'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
+const PLUS_UPDATE_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json';
 const LANGUAGE_KEY='alofok_v3_language';
 const THEME_KEY='alofok_v3_theme';
 
@@ -173,7 +176,7 @@ function HijriGrid({date,currentDate,locale,t,rtl,onPrevious,onNext,onToday}){
  </>
 }
 
-function Drawer({t,rtl,onClose,onNavigate,onUpdate}){
+function Drawer({t,rtl,onClose,onNavigate,onUpdate,updateReady=false}){
  const items=[
   ['⚙','settings','settings'],['⟳','checkUpdate','update'],...(!IS_PLUS?[['♛','subscription','plus']]:[]),['◉','support','support'],...(!IS_PLUS?[['▣','advertise','advertise']]:[]),['◎','languages','languages'],['ⓘ','about','about'],['©','copyright','copyright'],['◇','privacy','privacy']
  ];
@@ -184,7 +187,7 @@ function Drawer({t,rtl,onClose,onNavigate,onUpdate}){
     <IconButton label={t('back')} onPress={onClose}>{rtl?'›':'‹'}</IconButton>
     <View style={s.drawerBrand}><View style={s.logoTile}><Text style={s.logoTileText}>◩</Text></View><Text style={s.drawerAppName}>{t('appName')}</Text><Text style={s.drawerTagline}>{t('tagline')}</Text></View>
     <View style={s.drawerLine}/>
-    {items.map(([icon,key,target])=><Pressable key={target} onPress={()=>target==='update'?onUpdate():onNavigate(target)} style={[s.drawerItem,rowDir(rtl)]}><Text style={s.drawerItemIcon}>{icon}</Text><Text style={[s.drawerItemText,textDir(rtl)]}>{t(key)}</Text></Pressable>)}
+    {items.map(([icon,key,target])=><Pressable key={target} onPress={()=>target==='update'?onUpdate():onNavigate(target)} style={[s.drawerItem,rowDir(rtl)]}><Text style={s.drawerItemIcon}>{icon}</Text><Text style={[s.drawerItemText,textDir(rtl)]}>{t(key)}</Text>{target==='update'&&updateReady?<View accessibilityLabel={rtl?'تحديث Plus متاح':'Plus update available'} style={{width:10,height:10,borderRadius:5,backgroundColor:'#FF3B30',marginHorizontal:8}}/>:null}</Pressable>)}
     <View style={s.drawerBottom}><Text style={[s.drawerSlogan,textDir(rtl)]}>{rtl?'كل يوم في تقويمنا\nحكاية من أمتنا':'Every day in our calendar\ntells a story from our heritage'}</Text></View>
    </SafeAreaView>
   </View>
@@ -312,6 +315,19 @@ function CitiesScreen({t,rtl,location,onBack}){
  </ScrollView></SafeAreaView>
 }
 
+
+function PlusLockScreen({rtl,status,deviceCode,onRetry}){
+ const checking=status==='checking';
+ return <SafeAreaView style={{flex:1,backgroundColor:NAVY,justifyContent:'center',padding:24}}>
+  <View style={{backgroundColor:CARD,borderWidth:1,borderColor:'rgba(244,196,93,.55)',borderRadius:22,padding:22}}>
+   <Text style={{color:GOLD,fontSize:24,fontWeight:'900',textAlign:rtl?'right':'left'}}>{rtl?'حماية Plus':'Plus protection'}</Text>
+   <Text style={{color:WHITE,fontSize:15,lineHeight:24,marginTop:12,textAlign:rtl?'right':'left'}}>{checking?(rtl?'جاري التحقق من هذا الجهاز…':'Checking this device…'):(rtl?'هذه النسخة غير مفعّلة لهذا الموبايل. ملف APK وحده لا يفتح Plus؛ يجب أن يكون هذا الجهاز موافقًا عليه وأن يملك الحزمة الداخلية المشفرة.':'This Plus build is not activated for this phone. The APK alone cannot unlock Plus; this device must be approved and hold its encrypted internal payload.')}</Text>
+   {!!deviceCode&&<><Text style={{color:MUTED,fontSize:12,marginTop:18,textAlign:rtl?'right':'left'}}>{rtl?'كود الجهاز':'Device code'}</Text><Text selectable style={{color:WHITE,fontSize:18,fontWeight:'900',letterSpacing:.6,textAlign:'center',marginTop:8}}>{deviceCode}</Text></>}
+   {!checking&&<Pressable onPress={onRetry} style={{backgroundColor:GOLD,borderRadius:14,paddingVertical:14,alignItems:'center',marginTop:20}}><Text style={{color:NAVY,fontWeight:'900',fontSize:15}}>{rtl?'إعادة فحص التفعيل':'Check activation again'}</Text></Pressable>}
+  </View>
+ </SafeAreaView>
+}
+
 export default function AppV3(){
  const [language,setLanguage]=useState('ar');
  const [screen,setScreen]=useState('home');
@@ -321,6 +337,9 @@ export default function AppV3(){
  const [selectedTheme,setSelectedThemeState]=useState(IS_PLUS?'auto':'season-autumn');
  const [hijriDate,setHijriDate]=useState(new Date());
  const [gregDate,setGregDate]=useState(new Date());
+ const [plusAccess,setPlusAccess]=useState(IS_PLUS?'checking':'not_required');
+ const [plusDeviceCode,setPlusDeviceCode]=useState('');
+ const [plusUpgradeReady,setPlusUpgradeReady]=useState(false);
  const rtl=v3IsRtl(language),locale=v3LocaleTag(language);
  const t=useMemo(()=>{
   const base=makeV3Translator(language);
@@ -336,6 +355,29 @@ export default function AppV3(){
  useEffect(()=>{AsyncStorage.getItem(LANGUAGE_KEY).then(x=>{if(x&&LOCALES.some(([id])=>id===x))setLanguage(x)}).catch(()=>{});AsyncStorage.getItem(THEME_KEY).then(x=>{if(x&&(x==='auto'||THEME_BY_ID[x]))setSelectedThemeState(x)}).catch(()=>{})},[]);
  useEffect(()=>{const id=setInterval(()=>setNow(new Date()),30000);return()=>clearInterval(id)},[]);
  useEffect(()=>{if(screen!=='adhan')adhan.stop()},[screen]);
+ useEffect(()=>{
+  let active=true;
+  let timer=null;
+  const refresh=async()=>{
+   try{
+    const code=await getDeviceCode();
+    if(active)setPlusDeviceCode(code);
+    if(IS_PLUS){
+     if(active)setPlusAccess('checking');
+     const result=await unlockPlusForThisDevice();
+     if(active)setPlusAccess(result.unlocked?'unlocked':'locked');
+    }else{
+     const result=await checkPlusApproval();
+     if(active)setPlusUpgradeReady(Boolean(result.approved));
+    }
+   }catch(_){
+    if(active&&IS_PLUS)setPlusAccess('locked');
+   }
+  };
+  refresh();
+  if(!IS_PLUS)timer=setInterval(refresh,60000);
+  return()=>{active=false;if(timer)clearInterval(timer)};
+ },[]);
 
  const civilDate=useMemo(()=>civilDateForTimeZone(now,location.tz),[now,location.tz]);
  const tzOffset=useMemo(()=>timeZoneOffsetMinutes(now,location.tz),[now,location.tz]);
@@ -359,10 +401,38 @@ export default function AppV3(){
  const checkUpdate=useCallback(async()=>{
   setDrawer(false);
   try{
-   const res=await fetch(`${UPDATE_URL}?t=${Date.now()}`,{headers:{'Cache-Control':'no-cache'}});if(!res.ok)throw new Error('HTTP');
+   let upgradingToPlus=false;
+   if(!IS_PLUS){
+    const entitlement=await checkPlusApproval();
+    upgradingToPlus=Boolean(entitlement.approved);
+    setPlusUpgradeReady(upgradingToPlus);
+    if(upgradingToPlus){
+     const prepared=await prepareEncryptedPlusBundle();
+     if(!prepared.ok){
+      Alert.alert(t('checkUpdate'),rtl?'تمت الموافقة على Plus لكن تعذر تجهيز الحزمة الداخلية المشفرة. تحقق من الإنترنت وحاول مرة أخرى.':'Plus is approved, but the protected encrypted payload could not be prepared. Check your connection and try again.');
+      return;
+     }
+    }
+   }
+   const manifestUrl=upgradingToPlus?PLUS_UPDATE_URL:UPDATE_URL;
+   const res=await fetch(`${manifestUrl}?t=${Date.now()}`,{headers:{'Cache-Control':'no-cache'}});if(!res.ok)throw new Error('HTTP');
    const info=await res.json();
-   if(!isNewer(info.version,VERSION)){Alert.alert(t('checkUpdate'),rtl?'أنت تستخدم أحدث نسخة.':'You are using the latest version.');return}
-   Alert.alert(t('checkUpdate'),`${rtl?'يتوفر إصدار جديد':'A new version is available'}: ${info.version}`,[{text:t('close'),style:'cancel'},{text:rtl?'فتح التحديث':'Open update',onPress:()=>{const url=info.download_url||info.play_url||info.app_store_url;if(url)Linking.openURL(url)}}]);
+   if(!upgradingToPlus&&!isNewer(info.version,VERSION)){Alert.alert(t('checkUpdate'),rtl?'أنت تستخدم أحدث نسخة.':'You are using the latest version.');return}
+   const title=upgradingToPlus?(rtl?'Plus جاهزة لهذا الجهاز':'Plus is ready for this device'):(rtl?'يتوفر إصدار جديد':'A new version is available');
+   const message=upgradingToPlus?(rtl?'تمت الموافقة على هذا الموبايل. اضغط تنزيل وتثبيت ليتم تحميل Plus مباشرة داخل التطبيق.':'This phone is approved. Tap Download & install to fetch Plus directly inside the app.'):`${rtl?'الإصدار':'Version'}: ${info.version}`;
+   Alert.alert(title,message,[
+    {text:t('close'),style:'cancel'},
+    {text:rtl?'تنزيل وتثبيت':'Download & install',onPress:async()=>{
+      const url=info.download_url||info.play_url||info.app_store_url;
+      if(!url)return;
+      try{
+       await downloadAndInstallApk(url);
+      }catch(error){
+       const permission=String(error?.message||error).includes('INSTALL_PERMISSION_REQUIRED');
+       Alert.alert(t('checkUpdate'),permission?(rtl?'فعّل السماح بتثبيت التطبيقات من هذا المصدر، ثم ارجع واضغط التحديث مرة ثانية.':'Allow app installs from this source, then return and tap Update again.'):(rtl?'تعذر تنزيل أو تشغيل ملف التحديث. حاول مرة أخرى.':'Could not download or launch the update package. Please try again.'));
+      }
+    }}
+   ]);
   }catch(e){Alert.alert(t('checkUpdate'),rtl?'تعذر الاتصال بخدمة التحديث الآن. حاول مرة أخرى.':'Could not reach the update service. Please try again.')}
  },[t,rtl]);
 
@@ -393,6 +463,16 @@ export default function AppV3(){
  },[drawer,screen,goBack]);
  const goHome=useCallback(()=>{setDrawer(false);setScreenHistory([]);setScreen('home')},[]);
  const refreshGps=async()=>{const result=await location.refresh();if(!result&&location.error){const msg=location.error==='PERMISSION_DENIED'?t('locationDenied'):location.error==='SERVICES_OFF'?(rtl?'خدمة GPS متوقفة. فعّل الموقع ثم حاول مرة أخرى.':'GPS is off. Turn on location and try again.'):t('locationUnavailable');Alert.alert(t('location'),msg)}};
+ const retryPlusAccess=useCallback(async()=>{
+  setPlusAccess('checking');
+  try{
+   const code=await getDeviceCode();setPlusDeviceCode(code);
+   const result=await unlockPlusForThisDevice();
+   setPlusAccess(result.unlocked?'unlocked':'locked');
+  }catch(_){setPlusAccess('locked')}
+ },[]);
+
+ if(IS_PLUS&&plusAccess!=='unlocked')return <PlusLockScreen rtl={rtl} status={plusAccess} deviceCode={plusDeviceCode} onRetry={retryPlusAccess}/>;
 
  if(screen==='adhan')return <AdhanScreen t={t} rtl={rtl} adhan={adhan} onBack={goBack}/>;
  if(screen==='themes')return <ThemesScreen t={t} rtl={rtl} isPlus={IS_PLUS} selectedTheme={selectedTheme} setSelectedTheme={setSelectedTheme} onBack={goBack}/>;
@@ -410,7 +490,7 @@ export default function AppV3(){
 
  return <View style={s.root}>
   <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate}/>
-  {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate}/>} 
+  {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate} updateReady={plusUpgradeReady}/>} 
   {!IS_PLUS&&<TrialAdOverlay ad={trialAds.ad} rtl={rtl} onClose={trialAds.dismiss} onOpen={trialAds.open}/>} 
  </View>
 }
