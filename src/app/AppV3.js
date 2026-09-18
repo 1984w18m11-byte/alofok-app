@@ -19,6 +19,7 @@ import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
 import {downloadAndInstallApk} from '../services/apkUpdater';
+import {AdhkarHomeCard,AdhkarScreen,AdhkarSettings,useAdhkar} from './AdhkarFeature';
 import {AdhkarScreen} from './AdhkarScreen';
 import {AdhkarHomeCard,AdhkarSettings} from './AdhkarWidgets';
 import {useAdhkar} from './useAdhkar';
