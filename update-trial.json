@@ -2,13 +2,13 @@
   "channel": "trial",
   "build_variant": "trial",
   "package_id": "com.alofok.trial",
-  "version": "1.0.12",
-  "versionCode": 1000112,
+  "version": "1.0.13",
+  "versionCode": 1001102,
   "title_ar": "تحديث الأفق التجريبي",
-  "notes_ar": "الإصدار 1.0.12: إضافة أذكار الصباح بعد الفجر حتى 10:00 صباحًا، وأذكار المساء من 9:00 مساءً حتى منتصف الليل، مع صفحة قراءة وإخفاء بعد الإتمام وخيارات مستقلة للتفعيل والتنبيه. مع الحفاظ على واجهة تفعيل Plus المدمجة وكود الجهاز المخفي والنسخ الصامت.",
-  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.12/alofok-trial-1.0.12.apk",
+  "notes_ar": "الإصدار 1.0.13: إصلاح مسار ترقية Plus بعد موافقة الإدارة، مع إظهار تقدم تنزيل التحديث بشكل صغير ثم فتح التثبيت تلقائيًا.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.13/alofok-trial-1.0.13.apk",
   "mandatory": false,
-  "published_at": "2026-09-18",
+  "published_at": "2026-09-20",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.12 adds timed morning and evening adhkar, reading/completion hiding, independent settings and reminders, and preserves the compact silent Plus activation flow with hidden device code."
+  "notes_en": "1.0.13 fixes the approved Plus upgrade flow and shows compact download progress before launching Android installation."
 }
