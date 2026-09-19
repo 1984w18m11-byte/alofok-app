@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - .github/build-apks.trigger
+      - .github/build-apks.trigger.1
 
 permissions:
   contents: write
