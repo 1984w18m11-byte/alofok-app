@@ -32,7 +32,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.1.1';
+const VERSION='1.0.13';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -355,6 +355,7 @@ export default function AppV3(){
  const [gregDate,setGregDate]=useState(new Date());
  const [plusAccess,setPlusAccess]=useState(IS_PLUS?'checking':'not_required');
  const [plusUpgradeReady,setPlusUpgradeReady]=useState(false);
+ const [updateDownload,setUpdateDownload]=useState({active:false,progress:0});
  const rtl=v3IsRtl(language),locale=v3LocaleTag(language);
  const t=useMemo(()=>{
   const base=makeV3Translator(language);
@@ -440,8 +441,11 @@ export default function AppV3(){
       const url=info.download_url||info.play_url||info.app_store_url;
       if(!url)return;
       try{
-       await downloadAndInstallApk(url);
+       setUpdateDownload({active:true,progress:0});
+       await downloadAndInstallApk(url,progress=>setUpdateDownload({active:true,progress}));
+       setUpdateDownload({active:false,progress:1});
       }catch(error){
+       setUpdateDownload({active:false,progress:0});
        const permission=String(error?.message||error).includes('INSTALL_PERMISSION_REQUIRED');
        Alert.alert(t('checkUpdate'),permission?(rtl?'فعّل السماح بتثبيت التطبيقات من هذا المصدر، ثم ارجع واضغط التحديث مرة ثانية.':'Allow app installs from this source, then return and tap Update again.'):(rtl?'تعذر تنزيل أو تشغيل ملف التحديث. حاول مرة أخرى.':'Could not download or launch the update package. Please try again.'));
       }
@@ -511,12 +515,16 @@ export default function AppV3(){
  return <View style={s.root}>
   <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate} adhkar={adhkar}/>
   {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate} updateReady={plusUpgradeReady}/>} 
+  {updateDownload.active&&<View style={s.updateDownloadMini}>
+    <Text style={s.updateDownloadText}>{rtl?'جارٍ تنزيل التحديث':'Downloading update'} {Math.round(updateDownload.progress*100)}%</Text>
+    <View style={s.updateDownloadTrack}><View style={[s.updateDownloadFill,{width:`${Math.round(updateDownload.progress*100)}%`}]} /></View>
+  </View>}
   {!IS_PLUS&&<TrialAdOverlay ad={trialAds.ad} rtl={rtl} onClose={trialAds.dismiss} onOpen={trialAds.open}/>} 
  </View>
 }
 
 const s=StyleSheet.create({
- root:{flex:1,backgroundColor:NAVY},safe:{flex:1},flatSafe:{flex:1,backgroundColor:NAVY},homeBg:{flex:1,backgroundColor:NAVY},homeBgImage:{opacity:1},homeShade:{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(2,12,24,0.33)'},homeContent:{paddingHorizontal:16,paddingBottom:42},
+ root:{flex:1,backgroundColor:NAVY},updateDownloadMini:{position:'absolute',left:18,right:18,bottom:22,zIndex:40,backgroundColor:'rgba(5,20,37,.96)',borderWidth:1,borderColor:GOLD_SOFT,borderRadius:12,paddingHorizontal:12,paddingVertical:9},updateDownloadText:{color:WHITE,fontSize:12,fontWeight:'800',textAlign:'center'},updateDownloadTrack:{height:4,borderRadius:2,backgroundColor:'rgba(255,255,255,.16)',marginTop:7,overflow:'hidden'},updateDownloadFill:{height:4,borderRadius:2,backgroundColor:GOLD},safe:{flex:1},flatSafe:{flex:1,backgroundColor:NAVY},homeBg:{flex:1,backgroundColor:NAVY},homeBgImage:{opacity:1},homeShade:{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(2,12,24,0.33)'},homeContent:{paddingHorizontal:16,paddingBottom:42},
  heroTop:{minHeight:86,flexDirection:'row',alignItems:'flex-start',justifyContent:'space-between',paddingTop:8},iconButton:{width:44,height:44,borderRadius:14,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(4,20,37,.58)',borderWidth:1,borderColor:'rgba(255,255,255,.18)'},iconButtonGold:{borderColor:GOLD_SOFT},iconButtonText:{fontSize:26,color:WHITE,fontWeight:'400'},locationWrap:{alignItems:'flex-end',maxWidth:'55%'},gpsPill:{paddingHorizontal:16,height:42,borderRadius:22,borderWidth:1.2,borderColor:GOLD,backgroundColor:'rgba(2,25,52,.64)',alignItems:'center',justifyContent:'center'},gpsText:{color:WHITE,fontSize:15,fontWeight:'700'},locationLabel:{color:WHITE,fontSize:13,fontWeight:'700',marginTop:7,maxWidth:190},accuracyText:{color:MUTED,fontSize:10,marginTop:2},
  dateHero:{alignItems:'center',paddingTop:4},hijriHero:{color:WHITE,fontSize:25,fontWeight:'700',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},gregHero:{color:'#E5E9EF',fontSize:15,marginTop:8,textAlign:'center',textShadowColor:'rgba(0,0,0,.8)',textShadowRadius:5},visualSpace:{height:245},quoteBlock:{alignItems:'center',marginBottom:14},quoteText:{color:WHITE,fontSize:23,fontWeight:'600',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},quoteSub:{color:WHITE,fontSize:14,marginTop:7,textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:5},
  glassPanel:{backgroundColor:'rgba(7,23,41,.82)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:18,padding:10,overflow:'hidden'},adhkarHomeCard:{marginTop:10,minHeight:64,backgroundColor:'rgba(7,23,41,.88)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:16,paddingHorizontal:14,paddingVertical:11,flexDirection:'row',alignItems:'center'},adhkarHomeTitle:{color:GOLD,fontSize:17,fontWeight:'900'},adhkarHomeHint:{color:MUTED,fontSize:11,marginTop:3},adhkarHomeArrow:{color:WHITE,fontSize:28,fontWeight:'700',marginHorizontal:6},panelHeading:{alignItems:'center',justifyContent:'space-between',marginBottom:8},panelTitle:{fontSize:18,fontWeight:'800',color:GOLD},panelAction:{color:'#DCE3EC',fontSize:12},prayerStrip:{width:'100%',paddingVertical:1},prayerItem:{flex:1,minWidth:0,minHeight:72,alignItems:'center',justifyContent:'center',paddingHorizontal:1,borderRightWidth:StyleSheet.hairlineWidth,borderColor:LINE},prayerIcon:{color:WHITE,fontSize:17},prayerName:{color:WHITE,fontSize:10,fontWeight:'700',marginTop:3,textAlign:'center'},prayerTime:{color:'#F2F3F5',fontSize:10.5,fontWeight:'700',marginTop:2,textAlign:'center'},
