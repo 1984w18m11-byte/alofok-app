@@ -1,4 +1,4 @@
-name: Build Al-Ufuq Trial 1.1.1
+name: Build Al-Ufuq Trial + Plus 1.1.1
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        variant: [trial]
+        variant: [trial, paid]
     env:
       APP_VARIANT: ${{ matrix.variant }}
       EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
@@ -168,7 +168,7 @@ jobs:
           retention-days: 14
 
   publish-release:
-    name: Publish Al-Ufuq Trial 1.1.1
+    name: Publish Al-Ufuq Trial + Plus 1.1.1
     needs: build-apk
     runs-on: ubuntu-latest
     steps:
@@ -178,8 +178,16 @@ jobs:
           name: alofok-trial-1.1.1
           path: artifacts/trial
 
-      - name: Prepare Trial APK filename
-        run: cp artifacts/trial/app-release.apk alofok-trial-1.1.1.apk
+      - name: Download Plus APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: alofok-paid-1.1.1
+          path: artifacts/paid
+
+      - name: Prepare APK filenames
+        run: |
+          cp artifacts/trial/app-release.apk alofok-trial-1.1.1.apk
+          cp artifacts/paid/app-release.apk alofok-plus-1.1.1.apk
 
       - name: Publish Trial GitHub release
         env:
@@ -187,3 +195,4 @@ jobs:
         run: |
           gh release view v1.1.1 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.1.1 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.1.1" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي، آخر 4 أرقام فقط تظهر، والنسخ صامت مع إرسال طلب التفعيل إلى Wissam Digital Admin."
           gh release upload v1.1.1 alofok-trial-1.1.1.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release upload v1.1.1 alofok-plus-1.1.1.apk --repo 1984w18m11-byte/alofok-app --clobber
