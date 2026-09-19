@@ -1,0 +1,24 @@
+name: Rename Al-Ufuq Trial 1.0.13 asset
+
+on:
+  push:
+    paths:
+      - .github/rename-trial-1.0.13-asset.trigger
+
+permissions:
+  contents: write
+
+jobs:
+  rename:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Rename release asset to approved Al-Ufuq name
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/al-ufuq
+          gh release download v1.0.13 --repo 1984w18m11-byte/alofok-app --pattern "alofok-trial-1.0.13.apk" --dir /tmp/al-ufuq
+          mv /tmp/al-ufuq/alofok-trial-1.0.13.apk /tmp/al-ufuq/Al-Ufuq-Trial-1.0.13.apk
+          gh release upload v1.0.13 /tmp/al-ufuq/Al-Ufuq-Trial-1.0.13.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release delete-asset v1.0.13 alofok-trial-1.0.13.apk --repo 1984w18m11-byte/alofok-app -y
