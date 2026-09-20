@@ -1,1 +1,1 @@
-Retry Trial 1.0.14 after package version alignment — 2026-09-20T21:52:00Z
+Rebuild Trial with native background updater for internal version 1.1.4 — 2026-09-21T02:17:00+03:00
