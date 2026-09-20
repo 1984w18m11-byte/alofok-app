@@ -27,6 +27,9 @@ module.exports = () => {
     }
     return plugin;
   });
+  if (!plugins.some(plugin => (Array.isArray(plugin) ? plugin[0] : plugin) === '@kesha-antonov/react-native-background-downloader')) {
+    plugins.push('@kesha-antonov/react-native-background-downloader');
+  }
 
   return {
     ...base,
