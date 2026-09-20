@@ -2,13 +2,13 @@
   "channel": "plus",
   "build_variant": "paid",
   "package_id": "com.alofok.trial",
-  "version": "1.0.5",
-  "versionCode": 2000105,
+  "version": "1.0.6",
+  "versionCode": 2000106,
   "title_ar": "تحديث الأفق Plus",
-  "notes_ar": "الإصدار 1.0.8: إبقاء كود الجهاز داخليًا فقط مع ربط التفعيل بإدارة وسام ديجيتال.",
-  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.5/Al-Ufuq-Plus-1.0.5.apk",
+  "notes_ar": "الأفق Plus 1.0.6: إضافة أذكار الصباح والمساء مع إبقاء التفعيل مرتبطًا بموافقة إدارة وسام ديجيتال وكود الجهاز.",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.6/Al-Ufuq-Plus-1.0.6.apk",
   "mandatory": false,
-  "published_at": "2026-09-18",
+  "published_at": "2026-09-20",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.8 keeps the device code internal while activation remains linked to Wissam Digital Admin."
+  "notes_en": "Al-Ufuq Plus 1.0.6 adds timed morning and evening adhkar while keeping activation bound to Wissam Digital Admin approval and the approved device."
 }
