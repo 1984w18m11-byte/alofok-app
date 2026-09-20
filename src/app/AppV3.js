@@ -1,5 +1,5 @@
-import React,{useCallback,useEffect,useMemo,useState} from 'react';
-import {Alert,BackHandler,Image,ImageBackground,Linking,Pressable,ScrollView,StyleSheet,Switch,Text,View} from 'react-native';
+import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import {Alert,Animated,BackHandler,Image,PanResponder,ImageBackground,Linking,Pressable,ScrollView,StyleSheet,Switch,Text,View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {calculatePrayerTimes} from '../engine/prayer';
@@ -18,7 +18,7 @@ import {AdvertiseScreen,TrialAdOverlay,useTrialAd} from './TrialAds';
 import {TrialPlusActivation} from './TrialPlusActivation';
 import {SupportScreen} from './SupportScreen';
 import {checkPlusApproval,prepareEncryptedPlusBundle,unlockPlusForThisDevice} from '../services/deviceSecurity';
-import {downloadAndInstallApk} from '../services/apkUpdater';
+import {downloadAndInstallApk,getPendingApkDownload,resumePendingApkDownload} from '../services/apkUpdater';
 import {AdhkarScreen} from './AdhkarScreen';
 import {AdhkarHomeCard,AdhkarSettings} from './AdhkarWidgets';
 import {useAdhkar} from './useAdhkar';
@@ -356,6 +356,15 @@ export default function AppV3(){
  const [plusAccess,setPlusAccess]=useState(IS_PLUS?'checking':'not_required');
  const [plusUpgradeReady,setPlusUpgradeReady]=useState(false);
  const [updateDownload,setUpdateDownload]=useState({active:false,progress:0});
+ const updateDownloadY=useRef(new Animated.Value(0)).current;
+ const updateDownloadPan=useMemo(()=>PanResponder.create({
+  onStartShouldSetPanResponder:()=>true,
+  onMoveShouldSetPanResponder:(_,gesture)=>Math.abs(gesture.dy)>3,
+  onPanResponderGrant:()=>updateDownloadY.extractOffset(),
+  onPanResponderMove:(_,gesture)=>updateDownloadY.setValue(gesture.dy),
+  onPanResponderRelease:()=>updateDownloadY.flattenOffset(),
+  onPanResponderTerminate:()=>updateDownloadY.flattenOffset()
+ }),[updateDownloadY]);
  const rtl=v3IsRtl(language),locale=v3LocaleTag(language);
  const t=useMemo(()=>{
   const base=makeV3Translator(language);
@@ -370,6 +379,22 @@ export default function AppV3(){
 
  useEffect(()=>{AsyncStorage.getItem(LANGUAGE_KEY).then(x=>{if(x&&LOCALES.some(([id])=>id===x))setLanguage(x)}).catch(()=>{});AsyncStorage.getItem(THEME_KEY).then(x=>{if(x&&(x==='auto'||THEME_BY_ID[x]))setSelectedThemeState(x)}).catch(()=>{})},[]);
  useEffect(()=>{const id=setInterval(()=>setNow(new Date()),30000);return()=>clearInterval(id)},[]);
+ useEffect(()=>{
+  let mounted=true;
+  getPendingApkDownload().then(pending=>{
+   if(!mounted||!pending)return;
+   setUpdateDownload({active:true,progress:pending.progress});
+   resumePendingApkDownload(progress=>{
+    if(mounted)setUpdateDownload({active:true,progress});
+   }).then(()=>{
+    if(mounted)setUpdateDownload({active:false,progress:1});
+   }).catch(()=>{
+    if(mounted)setUpdateDownload({active:false,progress:pending.progress});
+   });
+  }).catch(()=>{});
+  return()=>{mounted=false};
+ },[]);
+
  useEffect(()=>{if(screen!=='adhan')adhan.stop()},[screen]);
  useEffect(()=>{
   let active=true;
@@ -515,16 +540,19 @@ export default function AppV3(){
  return <View style={s.root}>
   <HomeScreen t={t} rtl={rtl} locale={locale} location={location} prayers={prayers} lunar={lunar} now={now} onMenu={()=>setDrawer(true)} onGps={refreshGps} onNavigate={navigate} themeSource={themeSource} hijriDate={hijriDate} setHijriDate={setHijriDate} gregDate={gregDate} setGregDate={setGregDate} adhkar={adhkar}/>
   {drawer&&<Drawer t={t} rtl={rtl} onClose={()=>setDrawer(false)} onNavigate={navigate} onUpdate={checkUpdate} updateReady={plusUpgradeReady}/>} 
-  {updateDownload.active&&<View style={s.updateDownloadMini}>
+  {updateDownload.active&&<View style={s.updateDownloadLayer} pointerEvents="box-none">
+   <Animated.View {...updateDownloadPan.panHandlers} style={[s.updateDownloadMini,{transform:[{translateY:updateDownloadY}]}]}>
+    <View style={s.updateDownloadHandle}/>
     <Text style={s.updateDownloadText}>{rtl?'جارٍ تنزيل التحديث':'Downloading update'} {Math.round(updateDownload.progress*100)}%</Text>
     <View style={s.updateDownloadTrack}><View style={[s.updateDownloadFill,{width:`${Math.round(updateDownload.progress*100)}%`}]} /></View>
+   </Animated.View>
   </View>}
   {!IS_PLUS&&<TrialAdOverlay ad={trialAds.ad} rtl={rtl} onClose={trialAds.dismiss} onOpen={trialAds.open}/>} 
  </View>
 }
 
 const s=StyleSheet.create({
- root:{flex:1,backgroundColor:NAVY},updateDownloadMini:{position:'absolute',left:18,right:18,bottom:22,zIndex:40,backgroundColor:'rgba(5,20,37,.96)',borderWidth:1,borderColor:GOLD_SOFT,borderRadius:12,paddingHorizontal:12,paddingVertical:9},updateDownloadText:{color:WHITE,fontSize:12,fontWeight:'800',textAlign:'center'},updateDownloadTrack:{height:4,borderRadius:2,backgroundColor:'rgba(255,255,255,.16)',marginTop:7,overflow:'hidden'},updateDownloadFill:{height:4,borderRadius:2,backgroundColor:GOLD},safe:{flex:1},flatSafe:{flex:1,backgroundColor:NAVY},homeBg:{flex:1,backgroundColor:NAVY},homeBgImage:{opacity:1},homeShade:{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(2,12,24,0.33)'},homeContent:{paddingHorizontal:16,paddingBottom:42},
+ root:{flex:1,backgroundColor:NAVY},updateDownloadLayer:{...StyleSheet.absoluteFillObject,zIndex:40,justifyContent:'center',paddingHorizontal:18},updateDownloadMini:{backgroundColor:'rgba(5,20,37,.88)',borderWidth:1,borderColor:GOLD_SOFT,borderRadius:14,paddingHorizontal:14,paddingTop:8,paddingBottom:12,elevation:12},updateDownloadHandle:{alignSelf:'center',width:42,height:4,borderRadius:2,backgroundColor:'rgba(255,255,255,.42)',marginBottom:8},updateDownloadText:{color:WHITE,fontSize:12,fontWeight:'800',textAlign:'center'},updateDownloadTrack:{height:4,borderRadius:2,backgroundColor:'rgba(255,255,255,.16)',marginTop:7,overflow:'hidden'},updateDownloadFill:{height:4,borderRadius:2,backgroundColor:GOLD},safe:{flex:1},flatSafe:{flex:1,backgroundColor:NAVY},homeBg:{flex:1,backgroundColor:NAVY},homeBgImage:{opacity:1},homeShade:{...StyleSheet.absoluteFillObject,backgroundColor:'rgba(2,12,24,0.33)'},homeContent:{paddingHorizontal:16,paddingBottom:42},
  heroTop:{minHeight:86,flexDirection:'row',alignItems:'flex-start',justifyContent:'space-between',paddingTop:8},iconButton:{width:44,height:44,borderRadius:14,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(4,20,37,.58)',borderWidth:1,borderColor:'rgba(255,255,255,.18)'},iconButtonGold:{borderColor:GOLD_SOFT},iconButtonText:{fontSize:26,color:WHITE,fontWeight:'400'},locationWrap:{alignItems:'flex-end',maxWidth:'55%'},gpsPill:{paddingHorizontal:16,height:42,borderRadius:22,borderWidth:1.2,borderColor:GOLD,backgroundColor:'rgba(2,25,52,.64)',alignItems:'center',justifyContent:'center'},gpsText:{color:WHITE,fontSize:15,fontWeight:'700'},locationLabel:{color:WHITE,fontSize:13,fontWeight:'700',marginTop:7,maxWidth:190},accuracyText:{color:MUTED,fontSize:10,marginTop:2},
  dateHero:{alignItems:'center',paddingTop:4},hijriHero:{color:WHITE,fontSize:25,fontWeight:'700',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},gregHero:{color:'#E5E9EF',fontSize:15,marginTop:8,textAlign:'center',textShadowColor:'rgba(0,0,0,.8)',textShadowRadius:5},visualSpace:{height:245},quoteBlock:{alignItems:'center',marginBottom:14},quoteText:{color:WHITE,fontSize:23,fontWeight:'600',textAlign:'center',textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:7},quoteSub:{color:WHITE,fontSize:14,marginTop:7,textShadowColor:'rgba(0,0,0,.9)',textShadowRadius:5},
  glassPanel:{backgroundColor:'rgba(7,23,41,.82)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:18,padding:10,overflow:'hidden'},adhkarHomeCard:{marginTop:10,minHeight:64,backgroundColor:'rgba(7,23,41,.88)',borderColor:'rgba(244,196,93,.55)',borderWidth:1,borderRadius:16,paddingHorizontal:14,paddingVertical:11,flexDirection:'row',alignItems:'center'},adhkarHomeTitle:{color:GOLD,fontSize:17,fontWeight:'900'},adhkarHomeHint:{color:MUTED,fontSize:11,marginTop:3},adhkarHomeArrow:{color:WHITE,fontSize:28,fontWeight:'700',marginHorizontal:6},panelHeading:{alignItems:'center',justifyContent:'space-between',marginBottom:8},panelTitle:{fontSize:18,fontWeight:'800',color:GOLD},panelAction:{color:'#DCE3EC',fontSize:12},prayerStrip:{width:'100%',paddingVertical:1},prayerItem:{flex:1,minWidth:0,minHeight:72,alignItems:'center',justifyContent:'center',paddingHorizontal:1,borderRightWidth:StyleSheet.hairlineWidth,borderColor:LINE},prayerIcon:{color:WHITE,fontSize:17},prayerName:{color:WHITE,fontSize:10,fontWeight:'700',marginTop:3,textAlign:'center'},prayerTime:{color:'#F2F3F5',fontSize:10.5,fontWeight:'700',marginTop:2,textAlign:'center'},
