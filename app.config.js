@@ -10,7 +10,7 @@ module.exports = () => {
   // can replace an installed Trial APK in place. The edition stays separated by
   // the baked APP_VARIANT and by non-overlapping Android versionCode ranges.
   const packageId = 'com.alofok.trial';
-  const androidVersionCode = isPaid ? 2000105 : 1001102;
+  const androidVersionCode = isPaid ? 2000106 : 1001102;
 
   const trialSounds = [
     './assets/adhan/beautiful_adhan.wav',
