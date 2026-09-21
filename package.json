@@ -32,6 +32,7 @@
     "expo-secure-store": "~15.0.8",
     "tweetnacl": "1.0.3",
     "tweetnacl-util": "0.15.1",
-    "@kesha-antonov/react-native-background-downloader": "4.6.3"
+    "@kesha-antonov/react-native-background-downloader": "4.6.3",
+    "expo-application": "~7.0.8"
   }
 }
