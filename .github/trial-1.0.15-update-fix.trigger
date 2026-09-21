@@ -1,1 +1,1 @@
-Rebuild Trial 1.0.15 with persistent background APK resume fix - 2026-09-21
+Build fresh Trial 1.0.16 test APK after invalid 1.0.15 package - 2026-09-21
