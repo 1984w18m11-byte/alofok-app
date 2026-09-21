@@ -70,11 +70,7 @@ trackEvent('page_view');
 const ALAUFUQ_TRIAL_APK='https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.1.2/alaufuq-trial-1.1.2.apk';
 document.querySelectorAll('[data-download-app="alofok"]').forEach(link=>{
   const q=new URLSearchParams({sid:analyticsSessionId,src:analyticsSource});
-  if(location.hostname.endsWith('.pages.dev')){
-    link.href=ALAUFUQ_TRIAL_APK;
-  }else{
-    link.href=`https://wispy-salad-438b.wissamdigital11.workers.dev/download/alofok-trial?${q.toString()}`;
-  }
+  link.href=`https://wispy-salad-438b.wissamdigital11.workers.dev/download/alofok-trial?${q.toString()}`;
 });
 
 // قاعدة الموقع: أي تطبيق قابل للتحميل يجب أن يكون بجانبه زر "شرح عن البرنامج".
