@@ -57,7 +57,7 @@ assert(trial.versionCode<plus.versionCode,'Plus versionCode must stay above Tria
 assert(trial.cross_channel_allowed===false&&plus.cross_channel_allowed===false,'cross-channel update manifests must stay disabled');
 assert((config.match(/const packageId =/g)||[]).length===1,'app.config.js must contain exactly one packageId declaration');
 assert(config.includes("const packageId = 'com.alofok.trial';"),'Trial and Plus must share the canonical package id');
-assert(config.includes('const androidVersionCode = isPaid ? 2000107 : 1001106;'),'variant-specific Android versionCode ranges missing');
+assert(config.includes('const androidVersionCode = isPaid ? 2000108 : 1001107;'),'variant-specific Android versionCode ranges missing');
 assert(config.includes("isPaid ? './assets/icon-paid.png' : './assets/icon-trial.png'"),'Trial and Plus must use their approved full launcher icons');
 assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork inside adaptiveIcon; it causes the icon to render too small');
 
@@ -161,7 +161,7 @@ assert(pkgLegal.dependencies['react-native-qrcode-svg']&&pkgLegal.dependencies['
 // Device-bound Plus protection guards
 const deviceSecurity=read('src/services/deviceSecurity.js');
 const apkUpdater=read('src/services/apkUpdater.js');
-assert(pkg.dependencies['expo-secure-store']&&pkg.dependencies['expo-crypto']&&pkg.dependencies['tweetnacl'],'device-bound encryption dependencies must be installed');
+assert(pkg.dependencies['expo-secure-store']&&pkg.dependencies['expo-crypto']&&pkg.dependencies['tweetnacl']&&pkg.dependencies['expo-application'],'device-bound identity/encryption dependencies must be installed');
 assert(deviceSecurity.includes('SecureStore.WHEN_UNLOCKED_THIS_DEVICE_ONLY'),'device secret must be kept in device-only secure storage');
 assert(deviceSecurity.includes('nacl.secretbox'),'Plus payload must use authenticated encryption');
 assert(deviceSecurity.includes('/api/plus/status')&&deviceSecurity.includes('/api/plus/payload'),'Plus approval and protected payload API endpoints missing');
