@@ -20,7 +20,7 @@ const TARGET_PATH=`${directories.documents}/al-ufuq-update.apk`;
 setConfig({
   progressInterval:750,
   progressMinBytes:262144,
-  showNotificationsEnabled:false,
+  showNotificationsEnabled:true,
   isLogsEnabled:false
 });
 
@@ -252,12 +252,15 @@ async function runDownload(url){
       );
     }
 
-    if(task?.state==='FAILED'||task?.state==='STOPPED'){
+    if(task?.state==='FAILED'){
       await stopNativeTask(task);
       task=null;
       await deleteTarget();
       await clearSaved();
     }
+
+    // A STOPPED/PAUSED task can still contain a valid partial APK. Keep it and
+    // resume the same native task instead of deleting progress when the app is reopened.
 
     return await new Promise(async(resolve,reject)=>{
       try{
@@ -300,7 +303,7 @@ async function runDownload(url){
           error:null
         });
 
-        if(task.state==='PAUSED')await task.resume();
+        if(task.state==='PAUSED'||task.state==='STOPPED')await task.resume();
         else if(task.state==='PENDING')task.start();
       }catch(error){
         reject(error);
