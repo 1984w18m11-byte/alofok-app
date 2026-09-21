@@ -1,1 +1,1 @@
-Rebuild Trial with native background updater for internal version 1.1.4 — 2026-09-21T02:17:00+03:00
+Rebuild corrected Trial 1.1.4 with Android versionCode 1001104 - 2026-09-21T01:00:21Z
