@@ -1,5 +1,6 @@
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import * as Application from 'expo-application';
 import * as FileSystem from 'expo-file-system/legacy';
 import nacl from 'tweetnacl';
 import * as naclUtil from 'tweetnacl-util';
@@ -32,14 +33,35 @@ export async function getDeviceSecret(){
   return {encoded,bytes:naclUtil.decodeBase64(encoded)};
 }
 
-export async function getDeviceCode(){
-  const {encoded}=await getDeviceSecret();
+async function digestToDeviceCode(seed){
   const digest=await Crypto.digestStringAsync(
     Crypto.CryptoDigestAlgorithm.SHA256,
-    encoded,
+    String(seed||''),
     {encoding:Crypto.CryptoEncoding.HEX}
   );
   return bytesToCode(digest);
+}
+
+export async function getLegacyDeviceCode(){
+  const {encoded}=await getDeviceSecret();
+  return digestToDeviceCode(encoded);
+}
+
+export async function getDeviceIdentity(){
+  try{
+    const androidId=Application.getAndroidId();
+    if(androidId){
+      const deviceCode=await digestToDeviceCode(`alofok-device-v2|${androidId}`);
+      const legacyDeviceCode=await getLegacyDeviceCode();
+      return {deviceCode,legacyDeviceCode,source:'android_id'};
+    }
+  }catch(_){}
+  const legacyDeviceCode=await getLegacyDeviceCode();
+  return {deviceCode:legacyDeviceCode,legacyDeviceCode,source:'legacy_fallback'};
+}
+
+export async function getDeviceCode(){
+  return (await getDeviceIdentity()).deviceCode;
 }
 
 async function fetchJson(url){
@@ -51,9 +73,12 @@ async function fetchJson(url){
 }
 
 export async function checkPlusApproval(){
-  const deviceCode=await getDeviceCode();
+  const identity=await getDeviceIdentity();
+  const {deviceCode,legacyDeviceCode}=identity;
   try{
-    const data=await fetchJson(`${PLUS_API_BASE}/api/plus/status?device_code=${encodeURIComponent(deviceCode)}`);
+    const qs=new URLSearchParams({device_code:deviceCode});
+    if(legacyDeviceCode&&legacyDeviceCode!==deviceCode)qs.set('legacy_device_code',legacyDeviceCode);
+    const data=await fetchJson(`${PLUS_API_BASE}/api/plus/status?${qs.toString()}`);
     return {
       approved:Boolean(data?.approved),
       deviceCode,
@@ -108,7 +133,10 @@ export async function prepareEncryptedPlusBundle(){
   const entitlement=await checkPlusApproval();
   if(!entitlement.approved)return {ok:false,reason:'not_approved',deviceCode:entitlement.deviceCode,offline:entitlement.offline};
   try{
-    const remote=await fetchJson(`${PLUS_API_BASE}/api/plus/payload?device_code=${encodeURIComponent(entitlement.deviceCode)}`);
+    const identity=await getDeviceIdentity();
+    const qs=new URLSearchParams({device_code:entitlement.deviceCode});
+    if(identity.legacyDeviceCode&&identity.legacyDeviceCode!==entitlement.deviceCode)qs.set('legacy_device_code',identity.legacyDeviceCode);
+    const remote=await fetchJson(`${PLUS_API_BASE}/api/plus/payload?${qs.toString()}`);
     await writeEncryptedBundle({
       ...remote,
       tier:'plus',
