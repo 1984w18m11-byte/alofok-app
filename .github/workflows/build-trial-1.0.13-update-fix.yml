@@ -5,6 +5,7 @@ on:
   push:
     paths:
       - .github/trial-1.0.15-update-fix.trigger
+      - src/services/apkUpdater.js
 
 permissions:
   contents: write
