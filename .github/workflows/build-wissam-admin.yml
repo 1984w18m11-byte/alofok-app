@@ -87,12 +87,12 @@ jobs:
 
       - name: Prepare admin APK
         shell: bash
-        run: cp wissam-digital-admin/android/app/build/outputs/apk/release/app-release.apk wissam-digital-admin-0.1.0.apk
+        run: cp wissam-digital-admin/android/app/build/outputs/apk/release/app-release.apk wissam-digital-admin-0.1.1.apk
 
       - name: Publish private-use admin build
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view wissam-admin-v0.1.0 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 ||             gh release create wissam-admin-v0.1.0 --repo 1984w18m11-byte/alofok-app --title "Wissam Digital Admin 0.1.0" --notes "تطبيق الإدارة الخاص بوسام ديجيتال. القسم الأول: Al-Ufuq Plus — طلبات التفعيل، كود الجهاز، وقت النسخ، المبلغ، تفعيل/رفض."
-          gh release upload wissam-admin-v0.1.0 wissam-digital-admin-0.1.0.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release view wissam-admin-v0.1.1 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 ||             gh release create wissam-admin-v0.1.1 --repo 1984w18m11-byte/alofok-app --title "Wissam Digital Admin 0.1.1" --notes "تطبيق الإدارة الخاص بوسام ديجيتال 0.1.1 — تبويبات الطلبات والمقبولة والمرفوضة مع إحصائيات زيارات وتحميلات الموقع."
+          gh release upload wissam-admin-v0.1.1 wissam-digital-admin-0.1.1.apk --repo 1984w18m11-byte/alofok-app --clobber
