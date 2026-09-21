@@ -21,7 +21,7 @@ setConfig({
   progressInterval:750,
   progressMinBytes:262144,
   showNotificationsEnabled:true,
-  isLogsEnabled:false
+  isLogsEnabled:false // rebuild marker
 });
 
 let activePromise=null;
