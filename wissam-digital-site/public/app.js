@@ -75,13 +75,19 @@ document.querySelectorAll('[data-download-app="alofok"]').forEach(link=>{
   link.href=trackedDownloadUrl();
 });
 
-const inAppBrowser=/(FBAN|FBAV|Instagram|TikTok|musical_ly|BytedanceWebview)/i.test(navigator.userAgent||'');
+const inAppBrowser=/(FBAN|FBAV|FB_IAB|Instagram|TikTok|musical_ly|Bytedance|zhiliaoapp)/i.test(navigator.userAgent||'');
 if(inAppBrowser&&/Android/i.test(navigator.userAgent||'')){
   document.querySelectorAll('[data-chrome-download]').forEach(link=>{
     const httpsUrl=trackedDownloadUrl();
     const parsed=new URL(httpsUrl);
+    const intentUrl=`intent://${parsed.host}${parsed.pathname}${parsed.search}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(httpsUrl)};end`;
     link.hidden=false;
-    link.href=`intent://${parsed.host}${parsed.pathname}${parsed.search}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(httpsUrl)};end`;
+    link.href=intentUrl;
+    link.addEventListener('click',event=>{
+      event.preventDefault();
+      window.location.href=intentUrl;
+      setTimeout(()=>{if(document.visibilityState==='visible')window.location.href=httpsUrl},1400);
+    });
   });
 }
 
