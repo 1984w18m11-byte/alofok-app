@@ -29,3 +29,4 @@ deploy-al-ufuq-1.0.13-live-qa-20260922
 deploy-al-ufuq-1.0.13-live-qa-retry-20260922
 deploy-al-ufuq-chrome-button-visibility-20260922
 deploy-social-in-app-chrome-intent-fix-20260922
+deploy-stable-al-ufuq-download-link-20260922
