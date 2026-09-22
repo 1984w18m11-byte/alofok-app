@@ -102,6 +102,15 @@ export class PlusAdminStore {
     }
     const now = new Date().toISOString();
     const existing = await this.latestForDevice(deviceCode);
+    const entitlement = await this.state.storage.get(`entitlement:${deviceCode}`);
+    if (entitlement?.approved) {
+      if (existing?.status !== 'approved') {
+        const approvedRequest = existing ? { ...existing, status: 'approved', decidedAt: entitlement.approvedAt || now } : null;
+        if (approvedRequest) await this.state.storage.put(`request:${existing.id}`, approvedRequest);
+        return json({ ok: true, request: approvedRequest, alreadyApproved: true });
+      }
+      return json({ ok: true, request: existing, alreadyApproved: true });
+    }
     if (existing && existing.status === 'pending') {
       const updated = {
         ...existing,
@@ -161,6 +170,14 @@ export class PlusAdminStore {
       await this.state.storage.delete(`entitlement:${request.deviceCode}`);
     }
     return json({ ok: true, request: updated });
+  }
+
+  async deleteRequest(id) {
+    const key = `request:${id}`;
+    const request = await this.state.storage.get(key);
+    if (!request) return json({ ok: false, error: 'not_found' }, 404);
+    await this.state.storage.delete(key);
+    return json({ ok: true, deleted: true, entitlementPreserved: request.status === 'approved' });
   }
 
   async status(deviceCode, legacyDeviceCode = '') {
@@ -267,6 +284,7 @@ export class PlusAdminStore {
       const action = parts[2] || '';
       if (action === 'approve') return this.setRequestStatus(id, 'approved');
       if (action === 'reject') return this.setRequestStatus(id, 'rejected');
+      if (action === 'delete') return this.deleteRequest(id);
       return json({ ok: false, error: 'bad_action' }, 400);
     }
     if (url.pathname === '/status' && request.method === 'GET') return this.status(url.searchParams.get('device_code') || '', url.searchParams.get('legacy_device_code') || '');
@@ -336,7 +354,7 @@ export default {
     }
 
 
-    const adminMatch = url.pathname.match(/^\/api\/admin\/plus\/requests\/([^/]+)\/(approve|reject)$/);
+    const adminMatch = url.pathname.match(/^\/api\/admin\/plus\/requests\/([^/]+)\/(approve|reject|delete)$/);
     if (adminMatch && request.method === 'POST') {
       if (!adminAuthorized(request, env)) return json({ ok: false, error: 'unauthorized' }, 401);
       return forwardStore(env, `/requests/${encodeURIComponent(adminMatch[1])}/${adminMatch[2]}`, { method: 'POST' });

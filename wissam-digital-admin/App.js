@@ -77,6 +77,21 @@ export default function App(){
   ]);
  };
 
+ const removeRequest=row=>{
+  Alert.alert('حذف الطلب','سيُحذف هذا السجل من القائمة. إذا كان الجهاز مفعّلًا فسيبقى تفعيله محفوظًا.',[
+   {text:'إلغاء',style:'cancel'},
+   {text:'حذف',style:'destructive',onPress:async()=>{
+    setBusy(row.id+'delete');
+    try{
+     const res=await fetch(`${API}/api/admin/plus/requests/${encodeURIComponent(row.id)}/delete`,{method:'POST',headers});
+     const data=await res.json().catch(()=>({}));
+     if(!res.ok||!data?.ok)throw new Error(data?.error||'failed');
+     await load(true);
+    }catch(e){Alert.alert('خطأ','تعذر حذف الطلب الآن.')}finally{setBusy('')}
+   }}
+  ]);
+ };
+
  const pending=rows.filter(x=>x.status==='pending').length;
  const approved=rows.filter(x=>x.status==='approved').length;
  const rejected=rows.filter(x=>x.status==='rejected').length;
@@ -129,6 +144,7 @@ export default function App(){
      <Pressable disabled={!!busy} onPress={()=>decide(row,'approve')} style={[s.btn,s.approve]}><Text style={s.approveText}>{busy===row.id+'approve'?'…':'تفعيل'}</Text></Pressable>
      <Pressable disabled={!!busy} onPress={()=>decide(row,'reject')} style={[s.btn,s.reject]}><Text style={s.rejectText}>{busy===row.id+'reject'?'…':'رفض'}</Text></Pressable>
     </View>:null}
+    <Pressable disabled={!!busy} onPress={()=>removeRequest(row)} style={s.deleteBtn}><Text style={s.deleteText}>{busy===row.id+'delete'?'…':'حذف الطلب'}</Text></Pressable>
    </View>)}
 
    <Text style={s.footer}>الأفق Plus · al ufuq · الطلبات منفصلة حسب الحالة · إحصائيات الموقع خاصة بالإدارة</Text>
@@ -150,5 +166,6 @@ const s=StyleSheet.create({
  card:{backgroundColor:CARD,borderRadius:18,padding:16,marginTop:12,borderWidth:1,borderColor:'rgba(255,255,255,.10)'},pendingCard:{borderColor:'rgba(244,196,93,.55)'},
  rowTop:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:8},code:{color:WHITE,fontSize:16,fontWeight:'900',flex:1},status:{fontSize:12,fontWeight:'900'},
  meta:{color:MUTED,fontSize:12,marginTop:7},actions:{flexDirection:'row',gap:10,marginTop:16},btn:{flex:1,borderRadius:13,paddingVertical:13,alignItems:'center'},approve:{backgroundColor:GOLD},approveText:{color:NAVY,fontWeight:'900'},reject:{backgroundColor:'rgba(255,90,95,.14)',borderColor:'rgba(255,90,95,.55)',borderWidth:1},rejectText:{color:'#FFD7D8',fontWeight:'900'},
+ deleteBtn:{marginTop:12,borderRadius:13,paddingVertical:11,alignItems:'center',borderWidth:1,borderColor:'rgba(255,90,95,.55)',backgroundColor:'rgba(255,90,95,.08)'},deleteText:{color:'#FFD7D8',fontWeight:'900'},
  footer:{color:'#7F93A7',fontSize:11,textAlign:'center',marginTop:26}
 });
