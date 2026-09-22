@@ -2,7 +2,7 @@ const DOWNLOADS = {
   '/download/alofok-trial': {
     app: 'alofok',
     edition: 'trial',
-    url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.1.2/alaufuq-trial-1.1.2.apk'
+    url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.13/Al-Ufuq-Trial-1.0.13.apk'
   },
   '/download/wissam-admin': {
     app: 'wissam-digital-admin',
@@ -117,7 +117,7 @@ export class PlusAdminStore {
     const id = crypto.randomUUID();
     const request = {
       id,
-      app: 'ALAUFUQ',
+      app: 'al ufuq',
       section: 'plus',
       deviceCode,
       amountIqd: Number(payload.amountIqd || 8000),
@@ -346,7 +346,7 @@ export default {
       if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
       let payload = {};
       try { payload = await request.json(); } catch (_) {}
-      const allowed = new Set(['page_view', 'app_explainer_open']);
+      const allowed = new Set(['page_view', 'download_click', 'app_explainer_open']);
       const event = clean(payload.event, 60);
       if (!allowed.has(event)) return new Response(null, { status: 204 });
       ctx.waitUntil(Promise.resolve(record(env, event, request, {

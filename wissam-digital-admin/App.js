@@ -89,7 +89,7 @@ export default function App(){
    <Text style={s.subtitle}>إدارة وسام ديجيتال</Text>
 
    <View style={s.sectionHeader}>
-    <View><Text style={s.sectionTitle}>Al-Ufuq Plus</Text><Text style={s.sectionHint}>طلبات التفعيل المرتبطة بكود الموبايل</Text></View>
+    <View><Text style={s.sectionTitle}>الأفق Plus · al ufuq</Text><Text style={s.sectionHint}>طلبات التفعيل المرتبطة بكود الموبايل</Text></View>
     <View style={s.badge}><Text style={s.badgeText}>{pending}</Text></View>
    </View>
 
@@ -106,8 +106,8 @@ export default function App(){
      <View style={s.stat}><Text style={s.statNum}>{Number(siteStats?.totals?.visits||0)}</Text><Text style={s.statLabel}>كل الزيارات</Text></View>
     </View>
     <View style={s.stats}>
-     <View style={s.stat}><Text style={s.statNum}>{Number(siteStats?.today?.alofokDownloads||0)}</Text><Text style={s.statLabel}>تحميل الأفق اليوم</Text></View>
-     <View style={s.stat}><Text style={s.statNum}>{Number(siteStats?.totals?.alofokDownloads||0)}</Text><Text style={s.statLabel}>كل تحميلات الأفق</Text></View>
+     <View style={s.stat}><Text style={s.statNum}>{Number(siteStats?.today?.alofokDownloads||0)}</Text><Text style={s.statLabel}>تحميلات الأفق اليوم</Text></View>
+     <View style={s.stat}><Text style={s.statNum}>{Number(siteStats?.totals?.alofokDownloads||0)}</Text><Text style={s.statLabel}>إجمالي تحميلات الأفق</Text></View>
     </View>
    </View>
 
@@ -131,7 +131,7 @@ export default function App(){
     </View>:null}
    </View>)}
 
-   <Text style={s.footer}>Al-Ufuq Plus · الطلبات منفصلة حسب الحالة · إحصائيات الموقع خاصة بالإدارة</Text>
+   <Text style={s.footer}>الأفق Plus · al ufuq · الطلبات منفصلة حسب الحالة · إحصائيات الموقع خاصة بالإدارة</Text>
   </ScrollView>
  </SafeAreaView>
 }
