@@ -2,12 +2,12 @@
   "expo": {
     "name": "وسام Digital Admin",
     "slug": "wissam-digital-admin",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "android": {
       "package": "com.wissamdigital.admin",
-      "versionCode": 3
+      "versionCode": 4
     },
     "plugins": []
   }

@@ -21,6 +21,12 @@ function statusLabel(status){
  if(status==='rejected')return 'مرفوض';
  return 'بانتظار الموافقة';
 }
+function previousStatusLabel(status){
+ if(status==='approved')return 'طلب سابق: موافق عليه';
+ if(status==='rejected')return 'طلب سابق: مرفوض';
+ if(status==='pending')return 'طلب سابق: معلّق';
+ return 'أول طلب لهذا الجهاز';
+}
 
 export default function App(){
  const [rows,setRows]=useState([]);
@@ -140,6 +146,7 @@ export default function App(){
     <Text style={s.meta}>النسخ: {kindLabel(row.destinationKind)}</Text>
     <Text style={s.meta}>الوقت: {fmt(row.lastCopiedAt||row.createdAt)}</Text>
     <Text style={s.meta}>عدد مرات النسخ: {Number(row.copyCount||1)}</Text>
+    <Text style={s.history}>{previousStatusLabel(row.previousStatus)}</Text>
     {row.status==='pending'?<View style={s.actions}>
      <Pressable disabled={!!busy} onPress={()=>decide(row,'approve')} style={[s.btn,s.approve]}><Text style={s.approveText}>{busy===row.id+'approve'?'…':'تفعيل'}</Text></Pressable>
      <Pressable disabled={!!busy} onPress={()=>decide(row,'reject')} style={[s.btn,s.reject]}><Text style={s.rejectText}>{busy===row.id+'reject'?'…':'رفض'}</Text></Pressable>
@@ -166,6 +173,7 @@ const s=StyleSheet.create({
  card:{backgroundColor:CARD,borderRadius:18,padding:16,marginTop:12,borderWidth:1,borderColor:'rgba(255,255,255,.10)'},pendingCard:{borderColor:'rgba(244,196,93,.55)'},
  rowTop:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',gap:8},code:{color:WHITE,fontSize:16,fontWeight:'900',flex:1},status:{fontSize:12,fontWeight:'900'},
  meta:{color:MUTED,fontSize:12,marginTop:7},actions:{flexDirection:'row',gap:10,marginTop:16},btn:{flex:1,borderRadius:13,paddingVertical:13,alignItems:'center'},approve:{backgroundColor:GOLD},approveText:{color:NAVY,fontWeight:'900'},reject:{backgroundColor:'rgba(255,90,95,.14)',borderColor:'rgba(255,90,95,.55)',borderWidth:1},rejectText:{color:'#FFD7D8',fontWeight:'900'},
+ history:{color:GOLD,fontSize:12,fontWeight:'900',marginTop:9},
  deleteBtn:{marginTop:12,borderRadius:13,paddingVertical:11,alignItems:'center',borderWidth:1,borderColor:'rgba(255,90,95,.55)',backgroundColor:'rgba(255,90,95,.08)'},deleteText:{color:'#FFD7D8',fontWeight:'900'},
  footer:{color:'#7F93A7',fontSize:11,textAlign:'center',marginTop:26}
 });

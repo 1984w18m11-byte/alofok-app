@@ -115,12 +115,12 @@ jobs:
 
       - name: Prepare admin APK
         shell: bash
-        run: cp wissam-digital-admin/android/app/build/outputs/apk/release/app-release.apk wissam-digital-admin-0.1.2.apk
+        run: cp wissam-digital-admin/android/app/build/outputs/apk/release/app-release.apk wissam-digital-admin-0.1.3.apk
 
       - name: Publish private-use admin build
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release view wissam-admin-v0.1.2 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 ||             gh release create wissam-admin-v0.1.2 --repo 1984w18m11-byte/alofok-app --title "Wissam Digital Admin 0.1.2" --notes "تطبيق الإدارة الخاص بوسام ديجيتال 0.1.2 — حذف سجلات الطلبات مع إبقاء تفعيل الجهاز الموافق عليه، ومنع إنشاء طلب جديد لجهاز مفعّل."
-          gh release upload wissam-admin-v0.1.2 wissam-digital-admin-0.1.2.apk --repo 1984w18m11-byte/alofok-app --clobber
+          gh release view wissam-admin-v0.1.3 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 ||             gh release create wissam-admin-v0.1.3 --repo 1984w18m11-byte/alofok-app --title "Wissam Digital Admin 0.1.3" --notes "يعرض حالة الطلب السابقة لكل جهاز، مع حذف السجلات وإبقاء تفعيل الأجهزة الموافق عليها."
+          gh release upload wissam-admin-v0.1.3 wissam-digital-admin-0.1.3.apk --repo 1984w18m11-byte/alofok-app --clobber

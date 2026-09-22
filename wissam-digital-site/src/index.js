@@ -104,16 +104,26 @@ export class PlusAdminStore {
     const existing = await this.latestForDevice(deviceCode);
     const entitlement = await this.state.storage.get(`entitlement:${deviceCode}`);
     if (entitlement?.approved) {
-      if (existing?.status !== 'approved') {
-        const approvedRequest = existing ? { ...existing, status: 'approved', decidedAt: entitlement.approvedAt || now } : null;
-        if (approvedRequest) await this.state.storage.put(`request:${existing.id}`, approvedRequest);
-        return json({ ok: true, request: approvedRequest, alreadyApproved: true });
-      }
-      return json({ ok: true, request: existing, alreadyApproved: true });
+      const approvedRequest = existing ? {
+        ...existing,
+        status: 'approved',
+        previousStatus: 'approved',
+        lastCopiedAt: now,
+        copyCount: Number(existing.copyCount || 1) + 1,
+        decidedAt: entitlement.approvedAt || existing.decidedAt || now
+      } : {
+        id: crypto.randomUUID(), app: 'al ufuq', section: 'plus', deviceCode,
+        amountIqd: Number(payload.amountIqd || 8000), destinationKind: clean(payload.destinationKind, 60),
+        status: 'approved', previousStatus: 'approved', createdAt: now, lastCopiedAt: now,
+        decidedAt: entitlement.approvedAt || now, copyCount: 1, country: clean(payload.country, 8)
+      };
+      await this.state.storage.put(`request:${approvedRequest.id}`, approvedRequest);
+      return json({ ok: true, request: approvedRequest, alreadyApproved: true });
     }
     if (existing && existing.status === 'pending') {
       const updated = {
         ...existing,
+        previousStatus: 'pending',
         lastCopiedAt: now,
         copyCount: Number(existing.copyCount || 1) + 1,
         destinationKind: clean(payload.destinationKind, 60),
@@ -132,6 +142,7 @@ export class PlusAdminStore {
       amountIqd: Number(payload.amountIqd || 8000),
       destinationKind: clean(payload.destinationKind, 60),
       status: 'pending',
+      previousStatus: existing?.status || 'none',
       createdAt: now,
       lastCopiedAt: now,
       copyCount: 1,
