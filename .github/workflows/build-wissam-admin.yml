@@ -73,7 +73,13 @@ jobs:
           set -euo pipefail
           base='https://wispy-salad-438b.wissamdigital11.workers.dev'
           auth="Authorization: Bearer ${WISSAM_ADMIN_TOKEN}"
-          before="$(curl -fsS -H "$auth" "$base/api/admin/site/stats")"
+          before=''
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            before="$(curl -sS -H "$auth" "$base/api/admin/site/stats" || true)"
+            if BEFORE="$before" node -e "const x=JSON.parse(process.env.BEFORE||'{}');process.exit(x.ok?0:1)"; then break; fi
+            sleep 3
+          done
+          BEFORE="$before" node -e "const x=JSON.parse(process.env.BEFORE||'{}');if(!x.ok)throw new Error('admin stats authorization did not propagate')"
           curl -fsS -o /dev/null -X POST -H 'Content-Type: application/json' \
             --data '{"event":"page_view","path":"/qa","source":"GitHub Actions","sessionId":"release-qa"}' \
             "$base/api/track"
