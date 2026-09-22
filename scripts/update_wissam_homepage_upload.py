@@ -4,12 +4,12 @@ index = Path('wissam-digital-site/public/index.html')
 s = index.read_text(encoding='utf-8')
 
 old_hero = '''        <div style="position:relative;z-index:3;text-align:center;margin-top:16px">
-          <a class="btn primary" data-download-app="alofok" href="https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk" rel="noopener"><span data-ar>⬇ اضغط لتحميل البرنامج</span><span data-en>⬇ Tap to download the app</span></a>
+          <a class="btn primary" data-download-app="alofok" href="/download/alofok-trial" rel="noopener"><span data-ar>⬇ تحميل الأفق</span><span data-en>⬇ Download al ufuq</span></a>
           <div class="hint" style="margin-top:8px"><span data-ar>النسخة التجريبية للأندرويد — APK</span><span data-en>Android Trial — APK</span></div>
         </div>'''
 new_hero = '''        <div style="position:relative;z-index:3;text-align:center;margin-top:16px;width:100%">
-          <a class="btn primary" data-download-app="alofok" href="https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk" rel="noopener" style="display:flex;justify-content:center;align-items:center;width:min(100%,360px);margin:0 auto;font-size:17px;padding:15px 20px"><span data-ar>⬇ تحميل تطبيق الأفق الآن</span><span data-en>⬇ Download AlofoK now</span></a>
-          <div class="hint" style="margin-top:8px"><span data-ar>النسخة التجريبية للأندرويد — APK — الإصدار 1.0.2</span><span data-en>Android Trial — APK — version 1.0.2</span></div>
+          <a class="btn primary" data-download-app="alofok" href="/download/alofok-trial" rel="noopener" style="display:flex;justify-content:center;align-items:center;width:min(100%,360px);margin:0 auto;font-size:17px;padding:15px 20px"><span data-ar>⬇ تحميل الأفق</span><span data-en>⬇ Download al ufuq</span></a>
+          <div class="hint" style="margin-top:8px"><span data-ar>النسخة التجريبية للأندرويد — APK</span><span data-en>Android Trial — APK</span></div>
         </div>'''
 if old_hero not in s:
     raise SystemExit('hero download block not found')
@@ -43,5 +43,5 @@ a = a.replace("const fallbackMsg=files.length?`${msg}\\nملاحظة: يرجى �
 a = a.replace("notice.textContent=files.length?'سيتم فتح واتساب. إذا لم تنتقل الصور تلقائيًا، أرفق الصور المختارة داخل المحادثة.':'سيتم فتح واتساب لإرسال الطلب.';", "notice.textContent=files.length?'سيتم فتح واتساب. إذا لم تنتقل الملفات تلقائيًا، أرفقها داخل المحادثة.':'سيتم فتح واتساب لإرسال الطلب.';")
 app.write_text(a, encoding='utf-8')
 
-Path('wissam-digital-site/.cloudflare-refresh-20260916-2.txt').write_text('Refresh Wissam Digital homepage: prominent AlofoK download button and contact file attachments.\n', encoding='utf-8')
+Path('wissam-digital-site/.cloudflare-refresh-20260916-2.txt').write_text('Refresh Wissam Digital homepage: permanent al ufuq download button and contact file attachments.\n', encoding='utf-8')
 print('Wissam Digital homepage updated.')
