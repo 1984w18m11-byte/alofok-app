@@ -67,6 +67,28 @@ jobs:
           cd wissam-digital-site
           printf '%s' "$ADMIN_TOKEN" | npx -y wrangler@4 secret put ADMIN_TOKEN --config wrangler.jsonc
 
+      - name: Verify live visit and al ufuq download statistics
+        shell: bash
+        run: |
+          set -euo pipefail
+          base='https://wispy-salad-438b.wissamdigital11.workers.dev'
+          auth="Authorization: Bearer ${WISSAM_ADMIN_TOKEN}"
+          before="$(curl -fsS -H "$auth" "$base/api/admin/site/stats")"
+          curl -fsS -o /dev/null -X POST -H 'Content-Type: application/json' \
+            --data '{"event":"page_view","path":"/qa","source":"GitHub Actions","sessionId":"release-qa"}' \
+            "$base/api/track"
+          headers="$(curl -fsS -D - -o /dev/null "$base/download/alofok-trial?sid=release-qa&src=GitHub-Actions")"
+          printf '%s' "$headers" | grep -qi 'location: .*v1.0.13/Al-Ufuq-Trial-1.0.13.apk'
+          after="$(curl -fsS -H "$auth" "$base/api/admin/site/stats")"
+          BEFORE="$before" AFTER="$after" node - <<'NODE'
+          const before=JSON.parse(process.env.BEFORE),after=JSON.parse(process.env.AFTER);
+          for(const side of ['today','totals']){
+            if(after[side].visits<before[side].visits+1)throw new Error(`${side}.visits did not increase`);
+            if(after[side].alofokDownloads<before[side].alofokDownloads+1)throw new Error(`${side}.alofokDownloads did not increase`);
+          }
+          console.log(JSON.stringify({before,after,apk:'1.0.13',result:'PASS'}));
+          NODE
+
       - name: Install admin dependencies
         working-directory: wissam-digital-admin
         run: npm install --no-audit --no-fund
