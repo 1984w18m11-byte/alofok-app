@@ -37,7 +37,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add wissam-digital-site/public/index.html wissam-digital-site/public/app.js
+          git add wissam-digital-site/public/index.html wissam-digital-site/public/app.js wissam-digital-site/public/_redirects
           if ! git diff --cached --quiet; then
             git commit -m "site: show AlofoK download and document attachments"
             git push origin main
