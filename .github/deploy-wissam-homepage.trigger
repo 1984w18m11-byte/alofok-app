@@ -27,3 +27,4 @@ deploy-correct-pages-project-wissam-digital-site-20260918
 deploy-al-ufuq-1.0.13-tracking-chrome-20260922
 deploy-al-ufuq-1.0.13-live-qa-20260922
 deploy-al-ufuq-1.0.13-live-qa-retry-20260922
+deploy-al-ufuq-chrome-button-visibility-20260922
