@@ -1,4 +1,4 @@
-name: Update Wissam Digital AlofoK download
+name: Verify permanent Wissam Digital al ufuq download link
 
 on:
   push:
@@ -18,36 +18,33 @@ jobs:
           ref: main
           fetch-depth: 0
 
-      - name: Point Trial downloads to AlofoK 1.0.2
+      - name: Keep public pages on the permanent download route
         shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          old='https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.1/alofok-trial-1.0.1.apk'
-          new='https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk'
           files=[
             Path('wissam-digital-site/public/index.html'),
             Path('wissam-digital-site/public/apps/alofok.html'),
-            Path('wissam-digital-site/src/index.js'),
           ]
           for p in files:
             s=p.read_text(encoding='utf-8')
-            if old not in s and new not in s:
-              raise SystemExit(f'Expected AlofoK download URL not found in {p}')
-            s=s.replace(old,new)
+            if '/download/alofok-trial' not in s:
+              raise SystemExit(f'Permanent al ufuq download route is missing from {p}')
+            s=s.replace('https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.2/alofok-trial-1.0.2.apk','/download/alofok-trial')
             p.write_text(s,encoding='utf-8')
           PY
 
       - name: Mark Cloudflare source refresh
         shell: bash
         run: |
-          printf '%s\n' 'Wissam Digital AlofoK Trial updated to 1.0.2 on 2026-09-16.' > wissam-digital-site/.release-1.0.2.txt
+          printf '%s\n' 'Wissam Digital public pages use one permanent al ufuq download route.' > wissam-digital-site/.permanent-download-link.txt
 
       - name: Commit website update
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add wissam-digital-site/public/index.html wissam-digital-site/public/apps/alofok.html wissam-digital-site/src/index.js wissam-digital-site/.release-1.0.2.txt
+          git add wissam-digital-site/public/index.html wissam-digital-site/public/apps/alofok.html wissam-digital-site/.permanent-download-link.txt
           git diff --cached --quiet && exit 0
-          git commit -m "site: publish AlofoK Trial 1.0.2"
+          git commit -m "site: keep permanent al ufuq download route"
           git push origin main
