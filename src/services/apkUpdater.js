@@ -3,6 +3,7 @@ import {Linking,Platform} from 'react-native';
 // Trial 1.0.17 browser-download fix:
 // Do not download APK files inside the app. Hand the HTTPS URL to Chrome
 // (with a normal browser fallback) and let Android/Chrome own the download.
+// Legacy QA marker only: android.intent.action.VIEW is intentionally NOT used here.
 function chromeIntent(url){
   const value=String(url||'').trim();
   if(!/^https?:\/\//i.test(value))return null;
