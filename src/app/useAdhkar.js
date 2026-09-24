@@ -157,7 +157,7 @@ export function useAdhkar({now,fajrDate,timeZone='Asia/Baghdad',lat=33.3152,lon=
     if(!(await notificationPermission()))return;
     const channelId='alofok-adhkar-reminders';
     if(Platform.OS==='android'){
-     await Notifications.setNotificationChannelAsync(channelId,{name:'Al-Ufuq — Adhkar',importance:Notifications.AndroidImportance.DEFAULT,vibrationPattern:[0,180,120,180],sound:'default'});
+     await Notifications.setNotificationChannelAsync(channelId,{name:'Alufuq — Adhkar',importance:Notifications.AndroidImportance.DEFAULT,vibrationPattern:[0,180,120,180],sound:'default'});
     }
 
     const ar=String(language).startsWith('ar');
@@ -169,7 +169,7 @@ export function useAdhkar({now,fajrDate,timeZone='Asia/Baghdad',lat=33.3152,lon=
       const fajr=fajrInstant(day,timeZone,lat,lon);
       if(fajr&&fajr.getTime()>Date.now()+5000){
        ids.push(await Notifications.scheduleNotificationAsync({
-        content:{title:ar?'أذكار الصباح':'Morning adhkar',body:ar?'حان وقت أذكار الصباح. افتح تطبيق الأفق للقراءة.':'It is time for morning adhkar. Open Al-Ufuq to read.',sound:'default',data:{kind:'alofok-adhkar',period:'morning'}},
+        content:{title:ar?'أذكار الصباح':'Morning adhkar',body:ar?'حان وقت أذكار الصباح. افتح تطبيق الأفق للقراءة.':'It is time for morning adhkar. Open Alufuq to read.',sound:'default',data:{kind:'alofok-adhkar',period:'morning'}},
         trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:new Date(fajr.getTime()+60000),channelId:Platform.OS==='android'?channelId:undefined}
        }));
       }
@@ -178,7 +178,7 @@ export function useAdhkar({now,fajrDate,timeZone='Asia/Baghdad',lat=33.3152,lon=
       const evening=localClockInstant(day,timeZone,21,0);
       if(evening.getTime()>Date.now()+5000){
        ids.push(await Notifications.scheduleNotificationAsync({
-        content:{title:ar?'أذكار المساء':'Evening adhkar',body:ar?'حان وقت أذكار المساء. افتح تطبيق الأفق للقراءة.':'It is time for evening adhkar. Open Al-Ufuq to read.',sound:'default',data:{kind:'alofok-adhkar',period:'evening'}},
+        content:{title:ar?'أذكار المساء':'Evening adhkar',body:ar?'حان وقت أذكار المساء. افتح تطبيق الأفق للقراءة.':'It is time for evening adhkar. Open Alufuq to read.',sound:'default',data:{kind:'alofok-adhkar',period:'evening'}},
         trigger:{type:Notifications.SchedulableTriggerInputTypes.DATE,date:evening,channelId:Platform.OS==='android'?channelId:undefined}
        }));
       }
