@@ -197,6 +197,7 @@ function Drawer({t,rtl,onClose,onNavigate,onUpdate,updateReady=false}){
   <View style={[s.drawer,rtl?{right:0}:{left:0}]}>
    <SafeAreaView style={s.drawerSafe}>
     <IconButton label={t('back')} onPress={onClose}>{rtl?'›':'‹'}</IconButton>
+    <Pressable accessibilityLabel={t('close')} onPress={onClose} style={s.drawerClose}><Text style={s.drawerCloseText}>×</Text></Pressable>
     <View style={s.drawerBrand}><View style={s.logoTile}><Text style={s.logoTileText}>◩</Text></View><Text style={s.drawerAppName}>{t('appName')}</Text><Text style={s.drawerTagline}>{t('tagline')}</Text></View>
     <View style={s.drawerLine}/>
     {items.map(([icon,key,target])=><Pressable key={target} onPress={()=>target==='update'?onUpdate():onNavigate(target)} style={[s.drawerItem,rowDir(rtl)]}><Text style={s.drawerItemIcon}>{icon}</Text><Text style={[s.drawerItemText,textDir(rtl)]}>{t(key)}</Text>{target==='update'&&updateReady?<View accessibilityLabel={rtl?'تحديث Plus متاح':'Plus update available'} style={{width:10,height:10,borderRadius:5,backgroundColor:'#FF3B30',marginHorizontal:8}}/>:null}</Pressable>)}
