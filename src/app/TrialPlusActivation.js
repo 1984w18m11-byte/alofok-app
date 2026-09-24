@@ -37,6 +37,7 @@ export function TrialPlusActivation({rtl,country,onBack,alreadyActive=false}){
 
    <PaymentTransferPanel rtl={rtl} purpose='plus' edition={alreadyActive?'plus':'trial'} amountIqd={PLUS_PRICE_IQD} eventName={PAYMENT_COPY_EVENT} notificationEndpoint={PAYMENT_COPY_WEBHOOK}/>
 
+   <Text style={[s.discoverNote,dir(rtl)]}>{rtl?'اكتشف مزايا Plus':'Discover Plus features'}</Text>
    <Text style={[s.footerNote,dir(rtl)]}>{rtl?'بعد التحويل انتظر موافقة الإدارة، وبعد التفعيل سيظهر تحديث Plus داخل التطبيق.':'After payment, wait for admin approval. Once activated, the Plus update will appear inside the app.'}</Text>
   </>}
  </ScrollView></SafeAreaView>
@@ -58,5 +59,6 @@ const s=StyleSheet.create({
  priceLabel:{color:GOLD,fontSize:14,fontWeight:'900',flex:1},
  price:{color:WHITE,fontSize:20,fontWeight:'900',marginLeft:12},
  body:{color:WHITE,fontSize:13,lineHeight:20},
- footerNote:{color:MUTED,fontSize:11,lineHeight:17,marginTop:10}
+ discoverNote:{color:GOLD,fontSize:14,fontWeight:'900',marginTop:14},
+ footerNote:{color:MUTED,fontSize:11,lineHeight:17,marginTop:8}
 });
