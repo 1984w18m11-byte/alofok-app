@@ -284,7 +284,7 @@ const GROUP_ORDER=['seasons','atmospheres','weekdays','months','special'];
 function ThemesScreen({t,rtl,isPlus,selectedTheme,setSelectedTheme,onBack}){
  const [group,setGroup]=useState('seasons');
  const groups=isPlus?GROUP_ORDER:['seasons'];
- const themes=THEME_CATALOG.filter(x=>x.group===group&&(isPlus||!x.plus));
+ const themes=THEME_CATALOG.filter(x=>x.group===group&&(isPlus?x.id!=='trial-fixed':!x.plus));
  return <SafeAreaView style={s.flatSafe}><ScrollView contentContainerStyle={s.screenContent}>
   <Header title={t('themes')} t={t} rtl={rtl} onBack={onBack}/><Text style={[s.screenHint,textDir(rtl)]}>{t('themesHint')}</Text>
   <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.tabRow}>{groups.map(g=><Pressable key={g} onPress={()=>setGroup(g)} style={[s.tabPill,group===g&&s.tabPillActive]}><Text style={[s.tabPillText,group===g&&{color:GOLD}]}>{t(g)}</Text></Pressable>)}</ScrollView>
