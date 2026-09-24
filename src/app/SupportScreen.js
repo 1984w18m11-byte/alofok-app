@@ -21,8 +21,8 @@ export function SupportScreen({rtl,onBack,edition='trial'}){
   </View>
 
   <View style={s.hero}>
-   <Text style={[s.heroTitle,dir(rtl)]}>{rtl?'ساهم في دعم وتطوير برنامج الأفق':'Support Al-Ufuq development'}</Text>
-   <Text style={[s.body,dir(rtl)]}>{rtl?'دعمكم يساهم في تطوير تطبيق الأفق واستمرار تحسينه. شكرًا لمساهمتكم ودعمكم.':'Your support helps us develop Al-Ufuq and continue improving it. Thank you for your contribution and support.'}</Text>
+   <Text style={[s.heroTitle,dir(rtl)]}>{rtl?'ساهم في دعم وتطوير برنامج الأفق':'Support Alufuq development'}</Text>
+   <Text style={[s.body,dir(rtl)]}>{rtl?'دعمكم يساهم في تطوير تطبيق الأفق واستمرار تحسينه. شكرًا لمساهمتكم ودعمكم.':'Your support helps us develop Alufuq and continue improving it. Thank you for your contribution and support.'}</Text>
   </View>
 
   <View style={s.notice}><Text style={[s.noticeText,dir(rtl)]}>{rtl?'وسائل التحويل الحالية داخل العراق. اختر الطريقة المناسبة لك ثم انسخ الرقم.':'Current transfer methods are inside Iraq. Choose the method that suits you, then copy the number.'}</Text></View>
