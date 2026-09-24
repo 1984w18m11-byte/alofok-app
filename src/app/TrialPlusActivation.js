@@ -19,9 +19,9 @@ export function TrialPlusActivation({rtl,country,onBack,alreadyActive=false}){
  const inIraq=country==='IQ';
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content}>
   <View style={s.header}>
-   <Pressable onPress={onBack} style={s.back}><Text style={s.backText}>‹</Text></Pressable>
+   <Pressable accessibilityLabel={rtl?'رجوع':'Back'} onPress={onBack} style={s.back}><Text style={s.backText}>‹</Text></Pressable>
    <Text style={[s.title,dir(rtl)]}>{rtl?'تفعيل Plus':'Activate Plus'}</Text>
-   <View style={s.spacer}/>
+   <Pressable accessibilityLabel={rtl?'إغلاق':'Close'} onPress={onBack} style={s.close}><Text style={s.closeText}>×</Text></Pressable>
   </View>
 
   {alreadyActive&&<View style={s.activeCard}><Text style={[s.activeTitle,dir(rtl)]}>{rtl?'Plus مفعّلة':'Plus active'}</Text><Text style={[s.body,dir(rtl)]}>{rtl?'هذه النسخة مفعّلة على هذا الجهاز.':'This edition is active on this device.'}</Text></View>}
@@ -49,8 +49,9 @@ const s=StyleSheet.create({
  header:{height:60,flexDirection:'row',alignItems:'center',justifyContent:'space-between'},
  back:{width:44,height:44,borderRadius:14,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(4,20,37,.58)',borderWidth:1,borderColor:LINE},
  backText:{color:WHITE,fontSize:30},
+ close:{width:44,height:44,borderRadius:14,alignItems:'center',justifyContent:'center',backgroundColor:'rgba(4,20,37,.58)',borderWidth:1,borderColor:LINE},
+ closeText:{color:WHITE,fontSize:28,fontWeight:'700',lineHeight:30},
  title:{color:WHITE,fontSize:24,fontWeight:'900',flex:1,marginHorizontal:12},
- spacer:{width:44},
  card:{backgroundColor:CARD,borderRadius:16,borderWidth:1,borderColor:LINE,padding:14,marginTop:12},
  activeCard:{backgroundColor:'rgba(244,196,93,.10)',borderRadius:16,borderWidth:1,borderColor:'rgba(244,196,93,.45)',padding:14,marginTop:12},
  activeTitle:{color:GOLD,fontSize:17,fontWeight:'900',marginBottom:6},
