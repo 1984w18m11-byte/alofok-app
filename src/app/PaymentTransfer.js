@@ -16,6 +16,8 @@ const ADMIN_EVENT_ENDPOINT=process.env.EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK||'https:
 
 function dir(rtl){return {textAlign:rtl?'right':'left',writingDirection:rtl?'rtl':'ltr'}}
 function digits(value){return String(value||'').replace(/\D/g,'')}
+function expectedLength(kind){return kind==='money_transfer_16'?16:kind==='mobile_purchase_10'?10:0}
+function isValidDestination(kind,value){const expected=expectedLength(kind);return expected>0&&digits(value).length===expected}
 function maskedLast4(value){
  const clean=digits(value);
  if(!clean)return '••••';
@@ -28,13 +30,14 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
  const [open,setOpen]=useState(false);
 
  useEffect(()=>{
+  if(purpose!=='plus'){setDeviceCode('');return()=>{}}
   let active=true;
-  getDeviceCode().then(code=>{if(active)setDeviceCode(code)}).catch(()=>{if(active)setDeviceCode('غير متاح')});
+  getDeviceCode().then(code=>{if(active)setDeviceCode(code)}).catch(()=>{if(active)setDeviceCode('')});
   return()=>{active=false};
- },[]);
+ },[purpose]);
 
  const postCopyEvent=async(destinationKind,copiedAt)=>{
-  if(purpose!=='plus'||!notificationEndpoint)return false;
+  if(purpose!=='plus'||!notificationEndpoint||!deviceCode)return false;
   try{
    const response=await fetch(notificationEndpoint,{
     method:'POST',
@@ -47,7 +50,7 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
 
  const copyDestination=async(kind,value)=>{
   const clean=digits(value);
-  if(!clean)return;
+  if(!isValidDestination(kind,clean))return;
   setBusy(kind);
   const copiedAt=new Date().toISOString();
   await Clipboard.setStringAsync(clean);
