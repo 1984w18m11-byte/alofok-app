@@ -34,10 +34,9 @@ const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
 const VERSION='1.0.19';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
-const UPDATE_URL=IS_PLUS
- ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
- :'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-trial.json';
-const PLUS_UPDATE_URL='https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json';
+const UPDATE_MANIFEST_BASE=(process.env.EXPO_PUBLIC_UPDATE_MANIFEST_BASE||'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main').replace(/\/$/,'');
+const UPDATE_URL=`${UPDATE_MANIFEST_BASE}/${IS_PLUS?'update-plus.json':'update-trial.json'}`;
+const PLUS_UPDATE_URL=`${UPDATE_MANIFEST_BASE}/update-plus.json`;
 const LANGUAGE_KEY='alofok_v3_language';
 const THEME_KEY='alofok_v3_theme';
 
@@ -438,7 +437,7 @@ export default function AppV3(){
        await downloadAndInstallApk(url);
       }catch(error){
        const permission=String(error?.message||error).includes('INSTALL_PERMISSION_REQUIRED');
-       Alert.alert(t('checkUpdate'),permission?(rtl?'فعّل السماح بتثبيت التطبيقات من هذا المصدر، ثم ارجع واضغط التحديث مرة ثانية.':'Allow app installs from this source, then return and tap Update again.'):(rtl?'تعذر تنزيل أو تشغيل ملف التحديث. حاول مرة أخرى.':'Could not download or launch the update package. Please try again.'));
+       Alert.alert(t('checkUpdate'),rtl?'تعذر فتح رابط التحديث في Chrome أو متصفح النظام. حاول مرة أخرى.':'Could not open the update link in Chrome or the system browser. Please try again.');
       }
     }}
    ]);
