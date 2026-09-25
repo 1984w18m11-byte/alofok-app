@@ -72,13 +72,13 @@ export function AuthenticityScreen({rtl,onBack,edition,version}){
  return <SafeAreaView style={s.safe}><ScrollView contentContainerStyle={s.content}>
   <LegalHeader title={ar?'التحقق من أصالة النسخة':'Verify authenticity'} onBack={onBack} rtl={rtl}/>
   <Card title={ar?'بيانات النسخة':'Edition details'} rtl={rtl}><Paragraph rtl={rtl}>{ar?`البرنامج: الأفق / al ufuq\nصاحب المشروع: وسام محمد — Wissam Digital\nالنسخة: ${edition==='plus'?'Plus':'تجريبية'}\nالإصدار: ${version}`:`App: al ufuq\nProject owner: Wissam Mohammed — Wissam Digital\nEdition: ${edition==='plus'?'Plus':'Trial'}\nVersion: ${version}`}</Paragraph></Card>
-  {!configured&&!loading&&!error&&<View style={s.notice}><Text style={[s.noticeText,dir(rtl)]}>{ar?'الباركود الظاهر أدناه هو باركود تعريف النسخة الرسمية: يحتوي اسم الأفق، وسام محمد — Wissam Digital، نوع النسخة، رقم الإصدار ومعرّف التثبيت. عند ربط خادم التحقق الرسمي يتحول إلى باركود تحقق قصير العمر يمكن التحقق منه عبر صفحة الويب الرسمية.':'The QR below is the official-copy identity QR. It contains the al ufuq name, Wissam Mohammed — Wissam Digital, edition, version and installation ID. Once the official verification server is connected, it becomes a short-lived QR that can be verified on the official web page.'}</Text></View>}
+  {!configured&&!loading&&!error&&<View style={s.notice}><Text style={[s.noticeText,dir(rtl)]}>{ar?'باركود التحقق يتغير عند كل فتح لهذه الصفحة ويتجدد تلقائيًا كل دقيقة. يحمل رمزًا قصير العمر مرتبطًا بنوع النسخة والإصدار ومعرّف التثبيت، لذلك لا يبقى نفس QR ثابتًا.':'The authenticity QR changes every time this page opens and refreshes automatically every minute. It carries a short-lived token bound to the edition, version and installation instead of keeping the same QR.'}</Text></View>}
   {loading&&<Text style={[s.status,dir(rtl)]}>{ar?'جاري تجهيز بيانات التحقق…':'Preparing verification data…'}</Text>}
   {!!error&&<Text style={[s.error,dir(rtl)]}>{error}</Text>}
   {!!qrValue&&<>
    <Text style={[s.codeLabel,dir(rtl)]}>{configured?(ar?'باركود التحقق من أصالة النسخة':'Authenticity verification QR'):(ar?'باركود تعريف النسخة الرسمية':'Official-copy identity QR')}</Text>
    <View style={s.qrWrap}><QRCode value={qrValue} size={210} backgroundColor="#FFFFFF" color="#06182B"/></View>
-   <Text style={[s.expiry,dir(rtl)]}>{ar?'محتوى الباركود: الأفق / al ufuq — وسام محمد — Wissam Digital — نوع النسخة — رقم الإصدار — معرّف التثبيت.':'QR content: al ufuq — Wissam Mohammed — Wissam Digital — edition — version — installation ID.'}</Text>
+   <Text style={[s.expiry,dir(rtl)]}>{ar?'باركود متغير قصير العمر: الأفق / al ufuq — Wissam Digital — نوع النسخة — رقم الإصدار — معرّف التثبيت — رمز تحقق متغير.':'Rotating short-lived QR: al ufuq — Wissam Digital — edition — version — installation ID — changing verification token.'}</Text>
   </>}
   {configured&&challenge?.token&&<>
    <Text style={[s.codeLabel,dir(rtl)]}>{ar?'رمز التحقق':'Verification code'}</Text>
@@ -87,7 +87,7 @@ export function AuthenticityScreen({rtl,onBack,edition,version}){
    <View style={s.actions}><NavButton label={ar?'نسخ الرمز':'Copy code'} onPress={copyCode}/>{!!challenge.verifyUrl&&<NavButton label={ar?'فتح صفحة التحقق':'Open verification page'} onPress={openVerify}/>}</View>
   </>}
   <NavButton label={loading?(ar?'جاري التجهيز…':'Preparing…'):(ar?'تحديث باركود التحقق':'Refresh verification QR')} onPress={loading?()=>{}:issue}/>
-  <Text style={[s.note,dir(rtl)]}>{ar?'شرح النظام: الباركود المحلي يعرّف النسخة والجهاز ولا يُرسل معلوماتك الشخصية. عند تفعيل خادم التحقق الرسمي يصبح الرمز قصير العمر ويقرر الخادم صلاحية الرمز وحالة النسخة. إذا كان لديك هاتف واحد فقط، يمكنك استخدام رمز التحقق النصي أو فتح صفحة التحقق من نفس الجهاز عندما تكون الخدمة مرتبطة.':'How it works: the local QR identifies the app copy and installation without containing your personal information. When the official verification server is enabled, the code becomes short-lived and the server decides the validity and status of the copy. With one phone, the text code or official verification page can be used on the same device once the service is connected.'}</Text>
+  <Text style={[s.note,dir(rtl)]}>{ar?'شرح النظام: يتولد رمز جديد عند فتح الصفحة ويتجدد تلقائيًا، لذلك لا يبقى نفس QR ثابتًا. عند تفعيل خادم التحقق الرسمي يمكن اعتماد الرمز لمرة واحدة أو حتى انتهاء مدته بحسب سياسة الخادم. لا يتضمن QR رقم البطاقة أو رقم الهاتف.':'How it works: a new QR token is created when the page opens and rotates automatically, so the same QR is not kept permanently. When server verification is enabled, the token can be single-use or expire according to server policy. The QR does not contain card or phone numbers.'}</Text>
  </ScrollView></SafeAreaView>
 }
 
