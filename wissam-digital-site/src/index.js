@@ -2,7 +2,7 @@ const DOWNLOADS = {
   '/download/alofok-trial': {
     app: 'alofok',
     edition: 'trial',
-    url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.12/alofok-trial-1.0.12.apk'
+    url: 'https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.13/Al-Ufuq-Trial-1.0.13.apk'
   },
   '/download/wissam-admin': {
     app: 'wissam-digital-admin',
@@ -23,6 +23,16 @@ function json(data, status = 200) {
       'Cache-Control': 'no-store'
     }
   });
+}
+
+function baghdadDay(){
+  try{
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Baghdad',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+    const map=Object.fromEntries(parts.map(p=>[p.type,p.value]));
+    return `${map.year}-${map.month}-${map.day}`;
+  }catch(_){
+    return new Date().toISOString().slice(0,10);
+  }
 }
 
 function sourceFrom(request, url) {
@@ -92,9 +102,28 @@ export class PlusAdminStore {
     }
     const now = new Date().toISOString();
     const existing = await this.latestForDevice(deviceCode);
+    const entitlement = await this.state.storage.get(`entitlement:${deviceCode}`);
+    if (entitlement?.approved) {
+      const approvedRequest = existing ? {
+        ...existing,
+        status: 'approved',
+        previousStatus: 'approved',
+        lastCopiedAt: now,
+        copyCount: Number(existing.copyCount || 1) + 1,
+        decidedAt: entitlement.approvedAt || existing.decidedAt || now
+      } : {
+        id: crypto.randomUUID(), app: 'al ufuq', section: 'plus', deviceCode,
+        amountIqd: Number(payload.amountIqd || 8000), destinationKind: clean(payload.destinationKind, 60),
+        status: 'approved', previousStatus: 'approved', createdAt: now, lastCopiedAt: now,
+        decidedAt: entitlement.approvedAt || now, copyCount: 1, country: clean(payload.country, 8)
+      };
+      await this.state.storage.put(`request:${approvedRequest.id}`, approvedRequest);
+      return json({ ok: true, request: approvedRequest, alreadyApproved: true });
+    }
     if (existing && existing.status === 'pending') {
       const updated = {
         ...existing,
+        previousStatus: 'pending',
         lastCopiedAt: now,
         copyCount: Number(existing.copyCount || 1) + 1,
         destinationKind: clean(payload.destinationKind, 60),
@@ -107,12 +136,13 @@ export class PlusAdminStore {
     const id = crypto.randomUUID();
     const request = {
       id,
-      app: 'Al-Ufuq',
+      app: 'al ufuq',
       section: 'plus',
       deviceCode,
       amountIqd: Number(payload.amountIqd || 8000),
       destinationKind: clean(payload.destinationKind, 60),
       status: 'pending',
+      previousStatus: existing?.status || 'none',
       createdAt: now,
       lastCopiedAt: now,
       copyCount: 1,
@@ -153,10 +183,20 @@ export class PlusAdminStore {
     return json({ ok: true, request: updated });
   }
 
-  async status(deviceCode) {
+  async deleteRequest(id) {
+    const key = `request:${id}`;
+    const request = await this.state.storage.get(key);
+    if (!request) return json({ ok: false, error: 'not_found' }, 404);
+    await this.state.storage.delete(key);
+    return json({ ok: true, deleted: true, entitlementPreserved: request.status === 'approved' });
+  }
+
+  async status(deviceCode, legacyDeviceCode = '') {
     const code = clean(deviceCode, 80).toUpperCase();
-    const entitlement = await this.state.storage.get(`entitlement:${code}`);
-    const latest = await this.latestForDevice(code);
+    const legacy = clean(legacyDeviceCode, 80).toUpperCase();
+    const entitlement = await this.resolveEntitlement(code, legacy);
+    let latest = await this.latestForDevice(code);
+    if (!latest && legacy && legacy !== code) latest = await this.latestForDevice(legacy);
     return json({
       ok: true,
       deviceCode: code,
@@ -168,17 +208,76 @@ export class PlusAdminStore {
     });
   }
 
-  async payload(deviceCode) {
+  async payload(deviceCode, legacyDeviceCode = '') {
     const code = clean(deviceCode, 80).toUpperCase();
-    const entitlement = await this.state.storage.get(`entitlement:${code}`);
+    const entitlement = await this.resolveEntitlement(code, legacyDeviceCode);
     if (!entitlement?.approved) return json({ ok: false, error: 'not_approved' }, 403);
     return json({
       ok: true,
       tier: 'plus',
       deviceCode: code,
-      payloadVersion: '2026.09.18.2',
+      payloadVersion: '2026.09.21.1',
       features: ['plus_themes', 'automatic_theme_rotation', 'plus_interface'],
       issuedAt: new Date().toISOString()
+    });
+  }
+
+  async resolveEntitlement(deviceCode, legacyDeviceCode = '') {
+    const code = clean(deviceCode, 80).toUpperCase();
+    const legacy = clean(legacyDeviceCode, 80).toUpperCase();
+    let entitlement = await this.state.storage.get(`entitlement:${code}`);
+    if (!entitlement?.approved && legacy && legacy !== code) {
+      const oldEntitlement = await this.state.storage.get(`entitlement:${legacy}`);
+      if (oldEntitlement?.approved) {
+        entitlement = {
+          ...oldEntitlement,
+          deviceCode: code,
+          migratedFrom: legacy,
+          migratedAt: new Date().toISOString()
+        };
+        await this.state.storage.put(`entitlement:${code}`, entitlement);
+      }
+    }
+    return entitlement;
+  }
+
+  async incrementStats(payload) {
+    const event = clean(payload.event, 60);
+    if (!['page_view','download_click','app_explainer_open'].includes(event)) return json({ ok: false, error: 'bad_event' }, 400);
+    const app = clean(payload.app, 60);
+    const day = baghdadDay();
+    const keys = [
+      `stats:all:${event}`,
+      `stats:day:${day}:${event}`
+    ];
+    if (event === 'download_click' && app) {
+      keys.push(`stats:all:${event}:${app}`, `stats:day:${day}:${event}:${app}`);
+    }
+    for (const key of keys) {
+      const current = Number(await this.state.storage.get(key) || 0);
+      await this.state.storage.put(key, current + 1);
+    }
+    return json({ ok: true });
+  }
+
+  async siteStats() {
+    const day = baghdadDay();
+    const read = async key => Number(await this.state.storage.get(key) || 0);
+    return json({
+      ok: true,
+      day,
+      totals: {
+        visits: await read('stats:all:page_view'),
+        downloads: await read('stats:all:download_click'),
+        alofokDownloads: await read('stats:all:download_click:alofok'),
+        explainers: await read('stats:all:app_explainer_open')
+      },
+      today: {
+        visits: await read(`stats:day:${day}:page_view`),
+        downloads: await read(`stats:day:${day}:download_click`),
+        alofokDownloads: await read(`stats:day:${day}:download_click:alofok`),
+        explainers: await read(`stats:day:${day}:app_explainer_open`)
+      }
     });
   }
 
@@ -196,10 +295,13 @@ export class PlusAdminStore {
       const action = parts[2] || '';
       if (action === 'approve') return this.setRequestStatus(id, 'approved');
       if (action === 'reject') return this.setRequestStatus(id, 'rejected');
+      if (action === 'delete') return this.deleteRequest(id);
       return json({ ok: false, error: 'bad_action' }, 400);
     }
-    if (url.pathname === '/status' && request.method === 'GET') return this.status(url.searchParams.get('device_code') || '');
-    if (url.pathname === '/payload' && request.method === 'GET') return this.payload(url.searchParams.get('device_code') || '');
+    if (url.pathname === '/status' && request.method === 'GET') return this.status(url.searchParams.get('device_code') || '', url.searchParams.get('legacy_device_code') || '');
+    if (url.pathname === '/payload' && request.method === 'GET') return this.payload(url.searchParams.get('device_code') || '', url.searchParams.get('legacy_device_code') || '');
+    if (url.pathname === '/stats/increment' && request.method === 'POST') { let body={}; try{body=await request.json()}catch(_){} return this.incrementStats(body); }
+    if (url.pathname === '/stats' && request.method === 'GET') return this.siteStats();
     return json({ ok: false, error: 'not_found' }, 404);
   }
 }
@@ -245,11 +347,11 @@ export default {
     }
 
     if (url.pathname === '/api/plus/status' && request.method === 'GET') {
-      return forwardStore(env, `/status?device_code=${encodeURIComponent(url.searchParams.get('device_code') || '')}`);
+      return forwardStore(env, `/status?device_code=${encodeURIComponent(url.searchParams.get('device_code') || '')}&legacy_device_code=${encodeURIComponent(url.searchParams.get('legacy_device_code') || '')}`);
     }
 
     if (url.pathname === '/api/plus/payload' && request.method === 'GET') {
-      return forwardStore(env, `/payload?device_code=${encodeURIComponent(url.searchParams.get('device_code') || '')}`);
+      return forwardStore(env, `/payload?device_code=${encodeURIComponent(url.searchParams.get('device_code') || '')}&legacy_device_code=${encodeURIComponent(url.searchParams.get('legacy_device_code') || '')}`);
     }
 
     if (url.pathname === '/api/admin/plus/requests' && request.method === 'GET') {
@@ -257,7 +359,13 @@ export default {
       return forwardStore(env, '/requests');
     }
 
-    const adminMatch = url.pathname.match(/^\/api\/admin\/plus\/requests\/([^/]+)\/(approve|reject)$/);
+    if (url.pathname === '/api/admin/site/stats' && request.method === 'GET') {
+      if (!adminAuthorized(request, env)) return json({ ok: false, error: 'unauthorized' }, 401);
+      return forwardStore(env, '/stats');
+    }
+
+
+    const adminMatch = url.pathname.match(/^\/api\/admin\/plus\/requests\/([^/]+)\/(approve|reject|delete)$/);
     if (adminMatch && request.method === 'POST') {
       if (!adminAuthorized(request, env)) return json({ ok: false, error: 'unauthorized' }, 401);
       return forwardStore(env, `/requests/${encodeURIComponent(adminMatch[1])}/${adminMatch[2]}`, { method: 'POST' });
@@ -267,7 +375,7 @@ export default {
       if (request.method !== 'POST') return new Response('Method not allowed', { status: 405 });
       let payload = {};
       try { payload = await request.json(); } catch (_) {}
-      const allowed = new Set(['page_view', 'app_explainer_open']);
+      const allowed = new Set(['page_view', 'download_click', 'app_explainer_open']);
       const event = clean(payload.event, 60);
       if (!allowed.has(event)) return new Response(null, { status: 204 });
       ctx.waitUntil(Promise.resolve(record(env, event, request, {
@@ -277,6 +385,11 @@ export default {
         edition: payload.edition,
         sessionId: payload.sessionId
       })));
+      ctx.waitUntil(forwardStore(env, '/stats/increment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event, app: clean(payload.app || '', 60) })
+      }).catch(()=>{}));
       return new Response(null, {
         status: 204,
         headers: { 'Cache-Control': 'no-store' }
@@ -291,6 +404,11 @@ export default {
         sessionId: url.searchParams.get('sid') || '',
         source: url.searchParams.get('src') || sourceFrom(request, url)
       });
+      ctx.waitUntil(forwardStore(env, '/stats/increment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event: 'download_click', app: download.app })
+      }).catch(()=>{}));
       return Response.redirect(download.url, 302);
     }
 
