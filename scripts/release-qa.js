@@ -8,6 +8,7 @@ const adhans=read('src/app/adhanCatalog.js');
 const adhanHook=read('src/app/useAdhanAudio.js');
 const gps=read('src/app/useDeviceLocation.js');
 const strings=read('src/app/v3Strings.js');
+const translations=read('src/i18n/translations.js');
 const config=read('app.config.js');
 const appJson=JSON.parse(read('app.json'));
 const pkg=JSON.parse(read('package.json'));
@@ -122,7 +123,8 @@ assert(app.includes('v3IsRtl(language)'),'interface direction must follow select
 assert(events.every(x=>Boolean(x.en)),'all religious events need English names');
 for(const rows of Object.values(national))assert(rows.every(x=>Boolean(x.name_en)),'all national events need English names');
 
-assert(strings.includes('This app is not a religious authority')&&strings.includes('هذا البرنامج ليس دينيًا'),'research disclaimer missing');
+assert(strings.includes('This program is not religious; it is scientific research.')&&strings.includes('هذا البرنامج ليس دينيًا، بحث علمي.'),'research disclaimer missing');
+assert(!translations.includes('AlOfoK')&&!translations.includes('Al-Ufuq'),'visible translation branding must use al ufuq only');
 assert(strings.includes('Nasi')&&strings.includes('شهر النسيء'),'Nasi leap-month research explanation missing');
 assert(!app.includes('<View style={s.supportQuickWrap}>'),'large home support block must remain removed');
 assert(!app.includes('<View style={[s.dualCards,rowDir(rtl)]}>'),'mini calendar summary cards must stay removed');
@@ -147,6 +149,8 @@ assert(app.includes("screen==='copyright'")&&app.includes("screen==='authenticit
 const legal=read('src/app/LegalScreens.js');
 assert(legal.includes('سياسة الخصوصية')&&legal.includes('حقوق الطبع والنشر'),'full Arabic privacy and copyright screens required');
 assert(legal.includes('وسام محمد')&&legal.includes('Wissam Digital'),'owner identity must appear in privacy/copyright screens');
+assert(legal.includes('جميع حقوق الطبع والنشر محفوظة')&&legal.includes('حقوق الملكية الفكرية'),'copyright and IP wording missing');
+assert(legal.includes('setInterval(issue,60000)')&&legal.includes('rotating-authenticity-challenge'),'authenticity QR must rotate on every open and refresh automatically');
 const activation=read('src/app/TrialPlusActivation.js');
 assert(app.includes("from './TrialPlusActivation';"),'Trial Plus activation screen must be wired');
 assert(activation.includes('payment_data_copied')&&activation.includes('EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK'),'copy-payment event must be ready for secure admin notification');
@@ -154,7 +158,7 @@ assert(activation.includes("const inIraq=country==='IQ'"),'Plus activation must 
 assert(legal.includes('react-native-qrcode-svg'),'authenticity screen must render QR codes');
 const authClient=read('src/app/authenticityClient.js');
 assert(authClient.includes('EXPO_PUBLIC_AUTH_API_URL')&&authClient.includes('/v1/authenticity/challenge'),'authenticity API contract missing');
-assert(authClient.includes("edition,version,installationId"),'authenticity challenge must bind edition, version and installation');
+assert(authClient.includes("edition,version,installationId")&&authClient.includes('Crypto.randomUUID'),'authenticity challenge must bind edition/version/installation and use fresh randomness');
 const pkgLegal=JSON.parse(read('package.json'));
 assert(pkgLegal.dependencies['react-native-qrcode-svg']&&pkgLegal.dependencies['react-native-svg'],'QR dependencies must be installed');
 
@@ -168,8 +172,9 @@ assert(deviceSecurity.includes('nacl.secretbox'),'Plus payload must use authenti
 assert(deviceSecurity.includes('/api/plus/status')&&deviceSecurity.includes('/api/plus/payload'),'Plus approval and protected payload API endpoints missing');
 assert(app.includes('unlockPlusForThisDevice')&&app.includes("plusAccess!=='unlocked'"),'Plus build must stay locked until this device is approved');
 assert(app.includes('prepareEncryptedPlusBundle'),'approved Trial must prepare the encrypted Plus payload before upgrade');
-assert(app.includes('downloadAndInstallApk'),'updates must install directly from inside the Android app');
-assert(apkUpdater.includes('android.intent.action.VIEW'),'APK installer intent missing');
+assert(app.includes('downloadAndInstallApk'),'update download handoff missing');
+assert(apkUpdater.includes("packageName:CHROME_PACKAGE")&&apkUpdater.includes("CHROME_PACKAGE='com.android.chrome'"),'APK updates must hand off to Chrome');
+assert(!config.includes("'REQUEST_INSTALL_PACKAGES'")||config.includes("blockedPermissions: ['android.permission.RECORD_AUDIO','android.permission.REQUEST_INSTALL_PACKAGES']"),'install-packages permission must not be requested by the app');
 assert(fs.existsSync('plus-entitlements.json')&&fs.existsSync('plus-bundle.json'),'protected Plus registry/payload files missing');
 
 // Trial advertising guards
@@ -185,4 +190,4 @@ assert(trialAds.includes("status:'pending_review'"),'new ad submissions must rem
 assert(trialAds.includes('EXPO_PUBLIC_AD_PAYMENT_URL'),'ad payment must use configurable provider routing, never a hardcoded card number');
 
 if(process.exitCode)process.exit(process.exitCode);
-console.log('Release QA passed for Al-Ufuq V3',version);
+console.log('Release QA passed for al ufuq V3',version);
