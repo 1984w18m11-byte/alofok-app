@@ -25,7 +25,7 @@ function maskedLast4(value){
 }
 
 export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amountIqd=null,eventName='payment_data_copied',notificationEndpoint=ADMIN_EVENT_ENDPOINT}){
- const [deviceCode,setDeviceCode]=useState('…');
+ const [deviceCode,setDeviceCode]=useState('');
  const [busy,setBusy]=useState('');
  const [open,setOpen]=useState(false);
 
@@ -36,13 +36,13 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   return()=>{active=false};
  },[purpose]);
 
- const postCopyEvent=async(destinationKind,copiedAt)=>{
-  if(purpose!=='plus'||!notificationEndpoint||!deviceCode)return false;
+ const postCopyEvent=async(destinationKind,copiedAt,readyCode=deviceCode)=>{
+  if(purpose!=='plus'||!notificationEndpoint||!readyCode)return false;
   try{
    const response=await fetch(notificationEndpoint,{
     method:'POST',
     headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({event:eventName,purpose,edition,deviceCode,destinationKind,amountIqd:purpose==='plus'?amountIqd:null,copiedAt,timezoneOffsetMinutes:-new Date().getTimezoneOffset()})
+    body:JSON.stringify({event:eventName,purpose,edition,deviceCode:readyCode,destinationKind,amountIqd:purpose==='plus'?amountIqd:null,copiedAt,timezoneOffsetMinutes:-new Date().getTimezoneOffset()})
    });
    return response.ok;
   }catch(e){return false}
@@ -52,10 +52,16 @@ export function PaymentTransferPanel({rtl,purpose='support',edition='trial',amou
   const clean=digits(value);
   if(!isValidDestination(kind,clean))return;
   setBusy(kind);
-  const copiedAt=new Date().toISOString();
-  await Clipboard.setStringAsync(clean);
-  await postCopyEvent(kind,copiedAt);
-  setBusy('');
+  try{
+   let readyCode=deviceCode;
+   if(purpose==='plus'&&!readyCode){
+    try{readyCode=await getDeviceCode();if(readyCode)setDeviceCode(readyCode)}catch(_){}
+    if(!readyCode)return;
+   }
+   const copiedAt=new Date().toISOString();
+   await Clipboard.setStringAsync(clean);
+   await postCopyEvent(kind,copiedAt,readyCode);
+  }finally{setBusy('')}
 
  };
 
