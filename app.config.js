@@ -43,8 +43,8 @@ module.exports = () => {
       ...base.android,
       package: packageId,
       versionCode: androidVersionCode,
-      permissions: Array.from(new Set([...(base.android?.permissions || []), 'REQUEST_INSTALL_PACKAGES'])),
-      blockedPermissions: ['android.permission.RECORD_AUDIO']
+      permissions: Array.from(new Set([...(base.android?.permissions || [])])),
+      blockedPermissions: ['android.permission.RECORD_AUDIO','android.permission.REQUEST_INSTALL_PACKAGES']
     },
     extra: {
       ...base.extra,
