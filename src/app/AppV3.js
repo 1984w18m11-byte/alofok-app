@@ -32,7 +32,7 @@ const CARD_2='rgba(17,34,52,0.82)';
 const LINE='rgba(255,255,255,0.15)';
 const MUTED='#B9C4D1';
 const WHITE='#F7F8FB';
-const VERSION='1.1.1';
+const VERSION='1.0.19';
 const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';
 const UPDATE_URL=IS_PLUS
  ?'https://raw.githubusercontent.com/1984w18m11-byte/alofok-app/main/update-plus.json'
@@ -310,7 +310,7 @@ function AboutScreen({t,rtl,onBack}){
   <View style={s.aboutLogo}><Text style={s.aboutLogoMark}>◩</Text><Text style={s.aboutLogoName}>{t('appName')}</Text><Text style={s.aboutLogoTag}>{t('tagline')}</Text></View>
   <View style={s.disclaimer}><Text style={[s.disclaimerText,textDir(rtl)]}>{t('researchDisclaimer')}</Text></View>
   <SectionCard title={t('research')} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{t('researchBody')}</Text></SectionCard>
-  <SectionCard title={rtl?'حقوق الطبع والنشر والملكية الفكرية':'Copyright & intellectual property'} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{rtl?'© 2026 وسام محمد — Wissam Digital. جميع حقوق الطبع والنشر والملكية الفكرية الخاصة بالشفرة الأصلية، الواجهات، الشعارات، الأيقونات، النصوص والمواد المنشأة خصيصًا لتطبيق الأفق محفوظة لصاحب المشروع وسام محمد، مع بقاء المواد المرخصة من جهات أخرى خاضعة لحقوق أصحابها وتراخيصها.':'© 2026 Wissam Mohammed — Wissam Digital. Copyright and intellectual-property rights in the original source code, interfaces, original logos, icons, text and project-specific materials of ALAUFUQ are reserved to project owner Wissam Mohammed. Third-party licensed materials remain subject to their owners and license terms.'}</Text></SectionCard>
+  <SectionCard title={rtl?'حقوق الطبع والنشر والملكية الفكرية':'Copyright & intellectual property'} rtl={rtl}><Text style={[s.bodyText,textDir(rtl)]}>{rtl?'© 2026 وسام محمد — Wissam Digital. جميع حقوق الطبع والنشر والملكية الفكرية الخاصة بالشفرة الأصلية، الواجهات، الشعارات، الأيقونات، النصوص والمواد المنشأة خصيصًا لتطبيق الأفق محفوظة لصاحب المشروع وسام محمد، مع بقاء المواد المرخصة من جهات أخرى خاضعة لحقوق أصحابها وتراخيصها.':'© 2026 Wissam Mohammed — Wissam Digital. Copyright and intellectual-property rights in the original source code, interfaces, original logos, icons, text and project-specific materials of al ufuq are reserved to project owner Wissam Mohammed. Third-party licensed materials remain subject to their owners and license terms.'}</Text></SectionCard>
   <Text style={s.versionText}>© 2026 وسام محمد — Wissam Digital · v{VERSION}</Text>
  </ScrollView></SafeAreaView>
 }
@@ -357,13 +357,7 @@ export default function AppV3(){
  const [plusAccess,setPlusAccess]=useState(IS_PLUS?'checking':'not_required');
  const [plusUpgradeReady,setPlusUpgradeReady]=useState(false);
  const rtl=v3IsRtl(language),locale=v3LocaleTag(language);
- const t=useMemo(()=>{
-  const base=makeV3Translator(language);
-  return key=>{
-   const value=base(key);
-   return typeof value==='string'&&!v3IsRtl(language)?value.replace(/Al-Ufuq/g,'ALAUFUQ'):value;
-  };
- },[language]);
+ const t=useMemo(()=>makeV3Translator(language),[language]);
  const location=useDeviceLocation({rtl});
  const adhan=useAdhanAudio();
  const trialAds=useTrialAd({enabled:!IS_PLUS,country:location.country,language});
@@ -434,10 +428,10 @@ export default function AppV3(){
    const info=await res.json();
    if(!upgradingToPlus&&!isNewer(info.version,VERSION)){Alert.alert(t('checkUpdate'),rtl?'أنت تستخدم أحدث نسخة.':'You are using the latest version.');return}
    const title=upgradingToPlus?(rtl?'Plus جاهزة لهذا الجهاز':'Plus is ready for this device'):(rtl?'يتوفر إصدار جديد':'A new version is available');
-   const message=upgradingToPlus?(rtl?'تمت الموافقة على هذا الموبايل. اضغط تنزيل وتثبيت ليتم تحميل Plus مباشرة داخل التطبيق.':'This phone is approved. Tap Download & install to fetch Plus directly inside the app.'):`${rtl?'الإصدار':'Version'}: ${info.version}`;
+   const message=upgradingToPlus?(rtl?'تمت الموافقة على هذا الموبايل. اضغط تنزيل لفتح ملف Plus في تنزيلات النظام.':'This phone is approved. Tap Download to open the Plus file with the system downloader.'):`${rtl?'الإصدار':'Version'}: ${info.version}`;
    Alert.alert(title,message,[
     {text:t('close'),style:'cancel'},
-    {text:rtl?'تنزيل وتثبيت':'Download & install',onPress:async()=>{
+    {text:rtl?'تنزيل':'Download',onPress:async()=>{
       const url=info.download_url||info.play_url||info.app_store_url;
       if(!url)return;
       try{
