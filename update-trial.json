@@ -6,9 +6,9 @@
   "versionCode": 1001119,
   "title_ar": "تحديث الأفق التجريبي",
   "notes_ar": "الإصدار 1.0.19: تحديث تجريبي مبني على النسخة المستقرة 1.0.13 مع الإصلاحات والتحسينات المتفق عليها.",
-  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.12/alofok-trial-1.0.12.apk",
+  "download_url": "https://github.com/1984w18m11-byte/alofok-app/releases/download/v1.0.19/al-ufuq-trial-1.0.19.apk",
   "mandatory": false,
-  "published_at": "2026-09-18",
+  "published_at": "2026-09-25",
   "cross_channel_allowed": false,
-  "notes_en": "1.0.19 is the Trial update based on the stable 1.0.13 baseline with the agreed fixes and improvements."
+  "notes_en": "1.0.19 is the Trial update based on stable 1.0.13 with the agreed fixes and improvements."
 }
