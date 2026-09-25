@@ -62,8 +62,8 @@ jobs:
           fs.writeFileSync('package-lock.json',JSON.stringify(lock,null,2)+'\n');
           NODE
 
-      - name: Install dependencies
-        run: npm ci
+      - name: Install dependencies and refresh lock metadata
+        run: npm install
 
       - name: Validate existing Adhan assets
         shell: bash
