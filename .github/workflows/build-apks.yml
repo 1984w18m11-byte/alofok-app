@@ -1,4 +1,4 @@
-name: Build Al-Ufuq Trial 1.1.1
+name: Build al ufuq Trial 1.0.19 QA
 
 on:
   workflow_dispatch:
@@ -7,29 +7,25 @@ on:
       - .github/build-apks.trigger
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   build-apk:
-    name: Build ALAUFUQ ${{ matrix.variant }}
+    name: Build al ufuq trial 1.0.19
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        variant: [trial]
     env:
-      APP_VARIANT: ${{ matrix.variant }}
-      EXPO_PUBLIC_APP_VARIANT: ${{ matrix.variant }}
+      APP_VARIANT: trial
+      EXPO_PUBLIC_APP_VARIANT: trial
       EXPO_PUBLIC_DISTRIBUTION_CHANNEL: direct
       EXPO_PUBLIC_PAYMENT_CARD: ${{ secrets.ALOFOK_PAYMENT_CARD }}
       EXPO_PUBLIC_PAYMENT_BANK_ACCOUNT: "5490910105"
       EXPO_PUBLIC_PAYMENT_COPY_WEBHOOK: "https://wispy-salad-438b.wissamdigital11.workers.dev/api/payment-copy"
       EXPO_NO_TELEMETRY: "1"
-      RELEASE_VERSION: "1.1.1"
+      RELEASE_VERSION: "1.0.19"
       NODE_ENV: production
 
     steps:
-      - name: Checkout
+      - name: Checkout requested branch
         uses: actions/checkout@v4
 
       - name: Set up Node.js
@@ -44,104 +40,49 @@ jobs:
           distribution: temurin
           java-version: "17"
 
-      - name: Validate protected payment value
+      - name: Validate payment numbers
         shell: bash
         run: |
           set -euo pipefail
-          digits="$(printf '%s' "${EXPO_PUBLIC_PAYMENT_CARD:-}" | tr -cd '0-9')"
-          if [ "${#digits}" -ne 16 ]; then
-            echo "Required protected payment value is not configured as repository secret ALOFOK_PAYMENT_CARD."
-            exit 1
-          fi
+          card="$(printf '%s' "${EXPO_PUBLIC_PAYMENT_CARD:-}" | tr -cd '0-9')"
+          account="$(printf '%s' "${EXPO_PUBLIC_PAYMENT_BANK_ACCOUNT:-}" | tr -cd '0-9')"
+          test "${#card}" -eq 16
+          test "${#account}" -eq 10
 
-      - name: Synchronize release metadata
+      - name: Synchronize package lock version
         shell: bash
         run: |
-          set -euo pipefail
           node <<'NODE'
-          const fs = require('fs');
-          const version = JSON.parse(fs.readFileSync('app.json','utf8')).expo.version;
-          const lock = JSON.parse(fs.readFileSync('package-lock.json','utf8'));
-          lock.version = version;
-          if (lock.packages && lock.packages['']) lock.packages[''].version = version;
-          fs.writeFileSync('package-lock.json', JSON.stringify(lock, null, 2) + '\n');
-          const appPath = 'src/app/AppV3.js';
-          let app = fs.readFileSync(appPath,'utf8');
-          app = app.replace(/const VERSION='[^']+';/, `const VERSION='${version}';`);
-          fs.writeFileSync(appPath, app);
-          const qaPath = 'scripts/release-qa.js';
-          let qa = fs.readFileSync(qaPath,'utf8');
-          qa = qa.replace("['season-spring','season-summer','season-autumn','season-winter'].includes(id)", "['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)");
-          qa = qa.replace('trial build must allow only the four seasonal themes','trial build must allow the fixed original theme plus the four seasonal themes');
-          fs.writeFileSync(qaPath, qa);
+          const fs=require('fs');
+          const version=JSON.parse(fs.readFileSync('app.json','utf8')).expo.version;
+          if(version!=='1.0.19') throw new Error('app version must be 1.0.19');
+          const lock=JSON.parse(fs.readFileSync('package-lock.json','utf8'));
+          lock.version=version;
+          if(lock.packages&&lock.packages['']) lock.packages[''].version=version;
+          fs.writeFileSync('package-lock.json',JSON.stringify(lock,null,2)+'\n');
           NODE
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
-      - name: Fetch convert and validate approved Adhan recordings
+      - name: Validate existing Adhan assets
         shell: bash
         run: |
           set -euo pipefail
           sudo apt-get update -qq
-          sudo apt-get install -y -qq ffmpeg librsvg2-bin fonts-noto-core
-          mkdir -p assets/adhan /tmp/alofok-adhan
-
-          convert_source() {
-            local file_title="$1"
-            local stem="$2"
-            local encoded
-            encoded=$(python3 -c 'import sys,urllib.parse; print(urllib.parse.quote(sys.argv[1], safe=""))' "$file_title")
-            local url="https://commons.wikimedia.org/wiki/Special:Redirect/file/${encoded}"
-            local input="/tmp/alofok-adhan/${stem}.source"
-            curl -fL --retry 4 --retry-delay 2 -A "ALAUFUQ-build/1.1.1" "$url" -o "$input"
-            test -s "$input"
-            ffprobe -v error "$input" >/dev/null
-            local duration
-            duration=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 "$input")
-            python3 - "$duration" <<'PY'
-          import sys
-          duration=float(sys.argv[1])
-          if duration < 120:
-              raise SystemExit(f'Adhan source is too short: {duration:.1f}s')
-          PY
-            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a libvorbis -q:a 5 "assets/adhan/${stem}.ogg"
-            ffmpeg -hide_banner -loglevel error -xerror -y -fflags +genpts -i "$input" -vn -af "aresample=async=1:first_pts=0,asetpts=N/SR/TB" -ac 1 -ar 32000 -c:a pcm_s16le "assets/adhan/${stem}.wav"
-          }
-
-          test -s assets/adhan/beautiful_adhan.ogg
-          ffprobe -v error assets/adhan/beautiful_adhan.ogg >/dev/null
-          base_duration=$(ffprobe -v error -show_entries format=duration -of default=nw=1:nk=1 assets/adhan/beautiful_adhan.ogg)
-          python3 - "$base_duration" <<'PY'
-          import sys
-          duration=float(sys.argv[1])
-          if duration < 120:
-              raise SystemExit(f'Base Adhan is too short: {duration:.1f}s')
-          PY
-          ffmpeg -hide_banner -loglevel error -xerror -y -i assets/adhan/beautiful_adhan.ogg -vn -ac 1 -ar 32000 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
-
-          convert_source "Azan.ogg" "adhan_andrewler"
-
+          sudo apt-get install -y -qq ffmpeg librsvg2-bin
           for stem in beautiful_adhan adhan_andrewler adhan_aishatu98 adhan_nigeria_isaac adhan_medina_ejaz215 adhan_mecca_2013; do
-            for ext in ogg wav; do
-              f="assets/adhan/${stem}.${ext}"
-              test -s "$f"
-              ffprobe -v error "$f" >/dev/null
-              ffmpeg -hide_banner -loglevel error -xerror -i "$f" -f null -
-            done
+            f="assets/adhan/${stem}.wav"
+            test -s "$f"
+            ffprobe -v error "$f" >/dev/null
           done
 
-      - name: Render approved launcher icon
+      - name: Render Trial launcher icon
         shell: bash
         run: |
           set -euo pipefail
-          if [ "${APP_VARIANT}" = "paid" ]; then
-            rsvg-convert -w 1024 -h 1024 assets/icons/icon-paid-approved.svg -o assets/icon-paid.png
-            ffprobe -v error assets/icon-paid.png >/dev/null
-          else
-            rsvg-convert -w 1024 -h 1024 assets/icons/icon-trial-approved.svg -o assets/icon-trial.png
-            ffprobe -v error assets/icon-trial.png >/dev/null
-          fi
+          rsvg-convert -w 1024 -h 1024 assets/icons/icon-trial-approved.svg -o assets/icon-trial.png
+          test -s assets/icon-trial.png
 
       - name: Validate translations
         run: npm run check:translations
@@ -159,31 +100,10 @@ jobs:
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon
 
-      - name: Upload APK artifact
+      - name: Upload Trial APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: alofok-${{ matrix.variant }}-1.1.1
+          name: al-ufuq-trial-1.0.19-qa
           path: android/app/build/outputs/apk/release/app-release.apk
           if-no-files-found: error
           retention-days: 14
-
-  publish-release:
-    name: Publish Al-Ufuq Trial 1.1.1
-    needs: build-apk
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download Trial APK artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: alofok-trial-1.1.1
-          path: artifacts/trial
-
-      - name: Prepare Trial APK filename
-        run: cp artifacts/trial/app-release.apk alofok-trial-1.1.1.apk
-
-      - name: Publish Trial GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          gh release view v1.1.1 --repo 1984w18m11-byte/alofok-app >/dev/null 2>&1 || gh release create v1.1.1 --repo 1984w18m11-byte/alofok-app --title "الأفق التجريبي 1.1.1" --notes "نسخة تجريبية للاختبار بدون أذكار الصباح والمساء حاليًا. واجهة تفعيل Plus مدمجة وصغيرة، كود الجهاز مخفي، آخر 4 أرقام فقط تظهر، والنسخ صامت مع إرسال طلب التفعيل إلى Wissam Digital Admin."
-          gh release upload v1.1.1 alofok-trial-1.1.1.apk --repo 1984w18m11-byte/alofok-app --clobber
