@@ -46,3 +46,4 @@ trial-1.0.19-qa-build-20260925-0249
 trial-1.0.19-qa-retry-lockfix-20260925
 trial-1.0.19-qa-retry-adhanfix-20260925
 trial-1.0.19-qa-retry-manifest-installerfix-20260925
+trial-1.0.19-qa-retry-wav-prebuild-fix-20260925
