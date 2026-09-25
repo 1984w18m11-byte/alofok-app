@@ -48,3 +48,4 @@ trial-1.0.19-qa-retry-adhanfix-20260925
 trial-1.0.19-qa-retry-manifest-installerfix-20260925
 trial-1.0.19-qa-retry-wav-prebuild-fix-20260925
 trial-1.0.19-qa-retry-andrewler-codefix-20260925-1410
+trial-1.0.19-final-qa-brand-qr-chrome-audio-20260925-1519
