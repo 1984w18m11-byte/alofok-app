@@ -42,3 +42,4 @@ trial-1.0.12-no-adhkar-download-20260918
 trial-1.0.12-adhkar-20260918
 trial-1.1.0-no-adhkar-user-test-final-20260918
 trial-1.1.1-adhkar-final-20260918
+trial-1.0.19-qa-build-20260925-0249
