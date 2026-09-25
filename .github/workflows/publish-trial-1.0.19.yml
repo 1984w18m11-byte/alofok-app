@@ -1,0 +1,42 @@
+name: Publish al ufuq Trial 1.0.19
+
+on:
+  push:
+    branches:
+      - stable-rebuild-from-v1.0.13
+    paths:
+      - .github/workflows/publish-trial-1.0.19.yml
+      - .github/publish-trial-1.0.19.trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download validated APK artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -rf artifact
+          mkdir -p artifact
+          gh run download 36136793016 -n al-ufuq-trial-1.0.19-qa -D artifact
+          APK="$(find artifact -type f -name '*.apk' | head -n 1)"
+          test -n "$APK"
+          cp "$APK" Al-Ufuq-Trial-1.0.19.apk
+          test -s Al-Ufuq-Trial-1.0.19.apk
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view v1.0.19 >/dev/null 2>&1; then
+            gh release upload v1.0.19 Al-Ufuq-Trial-1.0.19.apk --clobber
+          else
+            gh release create v1.0.19 Al-Ufuq-Trial-1.0.19.apk \
+              --title "الأفق التجريبي 1.0.19" \
+              --notes "الإصدار التجريبي 1.0.19 بعد فحص البناء والصوت والتحميل والتحديث."
+          fi
