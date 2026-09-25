@@ -63,9 +63,10 @@ assert(!config.includes('adaptiveIcon'),'do not wrap full launcher artwork insid
 
 assert(app.includes("const IS_PLUS=process.env.EXPO_PUBLIC_APP_VARIANT==='paid';"),'Plus features must be gated by paid build variant');
 assert(app.includes('update-plus.json')&&app.includes('update-trial.json'),'Trial and Plus must read different update manifests');
-assert(app.includes("['season-spring','season-summer','season-autumn','season-winter'].includes(id)"),'trial build must allow only the four seasonal themes');
+assert(app.includes("['trial-fixed','season-spring','season-summer','season-autumn','season-winter'].includes(id)"),'trial build must allow exactly five themes: four seasons plus Mosque Minaret');
 assert(app.includes("if(!IS_PLUS)return THEME_BY_ID[selectedTheme]?.image"),'trial home background must use the selected seasonal theme');
 assert(app.includes('automaticThemeId(now)'),'Plus automatic theme rotation missing');
+assert(app.includes("isPlus?x.id!=='trial-fixed':!x.plus"),'Plus build must expose exactly 34 themes and exclude the Trial-only minaret theme');
 assert(!app.includes('THEME_ATLAS')&&!themes.includes('THEME_ATLAS'),'legacy atlas code must stay removed');
 assert(!fs.existsSync('assets/themes/alofok-plus-theme-atlas-v1.jpg'),'legacy atlas file must stay deleted');
 const standaloneThemeRequires=[...themes.matchAll(/require\('\.\.\/\.\.\/assets\/themes\/([^']+)'\)/g)].map(x=>x[1]);
@@ -114,7 +115,7 @@ assert(app.includes('adhanPreviewButton:{')&&app.includes('adhanPreviewIcon:{'),
 assert(app.includes("return <View style={[s.prayerStrip,rowDir(rtl)]}>"),'prayer strip must show all six times without horizontal scrolling');
 assert(app.includes("prayerItem:{flex:1,minWidth:0,minHeight:72"),'prayer items must share the available width');
 
-assert(strings.includes("appName:'الأفق'")&&strings.includes("appName:'Al-Ufuq'"),'Arabic and English V3 packs are required');
+assert(strings.includes("appName:'الأفق'")&&strings.includes("appName:'al ufuq'"),'Arabic and English V3 packs are required');
 assert(strings.includes("languageTitle:'Interface language'")&&strings.includes("languageTitle:'لغة الواجهة'"),'language screen strings missing');
 assert(app.includes('makeV3Translator(language)'),'all V3 screens must use centralized translations');
 assert(app.includes('v3IsRtl(language)'),'interface direction must follow selected language');
