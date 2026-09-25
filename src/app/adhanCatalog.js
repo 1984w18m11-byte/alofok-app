@@ -2,7 +2,7 @@ import registry from '../data/adhan-registry.json';
 
 const ASSETS={
  'commons-beautiful-adhan':require('../../assets/adhan/beautiful_adhan.ogg'),
- 'commons-andrewler-azan':require('../../assets/adhan/adhan_andrewler.ogg'),
+ 'commons-andrewler-azan':require('../../assets/adhan/azan-andrewler.ogg'),
  'commons-aishatu98-adhan':require('../../assets/adhan/adhan_aishatu98.ogg'),
  'commons-nigeria-isaac':require('../../assets/adhan/adhan_nigeria_isaac.ogg'),
  'commons-medina-ejaz215':require('../../assets/adhan/adhan_medina_ejaz215.ogg'),
