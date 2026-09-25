@@ -72,8 +72,12 @@ jobs:
           set -euo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq ffmpeg librsvg2-bin
-          ffmpeg -v error -y -i assets/adhan/beautiful_adhan.ogg assets/adhan/beautiful_adhan.wav
-          ffmpeg -v error -y -i assets/adhan/azan-andrewler.ogg assets/adhan/adhan_andrewler.wav
+          ffmpeg -v error -y -i assets/adhan/beautiful_adhan.ogg -ac 1 -ar 22050 -c:a pcm_s16le assets/adhan/beautiful_adhan.wav
+          ffmpeg -v error -y -i assets/adhan/azan-andrewler.ogg -ac 1 -ar 22050 -c:a pcm_s16le assets/adhan/adhan_andrewler.wav
+          ffmpeg -v error -y -i assets/adhan/adhan_aishatu98.ogg -ac 1 -ar 22050 -c:a pcm_s16le assets/adhan/adhan_aishatu98.wav
+          ffmpeg -v error -y -i assets/adhan/adhan_nigeria_isaac.ogg -ac 1 -ar 22050 -c:a pcm_s16le assets/adhan/adhan_nigeria_isaac.wav
+          ffmpeg -v error -y -i assets/adhan/adhan_medina_ejaz215.ogg -ac 1 -ar 22050 -c:a pcm_s16le assets/adhan/adhan_medina_ejaz215.wav
+          ffmpeg -v error -y -i assets/adhan/adhan_mecca_2013.ogg -ac 1 -ar 22050 -c:a pcm_s16le assets/adhan/adhan_mecca_2013.wav
           files=(
             assets/adhan/beautiful_adhan.wav
             assets/adhan/adhan_andrewler.wav
